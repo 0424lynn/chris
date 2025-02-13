@@ -1,0 +1,17 @@
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches:
+      - main  # 如果你的默认分支是 master，请改成 master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: .  # 确保 index.html 在这里
