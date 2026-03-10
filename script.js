@@ -146,14 +146,13 @@
 // ── 登录 / 登出（服务器端 session 验证）────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", function () {
 
-  // 登录表单
-  const loginForm = document.getElementById("login-form");
-  if (loginForm) {
-    loginForm.addEventListener("submit", async function (event) {
-      event.preventDefault();
+  // 登录按钮
+  const loginBtn = document.getElementById("loginBtn");
+  if (loginBtn) {
+    loginBtn.addEventListener("click", async function () {
       const username = document.getElementById("username").value.trim();
       const password = document.getElementById("password").value;
-      const btn = loginForm.querySelector("button[type=submit]");
+      const btn = loginBtn;
 
       // 显示加载状态
       btn.disabled = true;
