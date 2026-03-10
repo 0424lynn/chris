@@ -41,33 +41,36 @@ app.post('/api/login', async (req, res) => {
   if (!username || !password)
     return res.status(400).json({ error: 'Missing credentials' });
 
-  // username=admin 对应两个角色（密码不同）
-  if (username === 'admin') {
-    if (process.env.SUPER_ADMIN_HASH) {
-      const isSuperAdmin = await bcrypt.compare(password, process.env.SUPER_ADMIN_HASH);
-      if (isSuperAdmin) {
-        req.session.user = { username, role: 'superAdmin' };
-        return res.json({ role: 'superAdmin' });
+  try {
+    if (username === 'admin') {
+      if (process.env.SUPER_ADMIN_HASH) {
+        const isSuperAdmin = await bcrypt.compare(password, process.env.SUPER_ADMIN_HASH);
+        if (isSuperAdmin) {
+          req.session.user = { username, role: 'superAdmin' };
+          return res.json({ role: 'superAdmin' });
+        }
+      }
+      if (process.env.ADMIN_HASH) {
+        const isAdmin = await bcrypt.compare(password, process.env.ADMIN_HASH);
+        if (isAdmin) {
+          req.session.user = { username, role: 'normalAdmin' };
+          return res.json({ role: 'normalAdmin' });
+        }
       }
     }
-    if (process.env.ADMIN_HASH) {
-      const isAdmin = await bcrypt.compare(password, process.env.ADMIN_HASH);
-      if (isAdmin) {
-        req.session.user = { username, role: 'normalAdmin' };
-        return res.json({ role: 'normalAdmin' });
+
+    if (username === 'user' && process.env.USER_HASH) {
+      const isUser = await bcrypt.compare(password, process.env.USER_HASH);
+      if (isUser) {
+        req.session.user = { username, role: 'user' };
+        return res.json({ role: 'user' });
       }
     }
+  } catch (err) {
+    console.error('Login error:', err.message);
+    return res.status(500).json({ error: 'Server error: ' + err.message });
   }
 
-  if (username === 'user' && process.env.USER_HASH) {
-    const isUser = await bcrypt.compare(password, process.env.USER_HASH);
-    if (isUser) {
-      req.session.user = { username, role: 'user' };
-      return res.json({ role: 'user' });
-    }
-  }
-
-  // 统一报错，不区分「用户不存在」还是「密码错误」
   return res.status(401).json({ error: 'Invalid credentials' });
 });
 

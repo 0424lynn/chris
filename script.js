@@ -153,6 +153,11 @@ document.addEventListener("DOMContentLoaded", function () {
       event.preventDefault();
       const username = document.getElementById("username").value.trim();
       const password = document.getElementById("password").value;
+      const btn = loginForm.querySelector("button[type=submit]");
+
+      // 显示加载状态
+      btn.disabled = true;
+      btn.textContent = "Logging in...";
 
       try {
         const res = await fetch("/api/login", {
@@ -163,14 +168,18 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (res.ok) {
           const { role } = await res.json();
-          // 仅用于 UI 显示（admin 侧栏等），真正的权限由服务器 session 控制
           localStorage.setItem("userRole", role);
           window.location.href = "dashboard.html";
         } else {
-          alert("Username or password is incorrect. Please try again!");
+          const data = await res.json().catch(() => ({}));
+          alert("Username or password is incorrect. Please try again!\n" + (data.error || ""));
+          btn.disabled = false;
+          btn.textContent = "Login";
         }
       } catch (err) {
-        alert("Network error. Please try again.");
+        alert("Network error — server may be waking up, please try again in 30 seconds.");
+        btn.disabled = false;
+        btn.textContent = "Login";
       }
     });
   }
