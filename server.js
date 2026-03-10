@@ -37,9 +37,13 @@ app.use((req, res, next) => {
 // ── API: Login ────────────────────────────────────────────────────────────────
 app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
+  console.log('Login attempt:', username);
 
   if (!username || !password)
     return res.status(400).json({ error: 'Missing credentials' });
+
+  console.log('ADMIN_HASH present:', !!process.env.ADMIN_HASH);
+  console.log('SUPER_ADMIN_HASH present:', !!process.env.SUPER_ADMIN_HASH);
 
   try {
     if (username === 'admin') {
