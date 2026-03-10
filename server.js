@@ -5,6 +5,7 @@ const bcrypt   = require('bcrypt');
 require('dotenv').config();
 
 const app = express();
+app.set('trust proxy', 1); // Render 反向代理
 
 // ── Middleware ────────────────────────────────────────────────────────────────
 app.use(express.json());
@@ -49,18 +50,24 @@ app.post('/api/login', async (req, res) => {
     if (username === 'admin') {
       if (process.env.SUPER_ADMIN_HASH) {
         const isSuperAdmin = await bcrypt.compare(password, process.env.SUPER_ADMIN_HASH);
-        console.log('superAdmin check:', isSuperAdmin, '| hash prefix:', process.env.SUPER_ADMIN_HASH.substring(0, 10));
         if (isSuperAdmin) {
           req.session.user = { username, role: 'superAdmin' };
-          return res.json({ role: 'superAdmin' });
+          return req.session.save(err => {
+            if (err) { console.error('session save error:', err); return res.status(500).json({ error: 'session error' }); }
+            console.log('Logged in as superAdmin');
+            return res.json({ role: 'superAdmin' });
+          });
         }
       }
       if (process.env.ADMIN_HASH) {
         const isAdmin = await bcrypt.compare(password, process.env.ADMIN_HASH);
-        console.log('admin check:', isAdmin, '| hash prefix:', process.env.ADMIN_HASH.substring(0, 10));
         if (isAdmin) {
           req.session.user = { username, role: 'normalAdmin' };
-          return res.json({ role: 'normalAdmin' });
+          return req.session.save(err => {
+            if (err) { console.error('session save error:', err); return res.status(500).json({ error: 'session error' }); }
+            console.log('Logged in as normalAdmin');
+            return res.json({ role: 'normalAdmin' });
+          });
         }
       }
     }
@@ -69,7 +76,11 @@ app.post('/api/login', async (req, res) => {
       const isUser = await bcrypt.compare(password, process.env.USER_HASH);
       if (isUser) {
         req.session.user = { username, role: 'user' };
-        return res.json({ role: 'user' });
+        return req.session.save(err => {
+          if (err) { console.error('session save error:', err); return res.status(500).json({ error: 'session error' }); }
+          console.log('Logged in as user');
+          return res.json({ role: 'user' });
+        });
       }
     }
   } catch (err) {
