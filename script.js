@@ -160,11 +160,16 @@ document.addEventListener("DOMContentLoaded", function () {
       btn.textContent = "Logging in...";
 
       try {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 15000); // 15秒超时
+
         const res = await fetch("/api/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username, password })
+          body: JSON.stringify({ username, password }),
+          signal: controller.signal
         });
+        clearTimeout(timer);
 
         if (res.ok) {
           const { role } = await res.json();
