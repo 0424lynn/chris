@@ -124,7 +124,7 @@
     "MBF8501GR": {
       "title": "MBF8501GR — Bottom Mount One-Door Freezer",
       "image": "images/products/MBF8501GRP.png",
-      "diagram": "images/products/MBF8501GRD.png",
+      "diagram": "images/wiring/MBF8501GRD.png",
       "issues": ["noise", "leakingWater inside", "leakingWater outside","Led issue","physical Damage","cooling Issue","Power Issue","error Code"],
       "cooling Issue": {
         
@@ -157,7 +157,7 @@
     "MBF8502GR": {
       "title": "MBF8502GR —  Bottom Mount Two-Door Freezer",
       "image": "images/products/MBF8502GRP.png",
-      "diagram": "images/products/MBF8502GRD.png",
+      "diagram": "images/wiring/MBF8502GRD.png",
       "issues": ["noise", "leakingWater inside", "leakingWater outside","Led issue","physical Damage","cooling Issue","Power Issue","error Code"],
       "cooling Issue": {
         
@@ -185,7 +185,7 @@
     "MBF8503GR": {
       "title": "MBF8503GR — Bottom Mount Two-Door Freezer",
       "image": "images/products/MBF8503GRP.png",
-      "diagram": "images/products/MBF8503GRD.png",
+      "diagram": "images/wiring/MBF8503GRD.png",
     "issues": ["noise", "leakingWater inside", "leakingWater outside","Led issue","physical Damage","cooling Issue","Power Issue","error Code"],
     "cooling Issue": {
         
@@ -213,7 +213,7 @@
 "MBF8504GR": {
   "title": "MBF8504GR — Bottom Mount Three-Door Freezer",
   "image": "images/products/MBF8504GRP.png",
-  "diagram": "images/products/MBF8504GRD.png",
+  "diagram": "images/wiring/MBF8504GRD.png",
 "issues": ["noise", "leakingWater inside", "leakingWater outside","Led issue","physical Damage","cooling Issue","Power Issue","error Code"],
 "cooling Issue": {
         
@@ -250,7 +250,7 @@
   "MBF8520GR": {
     "title": "MBF8520GR — Low Height Freezer",
     "image": "images/products/MBF8520GRP.png",
-    "diagram": "images/products/MBF8520GRD.png",
+    "diagram": "images/wiring/MBF8520GRD.png",
     "issues": ["noise", "leakingWater inside", "leakingWater outside","Led issue","physical Damage","cooling Issue","Power Issue","error Code"],
     "cooling Issue": {
         
@@ -283,7 +283,7 @@
   "MBF8531GR": {
     "title": "MBF8531GR — Bottom Mount One-Door Freezer",
     "image": "images/products/MBF8531GRP.png",
-    "diagram": "images/products/MBF8531GRD.png",
+    "diagram": "images/wiring/MBF8531GRD.png",
     "issues": ["noise", "leakingWater inside", "leakingWater outside","Led issue","physical Damage","cooling Issue","Power Issue","error Code"],
    "cooling Issue": {
         

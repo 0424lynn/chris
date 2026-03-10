@@ -135,7 +135,7 @@
     "MPF8201GR": {
       "title": "MPF8201GR — 44″ Refrigerated Pizza Prep. Table",
       "image": "images/products/MPF8201GRP.png",
-      "diagram": "images/products/MPF8201GRD.png",
+      "diagram": "images/wiring/MPF8201GRD.png",
       "issues": ["noise", "leakingWater inside", "leakingWater outside","physical Damage","Power Issue","cooling Issue","error Code","Door-to-drawer conversion"],
       "documents": [
         {
@@ -155,7 +155,7 @@
     "MPF8202GR": {
       "title": "MPF8202GR — 67″ Refrigerated Pizza Prep. Table",
       "image": "images/products/MPF8202GRP.png",
-      "diagram": "images/products/MPF8202GRD.png",
+      "diagram": "images/wiring/MPF8202GRD.png",
       "issues": ["noise", "leakingWater inside", "leakingWater outside","physical Damage","Power Issue","cooling Issue","error Code","Door-to-drawer conversion"],
      "cooling Issue": {
         
@@ -180,7 +180,7 @@
 "MPF8203GR": {
     "title": "MPF8203GR — 93″ Refrigerated Pizza Prep. Table",
     "image": "images/products/MPF8203GRP.png",
-    "diagram": "images/products/MPF8203GRD.png",
+    "diagram": "images/wiring/MPF8203GRD.png",
   "issues":  ["noise", "leakingWater inside", "leakingWater outside","physical Damage","Power Issue","cooling Issue","error Code","Door-to-drawer conversion"],
   "documents": [
     {

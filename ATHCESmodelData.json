@@ -50,7 +50,7 @@
     "ATHC-9ES": {
       "title": "ATHC-9ES — Insulated Warming & Holding Cabinet",
       "image": "images/products/ATHC-9ESP.png",
-      "diagram": "images/products/ATHCESD.png",
+      "diagram": "images/wiring/ATHCESD.png",
       "issues": ["physical Damage","Module Disassembly Diagram","Heating issue"],
       
       
@@ -67,7 +67,7 @@
     "ATHC-18ES": {
       "title": "ATHC-18ES — Insulated Warming & Holding Cabinet",
       "image": "images/products/ATHC-18ESP.png",
-      "diagram": "images/products/ATHCESD.png",
+      "diagram": "images/wiring/ATHCESD.png",
       "issues": ["physical Damage","Module Disassembly Diagram","Heating issue"],
       
       

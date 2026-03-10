@@ -155,7 +155,7 @@
     "MSF8301GR": {
       "title": "MSF8301GR — 27\" Sandwich Prep Table",
       "image": "images/products/MSF8301GRP.png",
-      "diagram": "images/products/MSF8301GRD.png",
+      "diagram": "images/wiring/MSF8301GRD.png",
       "issues": ["noise", "leakingWater inside", "leakingWater outside","No display but cooling is functioning normall","physical Damage","Power Issue","cooling Issue","error Code","Door-to-drawer conversion"],
       "cooling Issue": {
         
@@ -178,7 +178,7 @@
     "MSF8302GR": {
       "title": "MSF8302GR — 48\" Sandwich Prep Table",
       "image": "images/products/MSF8302GRP.png",
-      "diagram": "images/products/MSF8302GRD.png",
+      "diagram": "images/wiring/MSF8302GRD.png",
       "issues": ["noise", "leakingWater inside", "leakingWater outside","No display but cooling is functioning normall","physical Damage","Power Issue","cooling Issue","error Code","Door-to-drawer conversion"],
      "cooling Issue": {
         
@@ -207,7 +207,7 @@
     "MSF8303GR": {
       "title": "MSF8303GR — 60\" Sandwich Prep Table",
       "image": "images/products/MSF8303GRP.png",
-      "diagram": "images/products/MSF8303GRD.png",
+      "diagram": "images/wiring/MSF8303GRD.png",
     "issues":  ["noise", "leakingWater inside", "leakingWater outside","No display but cooling is functioning normall","physical Damage","Power Issue","cooling Issue","error Code","Door-to-drawer conversion"],
     "cooling Issue": {
         
@@ -236,7 +236,7 @@
       "MSF8304GR": {
       "title": "MSF8304GR — 72\" Sandwich Prep Table",
       "image": "images/products/MSF8304GRP.png",
-      "diagram": "images/products/MSF8304GRD.png",
+      "diagram": "images/wiring/MSF8304GRD.png",
     "issues":  ["noise", "leakingWater inside", "leakingWater outside","No display but cooling is functioning normall","physical Damage","Power Issue","cooling Issue","error Code","Door-to-drawer conversion"],
     "cooling Issue": {
         
@@ -266,7 +266,7 @@
   "MSF8305GR": {
     "title": "MSF8305GR — 27\" Mega Top Sandwich Prep Table",
     "image": "images/products/MSF8305GRP.png",
-    "diagram": "images/products/MSF8305GRD.png",
+    "diagram": "images/wiring/MSF8305GRD.png",
   "issues":  ["noise", "leakingWater inside", "leakingWater outside","No display but cooling is functioning normall","physical Damage","Power Issue","cooling Issue","error Code","Door-to-drawer conversion"],
   "cooling Issue": {
         
@@ -289,7 +289,7 @@
 "MSF8306GR": {
     "title": "MSF8306GR — 48\" Sandwich Prep Table",
     "image": "images/products/MSF8306GRP.png",
-    "diagram": "images/products/MSF8306GRD.png",
+    "diagram": "images/wiring/MSF8306GRD.png",
   "issues":  ["Note: New issues with the pan temperature is not cold","noise", "leakingWater inside", "leakingWater outside","No display but cooling is functioning normall","physical Damage","Power Issue","cooling Issue","error Code","Door-to-drawer conversion"],
   "cooling Issue": {
         
@@ -318,7 +318,7 @@
 "MSF8307GR": {
     "title": "MSF8307GR — 60\" Mega Top Sandwich Prep Table",
     "image": "images/products/MSF8307GRP.png",
-    "diagram": "images/products/MSF8307GRD.png",
+    "diagram": "images/wiring/MSF8307GRD.png",
   "issues":  ["Note: New issues with the pan temperature is not cold","noise", "leakingWater inside", "leakingWater outside","No display but cooling is functioning normall","physical Damage","Power Issue","cooling Issue","error Code","Door-to-drawer conversion"],
  "cooling Issue": {
         
@@ -348,7 +348,7 @@
 "MSF8308GR": {
     "title": "MSF8308GR — Refrigerated Sandwich Prep Table",
     "image": "images/products/MSF8308GRP.png",
-    "diagram": "images/products/MSF8308GRD.png",
+    "diagram": "images/wiring/MSF8308GRD.png",
  "issues":  ["Note: New issues with the pan temperature is not cold","noise", "leakingWater inside", "leakingWater outside","No display but cooling is functioning normall","physical Damage","Power Issue","cooling Issue","error Code","Door-to-drawer conversion"],
  "cooling Issue": {
         
@@ -377,7 +377,7 @@
 "MSF17GR-NTCV": {
     "title": "MSF17GR-NTCV— 17\" Sandwich Prep Table with Night Cover",
     "image": "images/products/MSF17GRP-NTCV.png",
-    "diagram": "images/products/MSF17GRD-NTCV.png",
+    "diagram": "images/wiring/MSF17GRD-NTCV.png",
   "issues":  ["noise", "leakingWater inside", "leakingWater outside","No display but cooling is functioning normall","physical Damage","Power Issue","cooling Issue","error Code","Door-to-drawer conversion"],
   "documents": [
     {
@@ -389,7 +389,7 @@
 "MSF3610GR": {
     "title": "MSF3610GR — 36\" Sandwich Prep Table",
     "image": "images/products/MSF3610GRP.png",
-    "diagram": "images/products/MSF3610GRD.png",
+    "diagram": "images/wiring/MSF3610GRD.png",
   "issues":  ["noise", "leakingWater inside", "leakingWater outside","No display but cooling is functioning normall","physical Damage","Power Issue","cooling Issue","error Code","Door-to-drawer conversion"],
  "cooling Issue": {
         
@@ -408,7 +408,7 @@
 "MSF3615GR": {
     "title": "MSF3615GR — 36\" Sandwich Prep Table",
     "image": "images/products/MSF3615GRP.png",
-    "diagram": "images/products/MSF3615GRD.png",
+    "diagram": "images/wiring/MSF3615GRD.png",
   "issues":  ["noise", "leakingWater inside", "leakingWater outside","No display but cooling is functioning normall","physical Damage","Power Issue","cooling Issue","error Code","Door-to-drawer conversion"],
   "cooling Issue": {
         

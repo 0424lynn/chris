@@ -125,7 +125,7 @@
     "MCF8705GR": {
           "title": "MCF8705GR —  Bottom Mount One-Glass Door Refrigerator",
           "image": "images/products/MCF8705GRP.png",
-          "diagram": "images/products/MCF8705GRD.png",
+          "diagram": "images/wiring/MCF8705GRD.png",
           "issues": ["noise", "leakingWater inside", "leakingWater outside","Led issue","physical Damage","cooling Issue","Power Issue","error Code"],
           "cooling Issue": {
         
@@ -154,7 +154,7 @@
         "MCF8707GR": {
           "title": "MCF8707GR —  Bottom Mount Two-Glass Door Refrigerator",
           "image": "images/products/MCF8707GRP.png",
-          "diagram": "images/products/MCF8707GRD.png",
+          "diagram": "images/wiring/MCF8707GRD.png",
           "issues": ["noise", "leakingWater inside", "leakingWater outside","Led issue","physical Damage","cooling Issue","Power Issue","error Code"],
           "cooling Issue": {
         
@@ -181,7 +181,7 @@
 "MCF8722GR": {
   "title": "MCF8722GR —  Bottom Mount (1) Glass Door Refrigerator-Black Cabinet",
   "image": "images/products/MCF8722GRP.png",
-  "diagram": "images/products/MCF8722GRD.png",
+  "diagram": "images/wiring/MCF8722GRD.png",
   "issues": ["noise", "leakingWater inside", "leakingWater outside","Led issue","physical Damage","cooling Issue","Power Issue","error Code"],
   "cooling Issue": {
         
@@ -215,7 +215,7 @@
 "MCF8723GR": {
   "title": "MCF8723GR —  Bottom Mount (2) Glass Door Refrigerator-Black Cabinet",
   "image": "images/products/MCF8723GRP.png",
-  "diagram": "images/products/MCF8723GRD.png",
+  "diagram": "images/wiring/MCF8723GRD.png",
   "issues": ["noise", "leakingWater inside", "leakingWater outside","Led issue","physical Damage","cooling Issue","Power Issue","error Code"],
   "cooling Issue": {
         
@@ -245,7 +245,7 @@
 "MCF8733GR": {
   "title": "MCF8733GR — Two Glass Door Black Merchandiser - Refrigerator",
   "image": "images/products/MCF8733GRP.png",
-  "diagram": "images/products/MCF8733GRD.png",
+  "diagram": "images/wiring/MCF8733GRD.png",
  "issues": ["noise", "leakingWater inside", "leakingWater outside","Led issue","physical Damage","cooling Issue","Power Issue","error Code"],
  "cooling Issue": {
         
@@ -275,7 +275,7 @@
 "MCF8725GR": {
           "title": "MCF8725GR —  Bottom Mount (1) Glass Door Refrigerator-Black Cabinet",
           "image": "images/products/MCF8725GRP.png",
-          "diagram": "images/products/MCF8725GRD.png",
+          "diagram": "images/wiring/MCF8725GRD.png",
           "issues": ["noise", "leakingWater inside", "leakingWater outside","Led issue","physical Damage","cooling Issue","Power Issue","error Code"],
          "cooling Issue": {
         
@@ -308,7 +308,7 @@
 "MCF8726GR": {
           "title": "MCF8726GR —  Bottom Mount (1) Glass Door Refrigerator-Black Cabinet",
           "image": "images/products/MCF8726GRP.png",
-          "diagram": "images/products/MCF8726GRD.png",
+          "diagram": "images/wiring/MCF8726GRD.png",
          "issues": ["noise", "leakingWater inside", "leakingWater outside","Led issue","physical Damage","cooling Issue","Power Issue","error Code"],
           "cooling Issue": {
         
@@ -344,7 +344,7 @@
 "MCF8724GR": {
   "title": "MCF8724GR — Bottom Mount (3) Glass Door Refrigerator-Black Cabinet",
   "image": "images/products/MCF8724GRP.png",
-  "diagram": "images/products/MCF8724GRD.png",
+  "diagram": "images/wiring/MCF8724GRD.png",
   "issues": ["noise", "leakingWater inside", "leakingWater outside","Led issue","physical Damage","cooling Issue","Power Issue","error Code"],
   "cooling Issue": {
         
@@ -374,7 +374,7 @@
         "MCF8708GR": {
           "title": "MCF8708GR —  Bottom Mount Three-Glass Door Refrigerator",
           "image": "images/products/MCF8729GRP.png",
-          "diagram": "images/products/MCF8708GRD.png",
+          "diagram": "images/wiring/MCF8708GRD.png",
           "issues": ["noise", "leakingWater inside", "leakingWater outside","Led issue","physical Damage","cooling Issue","Power Issue","error Code"],
        "cooling Issue": {
         

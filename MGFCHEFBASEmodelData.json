@@ -120,7 +120,7 @@
 "MGF8448GR": {
     "title": "MGF8448GR — 36 Refrigerated Chef Base",
     "image": "images/products/MGF8448GRP.png",
-    "diagram": "images/products/MGF8448GRD.png",
+    "diagram": "images/wiring/MGF8448GRD.png",
   "issues":  ["noise", "leakingWater inside", "leakingWater outside","physical Damage","Power Issue","cooling Issue","error Code"],
   "cooling Issue": {
         
@@ -139,7 +139,7 @@
 "MGF8451GR": {
     "title": "MGF8451GR — 52 Refrigerated Chef Base",
     "image": "images/products/MGF8451GRP.png",
-    "diagram": "images/products/MGF8451GRD.png",
+    "diagram": "images/wiring/MGF8451GRD.png",
     "issues":  ["noise", "leakingWater inside", "leakingWater outside","physical Damage","Power Issue","cooling Issue","error Code"],
  "cooling Issue": {
         
@@ -162,7 +162,7 @@
 "MGF8452GR": {
     "title": "MGF8452GR — 60 Refrigerated Chef Base, Extended Top",
     "image": "images/products/MGF8452GRP.png",
-    "diagram": "images/products/MGF8452GRD.png",
+    "diagram": "images/wiring/MGF8452GRD.png",
     "issues":  ["noise", "leakingWater inside", "leakingWater outside","physical Damage","Power Issue","cooling Issue","error Code"],
     "cooling Issue": {
         
@@ -185,7 +185,7 @@
 "MGF8453GR": {
     "title": "MGF8453GR — 72 Refrigerated Chef Base",
     "image": "images/products/MGF8453GRP.png",
-    "diagram": "images/products/MGF8453GRD.png",
+    "diagram": "images/wiring/MGF8453GRD.png",
     "issues":  ["noise", "leakingWater inside", "leakingWater outside","physical Damage","Power Issue","cooling Issue","error Code"],
   "cooling Issue": {
         
@@ -208,7 +208,7 @@
 "MGF8454GR": {
     "title": "MGF8454GR — 76″ Refrigerated Chef Base, Extended Top",
     "image": "images/products/MGF8454GRP.png",
-    "diagram": "images/products/MGF8454GRD.png",
+    "diagram": "images/wiring/MGF8454GRD.png",
     "issues":  ["noise", "leakingWater inside", "leakingWater outside","physical Damage","Power Issue","cooling Issue","error Code"],
   "cooling Issue": {
         
@@ -233,7 +233,7 @@
 "MGF8450GR": {
     "title": "MGF8450GR — 48 Refrigerated Chef Base",
     "image": "images/products/MGF8450GRP.png",
-    "diagram": "images/products/MGF8450GRD.png",
+    "diagram": "images/wiring/MGF8450GRD.png",
     "issues":  ["noise", "leakingWater inside", "leakingWater outside","physical Damage","Power Issue","cooling Issue","error Code"],
     "cooling Issue": {
         

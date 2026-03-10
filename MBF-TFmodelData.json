@@ -137,7 +137,7 @@
     "MBF15FSGR": {
       "title": "MBF15FSGR — Top Mount One Door Reach-in Freezer",
       "image": "images/products/MBF15FSGRP.png",
-      "diagram": "images/products/MBF15FSGRD.png",
+      "diagram": "images/wiring/MBF15FSGRD.png",
       "issues": ["noise", "leakingWater inside", "leakingWater outside","Led issue","physical Damage","cooling Issue","cooling Issue-Ice Buildup","Power Issue","error Code"],
       "cooling Issue": {
         
@@ -173,7 +173,7 @@
     "MBF8001GR": {
       "title": "MBF8001GR — Top Mount One Door Reach-in Freezer",
       "image": "images/products/MBF8001GRP.png",
-      "diagram": "images/products/MBF8001GRD.png",
+      "diagram": "images/wiring/MBF8001GRD.png",
       "issues": ["noise", "leakingWater inside", "leakingWater outside","Led issue","physical Damage","cooling Issue","cooling Issue-Ice Buildup","Power Issue","error Code"],
       "cooling Issue": {
         
@@ -206,7 +206,7 @@
     "MBF8002GR": {
       "title": "MBF8002GR — Top Mount Two Door Reach-in Freezer",
       "image": "images/products/MBF8002GRP.png",
-      "diagram": "images/products/MBF8002GRD.png",
+      "diagram": "images/wiring/MBF8002GRD.png",
     "issues": ["noise", "leakingWater inside", "leakingWater outside","Led issue","physical Damage","cooling Issue","cooling Issue-Ice Buildup","Power Issue","error Code"],
     "cooling Issue": {
         
@@ -234,7 +234,7 @@
 "MBF8003GR": {
   "title": "MBF8003GR — Top Mount Three Door Reach-in Freezer",
   "image": "images/products/MBF8003GRP.png",
-  "diagram": "images/products/MBF8003GRD.png",
+  "diagram": "images/wiring/MBF8003GRD.png",
 "issues": ["noise", "leakingWater inside", "leakingWater outside","Led issue","physical Damage","cooling Issue","cooling Issue-Ice Buildup","Power Issue","error Code"],
 "cooling Issue": {
         
@@ -270,7 +270,7 @@
   "MBF8007GR": {
   "title": "MBF8007GR — Top Mount Three Door Reach-in Freezer",
   "image": "images/products/MBF8007GRP.png",
-  "diagram": "images/products/MBF8007GRD.png",
+  "diagram": "images/wiring/MBF8007GRD.png",
 "issues": ["noise", "leakingWater inside", "leakingWater outside","Led issue","physical Damage","cooling Issue","cooling Issue-Ice Buildup","Power Issue","error Code"],
 "cooling Issue": {
         
@@ -303,7 +303,7 @@
 "MBF8008GR": {
   "title": "MBF8008GR — Top Mount Two-Section (4) Divided Door Freezer",
   "image": "images/products/MBF8008GRP.png",
-  "diagram": "images/products/MBF8008GRD.png",
+  "diagram": "images/wiring/MBF8008GRD.png",
 "issues": ["noise", "leakingWater inside", "leakingWater outside","Led issue","physical Damage","cooling Issue","cooling Issue-Ice Buildup","Power Issue","error Code"],
 "cooling Issue": {
         

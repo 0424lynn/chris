@@ -122,7 +122,7 @@
     "MGF8405GR": {
       "title": "MGF8405GR — 27 Undercounter Freezer",
       "image": "images/products/MGF8405GRP.png",
-      "diagram": "images/products/MGF8405GRD.png",
+      "diagram": "images/wiring/MGF8405GRD.png",
       "issues": ["noise", "leakingWater inside", "leakingWater outside", "No display but cooling is functioning normall","physical Damage","cooling Issue","Power Issue","error Code"],
       "cooling Issue": {
         
@@ -152,7 +152,7 @@
     "MGF8406GR": {
       "title": "MGF8406GR — 48 Undercounter Freezer",
       "image": "images/products/MGF8406GRP.png",
-      "diagram": "images/products/MGF8406GRD.png",
+      "diagram": "images/wiring/MGF8406GRD.png",
       "issues": ["noise", "leakingWater inside", "leakingWater outside", "No display but cooling is functioning normall","physical Damage","cooling Issue","Power Issue","error Code"],
       "cooling Issue": {
         
@@ -182,7 +182,7 @@
     "MGF8407GR": {
       "title": "MGF8407GR — 60 Undercounter Freezer",
       "image": "images/products/MGF8407GRP.png",
-      "diagram": "images/products/MGF8407GRD.png",
+      "diagram": "images/wiring/MGF8407GRD.png",
       "issues": ["noise", "leakingWater inside", "leakingWater outside", "No display but cooling is functioning normall","physical Damage","cooling Issue","Power Issue","error Code"],
       "cooling Issue": {
         
@@ -212,7 +212,7 @@
    "MGF8412GR": {
       "title": "MGF8412GR — 27 Worktop Freezer with Backsplash",
       "image": "images/products/MGF8412GRP.png",
-      "diagram": "images/products/MGF8412GRD.png",
+      "diagram": "images/wiring/MGF8412GRD.png",
       "issues": ["noise", "leakingWater inside", "leakingWater outside", "No display but cooling is functioning normall","physical Damage","cooling Issue","Power Issue","error Code"],
       "cooling Issue": {
         
@@ -233,7 +233,7 @@
     "MGF8413GR": {
       "title": "MGF8413GR — 48 Worktop Freezer with Backsplash",
       "image": "images/products/MGF8413GRP.png",
-      "diagram": "images/products/MGF8413GRD.png",
+      "diagram": "images/wiring/MGF8413GRD.png",
       "issues": ["noise", "leakingWater inside", "leakingWater outside", "No display but cooling is functioning normall","physical Damage","cooling Issue","Power Issue","error Code"],
       "cooling Issue": {
         
@@ -255,7 +255,7 @@
     "MGF8414GR": {
       "title": "MGF8414GR — 60 Worktop Freezer with Backsplash",
       "image": "images/products/MGF8414GRP.png",
-      "diagram": "images/products/MGF8414GRD.png",
+      "diagram": "images/wiring/MGF8414GRD.png",
       "issues": ["noise", "leakingWater inside", "leakingWater outside", "No display but cooling is functioning normall","physical Damage","cooling Issue","Power Issue","error Code"],
       "cooling Issue": {
         
@@ -277,7 +277,7 @@
     "MGF8428GR": {
       "title": "MGF8428GR — 27 Worktop Freezer with Drawers & Backsplash",
       "image": "images/products/MGF8428GRP.png",
-      "diagram": "images/products/MGF8428GRD.png",
+      "diagram": "images/wiring/MGF8428GRD.png",
       "issues": ["noise", "leakingWater inside", "leakingWater outside", "No display but cooling is functioning normall","physical Damage","cooling Issue","Power Issue","error Code"],
       "cooling Issue": {
         
@@ -298,7 +298,7 @@
     "MGF24FGR": {
       "title": "MGF24FGR — 24 Undercounter Freezer",
       "image": "images/products/MGF24FGRP.png",
-      "diagram": "images/products/MGF24FGRD.png",
+      "diagram": "images/wiring/MGF24FGRD.png",
       "issues": ["noise", "leakingWater inside", "leakingWater outside", "No display but cooling is functioning normall","physical Damage","cooling Issue","Power Issue","error Code"],
       
       
@@ -317,7 +317,7 @@
     "MGF36FGR": {
       "title": "MGF36FGR — 36 Undercounter Freezer",
       "image": "images/products/MGF36FGRP.png",
-      "diagram": "images/products/MGF36FGRD.png",
+      "diagram": "images/wiring/MGF36FGRD.png",
       "issues": ["noise", "leakingWater inside", "leakingWater outside", "No display but cooling is functioning normall","physical Damage","cooling Issue","Power Issue","error Code"],
       "cooling Issue": {
         
@@ -343,7 +343,7 @@
   "MGF8420GR": {
     "title": "MGF8420GR — 27 Undercounter Freezer with Drawers",
     "image": "images/products/MGF8420GRP.png",
-    "diagram": "images/products/MGF8420GRD.png",
+    "diagram": "images/wiring/MGF8420GRD.png",
     "issues": ["noise", "leakingWater inside", "leakingWater outside", "No display but cooling is functioning normall","physical Damage","cooling Issue","Power Issue","error Code"],
     "cooling Issue": {
         

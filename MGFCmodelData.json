@@ -130,7 +130,7 @@
     "MGF24RGR": {
       "title": "MGF24RGR — 24 Undercounter Refrigerator",
       "image": "images/products/MGF24RGRP.png",
-      "diagram": "images/products/MGF24RGRD.png",
+      "diagram": "images/wiring/MGF24RGRD.png",
       "issues": ["noise", "leakingWater inside", "leakingWater outside","No display but cooling is functioning normall","physical Damage","Power Issue","cooling Issue","error Code"],
       "documents": [
         {
@@ -147,7 +147,7 @@
     "MGF36RGR": {
       "title": "MGF36RGR — 36 Undercounter Refrigerator",
       "image": "images/products/MGF36RGRP.png",
-      "diagram": "images/products/MGF36RGRD.png",
+      "diagram": "images/wiring/MGF36RGRD.png",
       "issues": ["noise", "leakingWater inside", "leakingWater outside","No display but cooling is functioning normall","physical Damage","Power Issue","cooling Issue","error Code"],
      "cooling Issue": {
         
@@ -167,7 +167,7 @@
     "MGF44GR": {
       "title": "MGF44GR — 44 Worktop Refrigerator with Backsplash, Side Mount Compressor",
       "image": "images/products/MGF44GRP.png",
-      "diagram": "images/products/MGF44GRD.png",
+      "diagram": "images/wiring/MGF44GRD.png",
       "issues": ["noise", "leakingWater inside", "leakingWater outside","No display but cooling is functioning normall","physical Damage","Power Issue","cooling Issue","error Code"],
       "documents": [
         {
@@ -184,7 +184,7 @@
     "MGF67GR": {
       "title": "MGF67GR — 67 Worktop Refrigerator with Backsplash, Side Mount Compressor",
       "image": "images/products/MGF67GRP.png",
-      "diagram": "images/products/MGF67GRD.png",
+      "diagram": "images/wiring/MGF67GRD.png",
       "issues": ["noise", "leakingWater inside", "leakingWater outside","No display but cooling is functioning normall","physical Damage","Power Issue","cooling Issue","error Code"],
       "documents": [
         {
@@ -201,7 +201,7 @@
     "MGF8401GR": {
       "title": "MGF8401GR — 27 Undercounter Refrigerator",
       "image": "images/products/MGF8401GRP.png",
-      "diagram": "images/products/MGF8401GRD.png",
+      "diagram": "images/wiring/MGF8401GRD.png",
       "issues": ["noise", "leakingWater inside", "leakingWater outside","No display but cooling is functioning normall","physical Damage","Power Issue","cooling Issue","error Code"],
       "cooling Issue": {
         
@@ -250,7 +250,7 @@
     "MGF8403GR": {
       "title": "MGF8403GR — 60 Undercounter Refrigerator",
       "image": "images/products/MGF8402GRP.png",
-      "diagram": "images/products/MGF8403GRD.png",
+      "diagram": "images/wiring/MGF8403GRD.png",
       "issues": ["noise", "leakingWater inside", "leakingWater outside","No display but cooling is functioning normall","physical Damage","Power Issue","cooling Issue","error Code"],
       "cooling Issue": {
         
@@ -274,7 +274,7 @@
     "MGF8404GR": {
       "title": "MGF8404GR —72 Undercounter Refrigerator",
       "image": "images/products/MGF8404GRP.png",
-      "diagram": "images/products/MGF8404GRD.png",
+      "diagram": "images/wiring/MGF8404GRD.png",
       "issues": ["noise", "leakingWater inside", "leakingWater outside","No display but cooling is functioning normall","physical Damage","Power Issue","cooling Issue","error Code"],
       "cooling Issue": {
         
@@ -298,7 +298,7 @@
     "MGF8408GR": {
       "title": "MGF8408GR — 27 Worktop Refrigerator with Backsplash",
       "image": "images/products/MGF8408GRP.png",
-      "diagram": "images/products/MGF8408GRD.png",
+      "diagram": "images/wiring/MGF8408GRD.png",
       "issues": ["noise", "leakingWater inside", "leakingWater outside","No display but cooling is functioning normall","physical Damage","Power Issue","cooling Issue","error Code"],
       "cooling Issue": {
         
@@ -325,7 +325,7 @@
     "MGF8409GR": {
       "title": "MGF8409GR — 48 Worktop Refrigerator with Backsplash",
       "image": "images/products/MGF8409GRP.png",
-      "diagram": "images/products/MGF8409GRD.png",
+      "diagram": "images/wiring/MGF8409GRD.png",
       "issues": ["noise", "leakingWater inside", "leakingWater outside","No display but cooling is functioning normall","physical Damage","Power Issue","cooling Issue","error Code"],
       "cooling Issue": {
         
@@ -352,7 +352,7 @@
     "MGF8410GR": {
       "title": "MGF8410GR —60 Worktop Refrigerator with Backsplash",
       "image": "images/products/MGF8409GRP.png",
-      "diagram": "images/products/MGF8410GRD.png",
+      "diagram": "images/wiring/MGF8410GRD.png",
       "issues": ["noise", "leakingWater inside", "leakingWater outside","No display but cooling is functioning normall","physical Damage","Power Issue","cooling Issue","error Code"],
       "cooling Issue": {
         
@@ -379,7 +379,7 @@
     "MGF8415GR": {
       "title": "MGF8415GR —27 Two-Drawer Undercounter Refrigerator",
       "image": "images/products/MGF8415GRP.png",
-      "diagram": "images/products/MGF8415GRD.png",
+      "diagram": "images/wiring/MGF8415GRD.png",
       "issues": ["noise", "leakingWater inside", "leakingWater outside","No display but cooling is functioning normall","physical Damage","Power Issue","cooling Issue","error Code"],
       "cooling Issue": {
         
@@ -421,7 +421,7 @@
 "MGF3615GR": {
     "title": "MSF3615GR — 36\" Sandwich Prep Table",
     "image": "images/products/MSF3615GRP.png",
-    "diagram": "images/products/MSF3615GRD.png",
+    "diagram": "images/wiring/MSF3615GRD.png",
   "issues":  ["noise", "leakingWater inside", "leakingWater outside","No display but cooling is functioning normall","physical Damage","Power Issue","cooling Issue","error Code"],
   "documents": [
     {
