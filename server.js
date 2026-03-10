@@ -49,6 +49,7 @@ app.post('/api/login', async (req, res) => {
     if (username === 'admin') {
       if (process.env.SUPER_ADMIN_HASH) {
         const isSuperAdmin = await bcrypt.compare(password, process.env.SUPER_ADMIN_HASH);
+        console.log('superAdmin check:', isSuperAdmin, '| hash prefix:', process.env.SUPER_ADMIN_HASH.substring(0, 10));
         if (isSuperAdmin) {
           req.session.user = { username, role: 'superAdmin' };
           return res.json({ role: 'superAdmin' });
@@ -56,6 +57,7 @@ app.post('/api/login', async (req, res) => {
       }
       if (process.env.ADMIN_HASH) {
         const isAdmin = await bcrypt.compare(password, process.env.ADMIN_HASH);
+        console.log('admin check:', isAdmin, '| hash prefix:', process.env.ADMIN_HASH.substring(0, 10));
         if (isAdmin) {
           req.session.user = { username, role: 'normalAdmin' };
           return res.json({ role: 'normalAdmin' });
