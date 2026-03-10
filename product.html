@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product</title>
+</head>
+<body>
+    <div class="container">
+        <div class="header-container">
+            <a href="dashboard.html" class="back-home-button">Back</a>
+            <h1 id="product-title"></h1>
+        </div>
+
+        <div class="grid-layout">
+            <div class="frame problem-box">
+                <div class="search-box">
+                    <label for="problemCategorySearch">Search Issue:</label>
+                    <input type="text" id="problemCategorySearch" placeholder="Search..." onkeyup="searchProblemCategory()">
+                </div>
+                <ul id="problemCategoryList"></ul>
+            </div>
+
+            <div class="frame solution-box">
+                <div class="solution-container">
+                    <div class="solution-section" id="customerSolution">
+                        <div class="solution-header">Non-warranty Issue</div>
+                        <ul><li><span style="color:grey;">Select an issue on the left to see the solution for the customer.</span></li></ul>
+                    </div>
+                    <div class="solution-section" id="technicianSolution">
+                        <div class="solution-header">Technician Solution</div>
+                        <ul><li><span style="color:grey;">Select an issue on the left to see the solution for the technician.</span></li></ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="frame diagram-box">
+                <img id="product-image" src="" alt="Product Image">
+            </div>
+
+            <div class="frame file-box">
+                <h2>Documents</h2>
+                <div class="documents-section">
+                    <ul id="modelDocumentsList"></ul>
+                </div>
+                <div class="documents-section">
+                    <ul id="commonDocumentsList"></ul>
+                </div>
+            </div>
+
+            <div class="frame diagram-box">
+                <img id="product-diagram" src="" alt="Product Diagram">
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // ─── Single source of truth: model → JSON file ───────────────────────────
+    const MODEL_JSON_MAP = {
+        // AGR series
+        "AGR-10B":      "AGRmodelData.json",
+        "AGR-24G":      "AGRmodelData.json",
+        "AGR-2B24GL":   "AGRmodelData.json",
+        "AGR-2B24GR":   "AGRmodelData.json",
+        "AGR-36G":      "AGRmodelData.json",
+        "AGR-4B":       "AGRmodelData.json",
+        "AGR-4B12GL":   "AGRmodelData.json",
+        "AGR-4B12GR":   "AGRmodelData.json",
+        "AGR-4B36GR":   "AGRmodelData.json",
+        "AGR-6B":       "AGRmodelData.json",
+        "AGR-6B24GR":   "AGRmodelData.json",
+        "AGR-8B":       "AGRmodelData.json",
+
+        // ATRC / ATCB / ACHP / ATMG / ATSP series
+        "ACHP-2":       "ATRC-ATCB-ACHP-ATMG-ATSPmodelData.json",
+        "ACHP-4":       "ATRC-ATCB-ACHP-ATMG-ATSPmodelData.json",
+        "ACHP-6":       "ATRC-ATCB-ACHP-ATMG-ATSPmodelData.json",
+        "ATCB-24":      "ATRC-ATCB-ACHP-ATMG-ATSPmodelData.json",
+        "ATCB-36":      "ATRC-ATCB-ACHP-ATMG-ATSPmodelData.json",
+        "ATCB-48":      "ATRC-ATCB-ACHP-ATMG-ATSPmodelData.json",
+        "ATMG-24":      "ATRC-ATCB-ACHP-ATMG-ATSPmodelData.json",
+        "ATMG-36":      "ATRC-ATCB-ACHP-ATMG-ATSPmodelData.json",
+        "ATMG-48":      "ATRC-ATCB-ACHP-ATMG-ATSPmodelData.json",
+        "ATRC-24":      "ATRC-ATCB-ACHP-ATMG-ATSPmodelData.json",
+        "ATRC-36":      "ATRC-ATCB-ACHP-ATMG-ATSPmodelData.json",
+        "ATRC-48":      "ATRC-ATCB-ACHP-ATMG-ATSPmodelData.json",
+        "ATSP-18-1":    "ATRC-ATCB-ACHP-ATMG-ATSPmodelData.json",
+        "ATSP-18-2":    "ATRC-ATCB-ACHP-ATMG-ATSPmodelData.json",
+
+        // ATCM / ATSB series
+        "ATCM-36":      "ATCM-ATSBmodelData.json",
+        "ATSB-36":      "ATSBmodelData.json",
+
+        // ATFS series
+        "ATFS-35ES":    "ATFSmodelData.json",
+        "ATFS-40":      "ATFSmodelData.json",
+        "ATFS-50":      "ATFSmodelData.json",
+        "ATFS-75":      "ATFSmodelData.json",
+
+        // ATHC series
+        "ATHC-9ES":     "ATHCESmodelData.json",
+        "ATHC-18ES":    "ATHCESmodelData.json",
+
+        // ATTG series
+        "ATTG-24":      "ATTGmodelData.json",
+        "ATTG-36":      "ATTGmodelData.json",
+        "ATTG-48":      "ATTGmodelData.json",
+
+        // AWC series
+        "AWC0606":      "AWC-modelData.json",
+        "AWC0608":      "AWC-modelData.json",
+        "AWC0808":      "AWC-modelData.json",
+        "AWC0810":      "AWC-modelData.json",
+        "AWC1010":      "AWC-modelData.json",
+        "AWC1012":      "AWC-modelData.json",
+
+        // HD350 series
+        "HD350-AP-161": "HD350modelData.json",
+
+        // MBF series
+        "MBF15FSGR":    "MBF-TFmodelData.json",
+        "MBF15RSGR":    "MBF-TCmodelData.json",
+        "MBF8001GR":    "MBF-TFmodelData.json",
+        "MBF8002GR":    "MBF-TFmodelData.json",
+        "MBF8003GR":    "MBF-TFmodelData.json",
+        "MBF8004GR":    "MBF-TCmodelData.json",
+        "MBF8005GR":    "MBF-TCmodelData.json",
+        "MBF8006GR":    "MBF-TCmodelData.json",
+        "MBF8007GR":    "MBF-TFmodelData.json",
+        "MBF8008GR":    "MBF-TFmodelData.json",
+        "MBF8010GR":    "MBF-TCmodelData.json",
+        "MBF8011GR":    "MBF-TCmodelData.json",
+        "MBF8129GR":    "MBF-TFCmodelData.json",
+        "MBF8501GR":    "MBF-BFmodelData.json",
+        "MBF8502GR":    "MBF-BFmodelData.json",
+        "MBF8503GR":    "MBF-BFmodelData.json",
+        "MBF8504GR":    "MBF-BFmodelData.json",
+        "MBF8505GR":    "MBF-BCmodelData.json",
+        "MBF8506GR":    "MBF-BCmodelData.json",
+        "MBF8507GR":    "MBF-BCmodelData.json",
+        "MBF8508GR":    "MBF-BCmodelData.json",
+        "MBF8519GR":    "MBF-BCmodelData.json",
+        "MBF8520GR":    "MBF-BFmodelData.json",
+        "MBF8531GR":    "MBF-BFmodelData.json",
+        "MBF8532GR":    "MBF-BCmodelData.json",
+
+        // MCF series
+        "MCF8701GR":    "MCF-BFmodelData.json",
+        "MCF8703ES":    "MCF-BFmodelData.json",
+        "MCF8703GR":    "MCF-BFmodelData.json",
+        "MCF8704GR":    "MCF-BFmodelData.json",
+        "MCF8705GR":    "MCF-BCmodelData.json",
+        "MCF8707GR":    "MCF-BCmodelData.json",
+        "MCF8708GR":    "MCF-BCmodelData.json",
+        "MCF8709GR":    "MCF-BSCmodelData.json",
+        "MCF8720GR":    "MCF-BFmodelData.json",
+        "MCF8721ES":    "MCF-BFmodelData.json",
+        "MCF8721GR":    "MCF-BFmodelData.json",
+        "MCF8722GR":    "MCF-BCmodelData.json",
+        "MCF8723GR":    "MCF-BCmodelData.json",
+        "MCF8724GR":    "MCF-BCmodelData.json",
+        "MCF8725GR":    "MCF-BCmodelData.json",
+        "MCF8726GR":    "MCF-BCmodelData.json",
+        "MCF8727GR":    "MCF-BSCmodelData.json",
+        "MCF8728GR":    "MCF-BFmodelData.json",
+        "MCF8729GR":    "MCF-BSCmodelData.json",
+        "MCF8732GR":    "MCF-BFmodelData.json",
+        "MCF8733GR":    "MCF-BCmodelData.json",
+
+        // MGF series
+        "MGF24FGR":     "MGFFmodelData.json",
+        "MGF24RGR":     "MGFCmodelData.json",
+        "MGF36FGR":     "MGFFmodelData.json",
+        "MGF36RGR":     "MGFCmodelData.json",
+        "MGF44GR":      "MGFCmodelData.json",
+        "MGF67GR":      "MGFCmodelData.json",
+        "MGF8401GR":    "MGFCmodelData.json",
+        "MGF8402GR":    "MGFCmodelData.json",
+        "MGF8403GR":    "MGFCmodelData.json",
+        "MGF8404GR":    "MGFCmodelData.json",
+        "MGF8405GR":    "MGFFmodelData.json",
+        "MGF8406GR":    "MGFFmodelData.json",
+        "MGF8407GR":    "MGFFmodelData.json",
+        "MGF8408GR":    "MGFCmodelData.json",
+        "MGF8409GR":    "MGFCmodelData.json",
+        "MGF8410GR":    "MGFCmodelData.json",
+        "MGF8412GR":    "MGFFmodelData.json",
+        "MGF8413GR":    "MGFFmodelData.json",
+        "MGF8414GR":    "MGFFmodelData.json",
+        "MGF8415GR":    "MGFCmodelData.json",
+        "MGF8420GR":    "MGFFmodelData.json",
+        "MGF8423GR":    "MGFCmodelData.json",
+        "MGF8428GR":    "MGFFmodelData.json",
+        "MGF8448GR":    "MGFCHEFBASEmodelData.json",
+        "MGF8450GR":    "MGFCHEFBASEmodelData.json",
+        "MGF8451GR":    "MGFCHEFBASEmodelData.json",
+        "MGF8452GR":    "MGFCHEFBASEmodelData.json",
+        "MGF8453GR":    "MGFCHEFBASEmodelData.json",
+        "MGF8454GR":    "MGFCHEFBASEmodelData.json",
+
+        // MPF series
+        "MPF8201GR":    "MPFCmodelData.json",
+        "MPF8202GR":    "MPFCmodelData.json",
+        "MPF8203GR":    "MPFCmodelData.json",
+
+        // MSF series
+        "MSF17GR-NTCV": "MSFmodelData.json",
+        "MSF3610GR":    "MSFmodelData.json",
+        "MSF3615GR":    "MSFmodelData.json",
+        "MSF8301GR":    "MSFmodelData.json",
+        "MSF8302GR":    "MSFmodelData.json",
+        "MSF8303GR":    "MSFmodelData.json",
+        "MSF8304GR":    "MSFmodelData.json",
+        "MSF8305GR":    "MSFmodelData.json",
+        "MSF8306GR":    "MSFmodelData.json",
+        "MSF8307GR":    "MSFmodelData.json",
+        "MSF8308GR":    "MSFmodelData.json",
+
+        // RDCS series
+        "RDCS-35":      "RDCSmodelData.json",
+        "RDCS-48":      "RDCSmodelData.json",
+        "RDCS-60":      "RDCSmodelData.json",
+
+        // YR series
+        "YR140-AP-161": "YR140-280modelData.json",
+        "YR280-AP-161": "YR140-280modelData.json",
+        "YR450-AP-161": "YR450-800modelData.json",
+        "YR450S-AP-161":"YR450-800modelData.json",
+        "YR800-AP-261": "YR450-800modelData.json",
+    };
+
+    // ─── Read model from URL: product.html?model=AGR-10B ─────────────────────
+    const params   = new URLSearchParams(location.search);
+    const model    = params.get('model');
+    const jsonFile = MODEL_JSON_MAP[model];
+
+    if (!model || !jsonFile) {
+        document.getElementById('product-title').innerText = 'Model not found: ' + (model || '(none)');
+    } else {
+        document.title = model;
+
+        fetch(jsonFile)
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById('product-title').innerText = data.models[model].title;
+                document.getElementById('product-image').src       = data.models[model].image;
+                document.getElementById('product-diagram').src     = data.models[model].diagram;
+
+                const problemCategoryList = document.getElementById('problemCategoryList');
+                data.models[model].issues.forEach(issueKey => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<a href="#" onclick="showSolution('${issueKey}')">${issueKey.charAt(0).toUpperCase() + issueKey.slice(1)}</a>`;
+                    problemCategoryList.appendChild(li);
+                });
+
+                const modelDocumentsList = document.getElementById('modelDocumentsList');
+                data.models[model].documents.forEach(doc => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<a href="${doc.url}" target="_blank">${doc.title}</a>`;
+                    modelDocumentsList.appendChild(li);
+                });
+
+                const commonDocumentsList = document.getElementById('commonDocumentsList');
+                data.common.documents.forEach(doc => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<a href="${doc.url}" target="_blank">${doc.title}</a>`;
+                    commonDocumentsList.appendChild(li);
+                });
+            })
+            .catch(err => console.error('Error loading model data:', err));
+    }
+
+    function showSolution(category) {
+        fetch(jsonFile)
+            .then(r => r.json())
+            .then(data => {
+                const customerSolution    = document.getElementById('customerSolution');
+                const technicianSolution  = document.getElementById('technicianSolution');
+
+                const commonC = data.common.issues[category]?.customer    || [];
+                const commonT = data.common.issues[category]?.technician  || [];
+                const modelC  = data.models[model][category]?.customer    || [];
+                const modelT  = data.models[model][category]?.technician  || [];
+
+                const allC = [...commonC, ...modelC];
+                const allT = [...commonT, ...modelT];
+
+                customerSolution.innerHTML   = `<div class="solution-header">Non-warranty Issue</div><ul>${allC.map(s => `<li>${s}</li>`).join('')}</ul>`;
+                technicianSolution.innerHTML = `<div class="solution-header">Technician Solution</div><ul>${allT.map(s => `<li>${s}</li>`).join('')}</ul>`;
+            })
+            .catch(err => console.error('Error loading issue data:', err));
+    }
+
+    function searchProblemCategory() {
+        const val   = document.getElementById('problemCategorySearch').value.toLowerCase();
+        const items = document.getElementById('problemCategoryList').getElementsByTagName('li');
+        for (const item of items) {
+            item.style.display = (item.textContent || item.innerText).toLowerCase().includes(val) ? '' : 'none';
+        }
+    }
+    </script>
+
+    <script src="script.js"></script>
+</body>
+</html>
