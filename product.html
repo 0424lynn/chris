@@ -254,6 +254,11 @@
                     problemCategoryList.appendChild(li);
                 });
 
+                // 自动选中第一个问题
+                if (data.models[model].issues.length > 0) {
+                    showSolution(data.models[model].issues[0]);
+                }
+
                 const modelDocumentsList = document.getElementById('modelDocumentsList');
                 data.models[model].documents.forEach(doc => {
                     const li = document.createElement('li');
