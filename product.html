@@ -276,6 +276,54 @@
             .catch(err => console.error('Error loading model data:', err));
     }
 
+    // ── 渲染单条 solution 条目 ──────────────────────────────────────────────────
+    // 支持旧格式（HTML 字符串）和新结构化格式（对象）
+    //
+    // 新格式示例：
+    // {
+    //   "text": "主文字（黑色）",
+    //   "red":  "红色说明文字（可选）",
+    //   "color": "orange",              // 可选，默认 "red"
+    //   "steps": [                      // 可选，自动编号，红色显示
+    //     "简单步骤文字",
+    //     { "text": "步骤文字", "red": "子说明", "links": [{"label":"..","url":".."}] }
+    //   ],
+    //   "link": { "label": "链接文字", "url": "https://..." },  // 可选
+    //   "video": "路径/to/video.mp4"    // 可选，嵌入视频
+    // }
+    function renderItem(item) {
+        if (typeof item === 'string') return item; // 旧 HTML 字符串，直接渲染
+
+        let html = item.text || '';
+
+        if (item.red) {
+            html += `<br><span style="color:${item.color || 'red'}">${item.red}</span>`;
+        }
+        if (item.link) {
+            html += ` <a href="${item.link.url}" target="_blank">${item.link.label}</a>`;
+        }
+        if (item.steps && item.steps.length) {
+            item.steps.forEach((step, i) => {
+                if (typeof step === 'string') {
+                    html += `<br>${i + 1}.<span style="color:red">${step}</span>`;
+                } else {
+                    html += `<br>${i + 1}.<span style="color:red">${step.text || ''}`;
+                    if (step.red) html += ` <span style="color:red">${step.red}</span>`;
+                    if (step.links) step.links.forEach(l => {
+                        html += ` <a href="${l.url}" target="_blank">${l.label}</a>`;
+                    });
+                    html += `</span>`;
+                }
+            });
+        }
+        if (item.video) {
+            html += `<br><video controls preload="metadata" playsinline style="width:100%;max-width:900px;">` +
+                    `<source src="${item.video}" type="video/mp4"></video>`;
+        }
+        html += '<br><br>';
+        return html;
+    }
+
     function showSolution(category) {
         fetch(jsonFile)
             .then(r => r.json())
@@ -291,8 +339,8 @@
                 const allC = [...commonC, ...modelC];
                 const allT = [...commonT, ...modelT];
 
-                customerSolution.innerHTML   = `<div class="solution-header">Non-warranty Issue</div><ul>${allC.map(s => `<li>${s}</li>`).join('')}</ul>`;
-                technicianSolution.innerHTML = `<div class="solution-header">Technician Solution</div><ul>${allT.map(s => `<li>${s}</li>`).join('')}</ul>`;
+                customerSolution.innerHTML   = `<div class="solution-header">Non-warranty Issue</div><ul>${allC.map(s => `<li>${renderItem(s)}</li>`).join('')}</ul>`;
+                technicianSolution.innerHTML = `<div class="solution-header">Technician Solution</div><ul>${allT.map(s => `<li>${renderItem(s)}</li>`).join('')}</ul>`;
             })
             .catch(err => console.error('Error loading issue data:', err));
     }
