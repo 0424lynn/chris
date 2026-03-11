@@ -1,0 +1,74 @@
+{
+  "_说明": "这是新格式的参考模板，复制需要的部分到你的 modelData.json 里使用",
+
+  "_格式一：纯文字（最简单）": {
+    "示例": "Check if the condenser fan blade is hitting any foreign objects."
+  },
+
+  "_格式二：文字 + 红色说明": {
+    "示例": {
+      "text": "Ask the customer to record a video and send it to us for analysis.",
+      "red": "(Make sure to upload it into the system)"
+    }
+  },
+
+  "_格式三：文字 + 橙色说明（零件型号常用）": {
+    "示例": {
+      "text": "The entire capillary tube should only be replaced if it is completely beyond repair.",
+      "red": "Capillary Tube: TP2-Y / φ2.4mm × 0.6mm / Length: 2300mm",
+      "color": "orange"
+    }
+  },
+
+  "_格式四：文字 + 编号步骤（步骤自动变红色）": {
+    "示例": {
+      "text": "Check if noise outside:",
+      "steps": [
+        "Check if the fan motor is defective.",
+        "Check whether there is any noise caused by loose screws.",
+        "Inspect the compressor for abnormal noise."
+      ]
+    }
+  },
+
+  "_格式五：文字 + 链接": {
+    "示例": {
+      "text": "If the door gasket is damaged, suggest the customer replace it themselves.",
+      "red": "Within warranty → part covered; customer self-install; no technician dispatch.",
+      "link": { "label": "Door Gasket Replacement Video", "url": "https://youtu.be/8fOAAQySY6w" }
+    }
+  },
+
+  "_格式六：步骤里带链接（复杂情况）": {
+    "示例": {
+      "text": "115V Fan Troubleshooting:",
+      "steps": [
+        {
+          "text": "If all fans are not working, please check if there is 115V output on the controller board.",
+          "links": [
+            { "label": "Dixell Fan Voltage Test", "url": "https://0424lynn.github.io/yang/Dixell.png" },
+            { "label": "Carel Fan Voltage Test", "url": "https://0424lynn.github.io/yang/Carel.png" }
+          ],
+          "red": "(If there is no voltage, replace the controller board)"
+        },
+        "If only one fan is not working, replace the fan directly."
+      ]
+    }
+  },
+
+  "_格式七：视频嵌入": {
+    "示例": {
+      "text": "MGF, MSF series – Door to Drawer Replacement Video",
+      "video": "/yang/MGFMSF-Drawer-web.mp4"
+    }
+  },
+
+  "_完整字段说明": {
+    "text":  "主要文字，黑色显示（必填）",
+    "red":   "补充说明，红色显示（可选）",
+    "color": "补充说明的颜色，默认 red，可改 orange（可选）",
+    "steps": "编号步骤列表，红色显示，可以是字符串或对象（可选）",
+    "link":  "单个链接 { label, url }（可选）",
+    "video": "视频文件路径，自动嵌入播放器（可选）"
+  }
+}
