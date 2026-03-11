@@ -149,6 +149,11 @@ document.addEventListener("DOMContentLoaded", function () {
   // 登录按钮
   const loginBtn = document.getElementById("loginBtn");
   if (loginBtn) {
+    // 支持 Enter 键登录
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" && !loginBtn.disabled) loginBtn.click();
+    });
+
     loginBtn.addEventListener("click", async function () {
       const username = document.getElementById("username").value.trim();
       const password = document.getElementById("password").value;
