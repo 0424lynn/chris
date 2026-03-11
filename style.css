@@ -104,6 +104,10 @@ h1 {
     margin-bottom: 10px;
 }
 
+.documents-section ul li {
+    margin-bottom: 8px;
+}
+
 .problem-box ul li a {
     text-decoration: none;
     color: #007BFF;
