@@ -102,6 +102,52 @@ app.get('/api/me', (req, res) => {
   res.status(401).json({ error: 'Not logged in' });
 });
 
+// ── API: Announcement ─────────────────────────────────────────────────────────
+const ANNOUNCEMENT_FILE = path.join(__dirname, 'announcement.json');
+
+app.get('/api/announcement', (req, res) => {
+  const fs = require('fs');
+  try {
+    const data = JSON.parse(fs.readFileSync(ANNOUNCEMENT_FILE, 'utf8'));
+    res.json(data);
+  } catch (e) {
+    res.json({ lines: [] });
+  }
+});
+
+app.post('/api/announcement', (req, res) => {
+  const fs = require('fs');
+  const role = req.session?.user?.role;
+  if (role !== 'superAdmin' && role !== 'normalAdmin') {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+  const { lines } = req.body;
+  if (!Array.isArray(lines)) return res.status(400).json({ error: 'Invalid data' });
+  fs.writeFileSync(ANNOUNCEMENT_FILE, JSON.stringify({ lines }, null, 2), 'utf8');
+  res.json({ ok: true });
+});
+
+// ── API: Product Titles ───────────────────────────────────────────────────────
+app.get('/api/product-titles', (req, res) => {
+  const fs = require('fs');
+  const titleMap = {};
+  try {
+    const files = fs.readdirSync(__dirname).filter(f => f.endsWith('modelData.json'));
+    files.forEach(file => {
+      try {
+        const data = JSON.parse(fs.readFileSync(path.join(__dirname, file), 'utf8'));
+        const models = data.models || {};
+        Object.entries(models).forEach(([code, info]) => {
+          if (info.title && !info.title.includes('<span')) {
+            titleMap[code] = info.title.trim();
+          }
+        });
+      } catch (e) {}
+    });
+  } catch (e) {}
+  res.json(titleMap);
+});
+
 // ── Static Files ──────────────────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname)));
 

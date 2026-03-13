@@ -131,17 +131,59 @@
       text-decoration: underline;
     }
 
-    /* Serial Number Check */
-    .serial-check-container {
-      margin-top: 30px;
-      padding-top: 20px;
-      border-top: 2px solid #ddd;
+    /* Search + Serial Row */
+    .search-serial-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 0;
+      margin-bottom: 20px;
+      background: rgba(255,255,255,0.6);
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 14px 18px;
+    }
+
+    .search-col, .serial-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .col-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: #444;
+      margin-bottom: 8px;
+      letter-spacing: .3px;
+    }
+
+    .col-divider {
+      width: 1px;
+      background: #ddd;
+      align-self: stretch;
+      margin: 0 18px;
+    }
+
+    #searchInput {
+      padding: 10px;
+      width: 90%;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    .serial-input-row {
+      display: flex;
+      gap: 8px;
+      width: 100%;
+      justify-content: center;
     }
 
     #serialInput {
       padding: 10px;
-      width: 30%;
-      margin-bottom: 10px;
+      flex: 1;
+      max-width: 320px;
       border-radius: 5px;
       border: 1px solid #ccc;
     }
@@ -153,17 +195,36 @@
       color: white;
       border-radius: 5px;
       cursor: pointer;
-      font-size: 16px;
+      font-size: 15px;
+      white-space: nowrap;
     }
 
     #checkSerialBtn:hover {
       background-color: #0056b3;
     }
 
+    #clearSerialBtn {
+      padding: 10px 12px;
+      border: 1px solid #ccc;
+      background: white;
+      color: #888;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 15px;
+      line-height: 1;
+    }
+
+    #clearSerialBtn:hover {
+      background: #f5f5f5;
+      color: #e00;
+      border-color: #e00;
+    }
+
     #serialFeedback {
       margin-top: 10px;
       font-size: 14px;
       font-weight: bold;
+      text-align: left;
     }
     
     /* 地图链接样式 */
@@ -214,21 +275,222 @@
     h1 {
       margin: 0;
     }
+
+    /* Recent History */
+    .recent-history {
+      margin-bottom: 14px;
+      font-size: 13px;
+      color: #555;
+    }
+
+    .recent-history span {
+      font-weight: 600;
+      margin-right: 6px;
+    }
+
+    .recent-tag {
+      display: inline-block;
+      margin: 2px 4px;
+      padding: 3px 10px;
+      background: rgba(255,255,255,0.85);
+      border: 1px solid #aaa;
+      border-radius: 12px;
+      color: #333;
+      text-decoration: none;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .recent-tag:hover {
+      background: #e0e0e0;
+    }
+
+    .recent-clear {
+      background: none;
+      border: none;
+      color: #999;
+      font-size: 12px;
+      cursor: pointer;
+      margin-left: 4px;
+    }
+
+    .recent-clear:hover { color: #e00; }
+
+    /* Announcement Edit */
+    #announcementEdit {
+      width: 100%;
+      min-height: 80px;
+      font-size: 14px;
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      margin-top: 8px;
+      box-sizing: border-box;
+      resize: vertical;
+    }
+
+    .ann-edit-btn {
+      margin-top: 8px;
+      padding: 5px 14px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .ann-save { background: #28a745; color: white; }
+    .ann-save:hover { background: #218838; }
+    .ann-cancel { background: #6c757d; color: white; margin-left: 6px; }
+    .ann-cancel:hover { background: #545b62; }
+
+    /* Category Tabs */
+    .category-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+
+    .cat-tab {
+      padding: 6px 16px;
+      border: 2px solid #007BFF;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.85);
+      color: #007BFF;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .cat-tab:hover {
+      background: #e8f0ff;
+    }
+
+    .cat-tab.active {
+      background: #007BFF;
+      color: white;
+    }
+
+    /* ── Dark Mode Toggle Button ── */
+    #darkModeToggle {
+      position: absolute;
+      top: 20px;
+      right: 130px;
+      padding: 8px 12px;
+      background: rgba(255,255,255,0.85);
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 18px;
+      line-height: 1;
+      z-index: 2;
+    }
+
+    /* ── Dark Mode ── */
+    body.dark-mode::before { opacity: 0.15; }
+
+    body.dark-mode { background-color: #0f172a; color: #e5e7eb; }
+
+    body.dark-mode .announcement-bar {
+      background-color: rgba(30, 41, 59, 0.92);
+      border-color: #374151;
+      color: #fbbf24;
+    }
+    body.dark-mode .announcement-bar h2 { color: #fbbf24; }
+    body.dark-mode .announcement-content { color: #f87171; }
+    body.dark-mode .close-btn { color: #fbbf24; }
+    body.dark-mode #annEditBtn { color: #fbbf24; }
+
+    body.dark-mode #searchInput,
+    body.dark-mode #serialInput,
+    body.dark-mode #announcementEdit {
+      background-color: #1e293b;
+      border-color: #475569;
+      color: #e5e7eb;
+    }
+
+    body.dark-mode #productList a { color: #60a5fa; }
+    body.dark-mode #productList a span { color: #94a3b8 !important; }
+
+    body.dark-mode .cat-tab {
+      border-color: #60a5fa;
+      background: rgba(30, 41, 59, 0.85);
+      color: #60a5fa;
+    }
+    body.dark-mode .cat-tab:hover { background: #1e3a5f; }
+    body.dark-mode .cat-tab.active { background: #1d4ed8; color: white; border-color: #1d4ed8; }
+
+    body.dark-mode .recent-history { color: #94a3b8; }
+    body.dark-mode .recent-tag {
+      background: rgba(30, 41, 59, 0.85);
+      border-color: #475569;
+      color: #cbd5e1;
+    }
+    body.dark-mode .recent-tag:hover { background: #1e3a5f; }
+
+    body.dark-mode h1, body.dark-mode h2 { color: #e5e7eb; }
+
+    body.dark-mode #darkModeToggle {
+      background: rgba(30, 41, 59, 0.85);
+      border-color: #475569;
+    }
+
+    body.dark-mode .search-serial-row {
+      background: rgba(30, 41, 59, 0.7);
+      border-color: #374151;
+    }
+    body.dark-mode .col-divider { background: #374151; }
+    body.dark-mode .col-label { color: #94a3b8; }
+
+    /* ── Mobile Responsive ── */
+    @media (max-width: 640px) {
+      .container { width: 100%; padding: 10px; }
+
+      #logout { top: 10px; right: 10px; padding: 7px 10px; font-size: 13px; }
+
+      #darkModeToggle { top: 10px; right: 80px; padding: 6px 9px; font-size: 16px; }
+
+      .header-container { flex-direction: column; gap: 8px; margin-top: 50px; }
+
+      h1 { font-size: 1.15rem; }
+
+      .search-serial-row { flex-direction: column; gap: 14px; padding: 12px; }
+      .col-divider { width: 100%; height: 1px; margin: 0; }
+      #searchInput { width: 100%; font-size: 14px; }
+      #serialInput { font-size: 14px; }
+
+      .cat-tab { padding: 5px 10px; font-size: 12px; }
+
+      #productList li { width: 160px; }
+
+      .announcement-bar { padding: 12px; }
+
+      .recent-history { font-size: 12px; }
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <!-- ✅ Logout Button -->
     <button id="logout" class="logout-btn">Logout</button>
+    <!-- ✅ Dark Mode Toggle -->
+    <button id="darkModeToggle" title="Toggle dark mode">🌙</button>
 
     <!-- ✅ Announcement Bar -->
     <div class="announcement-bar" id="announcementBar">
       <button class="close-btn" onclick="closeAnnouncement()">×</button>
-      <h2>Announcement</h2>
-      <p class="announcement-content">
-        1. The MCF, MBF, MGF, MSF, YR, ATFS, AGR, ATCM, ATSB, ATTG, ATRC, ATCB, ACHP, ATMG, ATSP, ATHC,series products have been updated. Next, We will continue updating the AGR issue. <br>
-        2. If you have any new requirements, please organize your questions in a timely manner and send them to Lynn; operator53@smartkitchenservice.com
-      </p>
+      <h2>Announcement <span id="annEditBtn" style="display:none;font-size:13px;font-weight:400;margin-left:8px;cursor:pointer;color:#856404;text-decoration:underline;" onclick="toggleAnnouncementEdit()">✏️ Edit</span></h2>
+      <p class="announcement-content" id="announcementContent">Loading...</p>
+      <div id="announcementEditArea" style="display:none;">
+        <textarea id="announcementEdit" placeholder="One line per item..."></textarea>
+        <br>
+        <button class="ann-edit-btn ann-save" onclick="saveAnnouncement()">Save</button>
+        <button class="ann-edit-btn ann-cancel" onclick="toggleAnnouncementEdit()">Cancel</button>
+      </div>
     </div>
 
     <!-- ✅ 修改后的标题区域，包含地图按钮 -->
@@ -238,24 +500,52 @@
     </div>
 
 
-    <!-- ✅ Product Search -->
-    <input type="text" id="searchInput" placeholder="Search for a product model..." onkeyup="searchProduct()">
-    
+    <!-- ✅ Search + Serial Number Row -->
+    <div class="search-serial-row">
+
+      <!-- 產品搜索 -->
+      <div class="search-col">
+        <label class="col-label">🔍 Product Search</label>
+        <input type="text" id="searchInput" placeholder="Search model or product name..." onkeyup="searchProduct()">
+      </div>
+
+      <!-- 分隔線 -->
+      <div class="col-divider"></div>
+
+      <!-- 序列號查詢 -->
+      <div class="serial-col">
+        <label class="col-label">🔢 Serial Number Check</label>
+        <div class="serial-input-row">
+          <input type="text" id="serialInput" placeholder="e.g. MCF8725AUS1CN4U021" />
+          <button id="checkSerialBtn">Check</button>
+          <button id="clearSerialBtn" onclick="document.getElementById('serialInput').value='';document.getElementById('serialFeedback').innerHTML='';" title="Clear">✕</button>
+        </div>
+        <p style="margin:4px 0 0;font-size:12px;color:#888;">Format: <strong style="color:#0056b3;">MCF8725 AUS 1 C N4U 021</strong></p>
+        <p id="serialFeedback"></p>
+      </div>
+
+    </div>
+
+    <!-- ✅ Recent History -->
+    <div class="recent-history" id="recentHistory" style="display:none;">
+      <span>Recently viewed:</span>
+      <span id="recentTags"></span>
+      <button class="recent-clear" onclick="clearRecentHistory()" title="Clear history">✕ clear</button>
+    </div>
+
+    <!-- ✅ Category Tabs -->
+    <div class="category-tabs" id="categoryTabs">
+      <button class="cat-tab active" data-cat="all" onclick="filterByCategory('all', this)">All</button>
+      <button class="cat-tab" data-cat="refrigeration" onclick="filterByCategory('refrigeration', this)">❄️ Refrigeration</button>
+      <button class="cat-tab" data-cat="cooking" onclick="filterByCategory('cooking', this)">🔥 Cooking</button>
+      <button class="cat-tab" data-cat="ice" onclick="filterByCategory('ice', this)">🧊 Ice</button>
+      <button class="cat-tab" data-cat="walkin" onclick="filterByCategory('walkin', this)">🚪 Walk-in</button>
+      <button class="cat-tab" data-cat="display" onclick="filterByCategory('display', this)">🪟 Display Case</button>
+    </div>
+
     <div class="directory">
       <ul id="productList"></ul>
     </div>
-
-    <!-- ✅ Serial Number Check -->
-    <div class="serial-check-container">
-      <h2>Serial Number Check</h2>
-      <p>Expected Format: <strong style="font-size: 18px; color: blue;">MCF8725 AUS 1 C N4U 021</strong></p>
-
-      <input type="text" id="serialInput" placeholder="Enter serial number..." />
-      <button id="checkSerialBtn">Check</button>
-      <p id="serialFeedback"></p>
-    </div>
-    
-    <!-- 移除原来的地图区域 -->
 
   </div>
 

@@ -372,29 +372,40 @@ document.addEventListener("DOMContentLoaded", function () {
 "AWC0606",
 
     ];
+// **📌 产品名称映射（从 API 载入）**
+let productTitleMap = {};
+
 // **📌 渲染产品列表**
 function renderProductList() {
   const productList = document.getElementById("productList");
 
-  // **防止 productList 为空**
   if (!productList) {
     console.error("❌ `productList` 未找到，检查 HTML 里是否有 `<ul id='productList'></ul>`");
     return;
   }
 
-  productList.innerHTML = ""; // 清空列表
+  productList.innerHTML = "";
 
   products.forEach((product) => {
     const li = document.createElement("li");
     const a = document.createElement("a");
 
-    // All models now served by the single product.html template
     a.href = `product.html?model=${product}`;
-    a.textContent = product;
-    a.target = "_blank"; // 在新标签页打开
+    a.target = "_blank";
+
+    const title = productTitleMap[product];
+    if (title) {
+      // 顯示：型號 + 產品全名（型號加粗，名稱用小字灰色）
+      a.innerHTML = `<strong>${product}</strong><br><span style="font-size:12px;color:#666;">${title.replace(/^[^—–-]*[—–-]\s*/, '')}</span>`;
+      li.style.width = "220px";
+    } else {
+      a.textContent = product;
+    }
 
     li.appendChild(a);
-    li.style.display = "none"; // **默认隐藏所有产品**
+    li.style.display = "none";
+    li.dataset.model = product.toUpperCase();
+    li.dataset.title = (title || "").toUpperCase();
     productList.appendChild(li);
   });
 
@@ -429,158 +440,265 @@ function searchProduct() {
   }
 }
 
-//序列号检查
+// **📌 序列號生産日期解碼**
+const _YEAR_SEQ = "ABCDEFGHIJKLMNPQRSTUVWXYZ"; // 跳過 O
+const _YEAR_MAP = {};
+(function() {
+  let idx = 0;
+  for (const ch of _YEAR_SEQ) {
+    if (ch !== 'O') _YEAR_MAP[ch] = 2011 + idx++;
+  }
+})();
+const _MONTH_MAP = { '1':1,'2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9,'A':10,'B':11,'C':12 };
+const _DAY_SEQ = "ABCDEFGHJKMNPQRSTUVWXYZ"; // 跳過 I、L、O
+const _DAY_MAP = { '1':1,'2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9 };
+(function() {
+  let idx = 0;
+  for (const ch of _DAY_SEQ) _DAY_MAP[ch] = 10 + idx++;
+})();
+
+function decodeProductionDate(code3) {
+  if (!code3 || code3.length < 3) return null;
+  const y = _YEAR_MAP[code3[0].toUpperCase()];
+  const m = _MONTH_MAP[code3[1].toUpperCase()];
+  const d = _DAY_MAP[code3[2].toUpperCase()];
+  if (!y || !m || !d) return null;
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${months[m-1]} ${d}, ${y}`;
+}
+
+// **📌 序列號 — 段落表格行**
+function _serialRow(label, value, ok, hint) {
+  const color = ok ? '#16a34a' : '#dc2626';
+  const bg    = ok ? 'rgba(220,252,231,0.4)' : 'rgba(254,226,226,0.4)';
+  return `<tr style="background:${bg};">
+    <td style="padding:5px 10px 5px 6px;color:#555;white-space:nowrap;font-size:12px;width:140px;">${label}</td>
+    <td style="padding:5px 8px;font-weight:700;font-family:monospace;font-size:14px;color:${color};">${value || '—'}</td>
+    <td style="padding:5px 6px;font-size:12px;color:${color};">${hint}</td>
+  </tr>`;
+}
+
+// **📌 序列號驗證（固定位置拆分）**
 function checkSerialNumber() {
-  console.log("🔍 Running checkSerialNumber() from script.js...");
+  const raw = (document.getElementById('serialInput').value || '').trim().replace(/\s+/g, '').toUpperCase();
+  const feedback = document.getElementById('serialFeedback');
+  feedback.innerHTML = '';
 
-  let inputSerial = document.getElementById("serialInput").value.trim();
-  console.log(`🔍 Step 1: Raw inputSerial: '${inputSerial}'`);
-  const feedback = document.getElementById("serialFeedback");
-
-  // Clear previous feedback
-  feedback.innerHTML = "";
-
-  // 新增的总长度检查
-  const expectedLength = 18;
-  if (inputSerial.length > expectedLength) {
-    feedback.innerHTML = `<span style='color: red;'>❌ Serial number is too long. Expected ${expectedLength} characters, but found ${inputSerial.length}.</span><br>`;
-  } else if (inputSerial.length < expectedLength) {
-    feedback.innerHTML += `<span style='color: red;'>❌ Serial number is too short. Expected ${expectedLength} characters, but found ${inputSerial.length}.</span><br>`;
-  }
-
-  if (!inputSerial) {
-    feedback.innerHTML += `<span style='color: red;'>❌ Please enter a serial number.</span>`;
-    console.warn("⚠️ No serial number entered.");
+  if (!raw) {
+    feedback.innerHTML = `<span style='color:red'>❌ Please enter a serial number.</span>`;
     return;
   }
 
-  let formattedResult = "";
-  let isCorrect = true;
-  let exceededPart = "";
-  let extraChars = "";
-
-  // ✅ **解析 Product Model (7 位)**
-  let productModel = inputSerial.substring(0, 7);
-  let rest = inputSerial.substring(7);
-
-  let aIndex = rest.indexOf("A");
-  if (aIndex === -1) {
-    feedback.innerHTML += `<span style='color: red;'>❌ Invalid Serial Number: Model Number- Too Short) ❌ Or missing "A".</span>`;
-    return;
-  }
-
-  let beforeA = rest.substring(0, aIndex);
-  if (beforeA.length > 0) {
-    exceededPart = "Product Model";
-    extraChars = beforeA;
-  }
-  rest = rest.substring(aIndex);
-
-  // ✅ **解析 Customer Code**
-  let match = rest.match(/^A([A-Z]{0,2})([A-Z]*)/);
-  let customerCode = match ? "A" + match[1] : "";
-  let extraCustomer = match ? match[2] : "";
-  
-  // 客户编码要求：如果没有AUS或CAJ，直接报错；如果客户编码长度大于3，报错
-  if (!/^(AUS|CAJ)$/.test(customerCode)) {
-    feedback.innerHTML += `<span style='color: red;'>❌ Invalid Customer Code: Must include 'AUS' no more than 3 characters long.</span>`;
-    return;
-  }
-  if (customerCode.length > 3) {
-    feedback.innerHTML += `<span style='color: red;'>❌ Invalid Customer Code: Must include 'AUS' no more than 3 characters long.</span>`;
-    return;
-  }
-
-  rest = rest.substring(customerCode.length + extraCustomer.length);
-
-  // ✅ **解析 Configuration**
-  match = rest.match(/^([0-9]*)([^CTNOP]*)/);
-  let configuration = match ? match[1] : "";
-  let extraConfiguration = match ? match[2] : "";
-
-  if (configuration.length > 1) {
-    extraConfiguration = configuration.substring(1) + extraConfiguration;
-    configuration = configuration.substring(0, 1);
-  }
-
-  rest = rest.substring(configuration.length + extraConfiguration.length);
-
-  // ✅ **解析 Production Location**
-  let productionLocation = "";
-  let extraLocation = "";
-
-  // 只取第一个字母作为生产地字符（T 或 C）
-  if (/^[TC]$/.test(rest[0])) {
-    productionLocation = rest[0]; // 取第一个字符作为生产地
-    rest = rest.substring(1); // 移除生产地字符
-  } else {
-    productionLocation = ""; // 如果没有 T 或 C，生产地为空
-  }
-
-  // ✅ **解析 Production Date**
-  let productionDate = rest.substring(0, 3); // 生产日期的前三个字符
-  let extraDate = "";
-
-  if (productionDate.length > 3) {
-    extraDate = productionDate.substring(3); // 处理超出的部分
-    productionDate = productionDate.substring(0, 3);
-    exceededPart = "Production Date";
-  }
-  rest = rest.substring(3);
-
-  // ✅ **解析 Daily Production Count**
-  let dailyProductionCount = rest.substring(0, 3);
-  let extraCount = "";
-
-  if (dailyProductionCount.length > 3) {
-    extraCount = dailyProductionCount.substring(3); // 处理超出的部分
-    dailyProductionCount = dailyProductionCount.substring(0, 3);
-    exceededPart = "Daily Production Count";
-  }
-
-  if (/[^0-9]/.test(dailyProductionCount)) {
-    exceededPart = "Daily Production Count";
-    extraCount += dailyProductionCount.replace(/[0-9]/g, "");
-  }
-
-  let parts = [
-    { name: "Product Model", value: productModel, extra: extraChars },
-    { name: "Customer Code", value: customerCode, extra: extraCustomer },
-    { name: "Configuration", value: configuration, extra: extraConfiguration },
-    { name: "Production Location", value: productionLocation, extra: extraLocation },
-    { name: "Production Date", value: productionDate, extra: extraDate },
-    { name: "Daily Production Count", value: dailyProductionCount, extra: extraCount }
+  // 固定段落定義：型號(7) + 客戶碼(3) + 配置(1) + 產地(1) + 日期(3) + 批次(3) = 18
+  const SEGS = [
+    { key: 'model',    label: 'Product Model',      len: 7 },
+    { key: 'customer', label: 'Customer Code',       len: 3 },
+    { key: 'config',   label: 'Configuration',       len: 1 },
+    { key: 'location', label: 'Production Location', len: 1 },
+    { key: 'date',     label: 'Production Date',     len: 3 },
+    { key: 'count',    label: 'Daily Batch',         len: 3 },
   ];
+  const TOTAL = 18;
+  const KNOWN_CUSTOMERS = ['AUS', 'CAJ'];
+  const VALID_LOCATIONS  = ['C', 'T'];
 
-  parts.forEach((part) => {
-    let displayPart = "";
-    let errorMessage = "";
-    let correctPart = part.value;
-    let extraPart = part.extra || "";
+  // 按長度陣列拆分字串
+  function splitAt(s, lens) {
+    const out = {}; let pos = 0;
+    SEGS.forEach((seg, i) => { out[seg.key] = s.substring(pos, pos + lens[i]); pos += lens[i]; });
+    return out;
+  }
 
-    if (extraPart.length > 0) {
-      displayPart = `<span style='color: green;'>${correctPart}</span>
-                   <span style='color: red; background: yellow;'>${extraPart}</span>`;
-      errorMessage = `<small style="color:red;">(${part.name} - Too Long) ❌ Must be exactly ${correctPart.length} characters.</small>`;
-      isCorrect = false;
-    } else if (!correctPart || correctPart.includes("_")) {
-      displayPart = `<span style='color: red; font-weight: bold;'>${correctPart.padEnd(correctPart.length, "_")}</span>`;
-      errorMessage = `<small style="color:red;">(${part.name} - Too Short) ❌ Must be exactly ${correctPart.length} characters.</small>`;
-      isCorrect = false;
-    } else {
-      displayPart = `<span style='color: green; font-weight: bold;'>${correctPart}</span>`;
-      errorMessage = `<small style="color:green;">(${part.name}) ✅</small>`;
+  // 打分：越高 = 越合法
+  function scoreP(p) {
+    let s = 0;
+    if (KNOWN_CUSTOMERS.includes(p.customer)) s += 10;
+    else if (p.customer.length >= 2 && KNOWN_CUSTOMERS.some(c => c.startsWith(p.customer.slice(0,2)))) s += 3;
+    if (VALID_LOCATIONS.includes(p.location)) s += 10;
+    if (/^\d$/.test(p.config))  s += 5;
+    if (/^\d{3}$/.test(p.count)) s += 5;
+    if (p.date.length === 3) {
+      if (_YEAR_MAP[p.date[0]])  s += 3;
+      if (_MONTH_MAP[p.date[1]]) s += 3;
+      if (_DAY_MAP[p.date[2]])   s += 3;
     }
+    return s;
+  }
 
-    formattedResult += displayPart + " " + errorMessage + "<br>";
-  });
+  const MODEL_SUFFIXES = ['GR', 'ES']; // 產品列表尾綴，不屬於序列號
 
-  feedback.innerHTML += `Checked Serial Number:<br>${formattedResult}`;
-  feedback.innerHTML += isCorrect
-    ? "<br><span style='color: green; font-size: 18px;'>✅ Serial number is correct.</span>"
-    : "<br><span style='color: red; font-size: 18px;'>❌ Serial number contains errors.</span>";
+  // 如果長度超出，嘗試去除型號尾綴
+  let strippedSuffix = '';
+  let rawClean = raw;
+  if (raw.length > TOTAL) {
+    for (const sfx of MODEL_SUFFIXES) {
+      if (raw.length === TOTAL + sfx.length && raw.substring(7, 7 + sfx.length) === sfx) {
+        rawClean = raw.slice(0, 7) + raw.slice(7 + sfx.length);
+        strippedSuffix = sfx;
+        break;
+      }
+    }
+  }
 
-  console.log("✅ Serial number check completed.");
+  const normalLens = SEGS.map(s => s.len);
+  let parsed, missingSegIdx = -1;
+
+  if (rawClean.length === TOTAL) {
+    parsed = splitAt(rawClean, normalLens);
+  } else if (rawClean.length === TOTAL - 1) {
+    // 嘗試每個段少一個字符，取最高分
+    let best = -1;
+    SEGS.forEach((seg, i) => {
+      if (normalLens[i] === 0) return;
+      const lens = [...normalLens]; lens[i] -= 1;
+      const p = splitAt(rawClean, lens);
+      const sc = scoreP(p);
+      if (sc > best) { best = sc; parsed = p; missingSegIdx = i; }
+    });
+  } else {
+    parsed = splitAt(rawClean, normalLens);
+  }
+
+  const lenOk = rawClean.length === TOTAL;
+  let html = '';
+
+  // 尾綴提示 + 一鍵修復
+  if (strippedSuffix) {
+    html += `<div style="margin-bottom:10px;padding:8px 12px;background:#fff3cd;border:1px solid #ffc107;border-radius:6px;font-size:13px;">
+      ⚠️ Model suffix "<strong>${strippedSuffix}</strong>" is not part of the serial number (product code only).
+      <button onclick="document.getElementById('serialInput').value='${rawClean}';checkSerialNumber();"
+        style="margin-left:8px;padding:3px 10px;border:1px solid #856404;border-radius:4px;background:white;color:#856404;cursor:pointer;font-size:12px;">
+        Remove "${strippedSuffix}" and re-check</button>
+    </div>`;
+  }
+
+  html += `<div style="margin-bottom:8px;font-size:13px;">
+    Length: <strong style="color:${lenOk ? '#16a34a' : '#dc2626'}">${rawClean.length} / ${TOTAL}</strong>
+    ${rawClean.length < TOTAL ? `<span style="color:#dc2626"> — ${TOTAL - rawClean.length} char(s) missing</span>` : ''}
+    ${rawClean.length > TOTAL ? `<span style="color:#dc2626"> — ${rawClean.length - TOTAL} extra char(s)</span>` : ''}
+  </div>`;
+
+  // 缺字提示（17位時）
+  if (missingSegIdx >= 0) {
+    const s = SEGS[missingSegIdx];
+    const posStart = normalLens.slice(0, missingSegIdx).reduce((a,v) => a+v, 0) + 1;
+    const posEnd   = posStart + s.len - 1;
+    html += `<div style="margin-bottom:10px;padding:8px 12px;background:#fff3cd;border:1px solid #ffc107;border-radius:6px;font-size:13px;">
+      ⚠️ Likely missing 1 character in <strong>${s.label}</strong> (position ${posStart}${posEnd > posStart ? '–'+posEnd : ''})
+    </div>`;
+  }
+
+  html += `<table style="border-collapse:collapse;width:100%;margin-bottom:10px;">`;
+
+  let allOk = lenOk;
+
+  // ── Product Model ──
+  const model = parsed.model || '';
+  const modelOk = model.length === 7;
+  html += _serialRow('Product Model', model, modelOk, modelOk ? '✅' : `❌ Need 7 chars, got ${model.length}`);
+  if (!modelOk) allOk = false;
+
+  // ── Customer Code ──
+  const cust = parsed.customer || '';
+  const custOk = KNOWN_CUSTOMERS.includes(cust);
+  let custHint = '✅';
+  if (!custOk) {
+    allOk = false;
+    if (cust.length < 3) {
+      const guess = KNOWN_CUSTOMERS.find(c => c.startsWith(cust));
+      custHint = guess
+        ? `❌ Incomplete — try adding "<strong>${guess.slice(cust.length)}</strong>" → <strong>${guess}</strong>`
+        : `❌ Incomplete (${cust.length}/3) — known codes: AUS, CAJ`;
+    } else {
+      const guess = KNOWN_CUSTOMERS.find(c => c.slice(0,2) === cust.slice(0,2));
+      custHint = guess
+        ? `❌ Did you mean <strong>${guess}</strong>?`
+        : `❌ Unknown "${cust}" — known: AUS, CAJ`;
+    }
+  }
+  html += _serialRow('Customer Code', cust || '—', custOk, custHint);
+
+  // ── Configuration ──
+  const cfg = parsed.config || '';
+  const cfgOk = cfg === '1';
+  let cfgHint = '✅';
+  if (!cfgOk) {
+    allOk = false;
+    cfgHint = `❌ Should be <strong>1</strong> — try replacing "${cfg || '—'}" with 1`;
+  }
+  html += _serialRow('Configuration', cfg || '—', cfgOk, cfgHint);
+
+  // ── Production Location ──
+  const loc = parsed.location || '';
+  const locOk = VALID_LOCATIONS.includes(loc);
+  let locHint = loc === 'C' ? '✅ China' : loc === 'T' ? '✅ Taiwan' : '';
+  if (!locOk) {
+    allOk = false;
+    locHint = loc ? `❌ "${loc}" invalid — only C (China) or T (Taiwan)` : `❌ Missing — should be C or T`;
+  }
+  html += _serialRow('Production Location', loc || '—', locOk, locHint);
+
+  // ── Production Date ──
+  const dateStr  = parsed.date || '';
+  const prodDate = decodeProductionDate(dateStr);
+  const dateOk   = !!prodDate;
+  let dateHint   = dateOk ? `✅ ${prodDate}` : '';
+  if (!dateOk) {
+    allOk = false;
+    if (dateStr.length === 3) {
+      const yErr = _YEAR_MAP[dateStr[0]]  ? '' : `year letter "${dateStr[0]}" invalid; `;
+      const mErr = _MONTH_MAP[dateStr[1]] ? '' : `month "${dateStr[1]}" invalid; `;
+      const dErr = _DAY_MAP[dateStr[2]]   ? '' : `day "${dateStr[2]}" invalid`;
+      dateHint = `❌ ${(yErr + mErr + dErr).replace(/;\s*$/, '')}`;
+    } else {
+      dateHint = `❌ Expected 3 chars, got ${dateStr.length}`;
+    }
+  }
+  html += _serialRow('Production Date', dateStr || '—', dateOk, dateHint);
+
+  // ── Daily Batch ──
+  const cnt   = parsed.count || '';
+  const cntOk = /^\d{3}$/.test(cnt);
+  html += _serialRow('Daily Batch', cnt || '—', cntOk, cntOk ? '✅' : `❌ Expected 3 digits, got "${cnt}"`);
+  if (!cntOk) allOk = false;
+
+  html += `</table>`;
+
+  // ── 一鍵修復按鈕 ──
+  if (!locOk && loc && raw.length === TOTAL) {
+    const tryC = raw.slice(0,11) + 'C' + raw.slice(12);
+    const tryT = raw.slice(0,11) + 'T' + raw.slice(12);
+    html += `<div style="margin:6px 0;font-size:13px;">Location fix:
+      <button onclick="document.getElementById('serialInput').value='${tryC}';checkSerialNumber();"
+        style="margin:2px 4px;padding:3px 10px;border:1px solid #007BFF;border-radius:4px;background:white;color:#007BFF;cursor:pointer;font-size:12px;">Try C (China)</button>
+      <button onclick="document.getElementById('serialInput').value='${tryT}';checkSerialNumber();"
+        style="margin:2px 4px;padding:3px 10px;border:1px solid #28a745;border-radius:4px;background:white;color:#28a745;cursor:pointer;font-size:12px;">Try T (Taiwan)</button>
+    </div>`;
+  }
+  if (!custOk && raw.length === TOTAL) {
+    const btns = KNOWN_CUSTOMERS.map(c => {
+      const fixed = raw.slice(0,7) + c + raw.slice(10);
+      return `<button onclick="document.getElementById('serialInput').value='${fixed}';checkSerialNumber();"
+        style="margin:2px 4px;padding:3px 10px;border:1px solid #6c757d;border-radius:4px;background:white;color:#333;cursor:pointer;font-size:12px;">Try ${c}</button>`;
+    }).join('');
+    html += `<div style="margin:6px 0;font-size:13px;">Try customer code: ${btns}</div>`;
+  }
+
+  if (allOk) {
+    html += `<div style="margin-top:8px;font-size:15px;color:#16a34a;font-weight:700;">✅ Serial number is valid.</div>`;
+    const matchedProduct = products.find(p => p.toUpperCase().startsWith(model));
+    if (matchedProduct) {
+      const titleShort = (productTitleMap[matchedProduct] || '').replace(/^[^—–-]*[—–-]\s*/, '');
+      html += `<a href="product.html?model=${matchedProduct}" target="_blank"
+        style="display:inline-block;margin-top:8px;padding:7px 16px;background:#007BFF;color:white;border-radius:6px;text-decoration:none;font-weight:600;font-size:13px;">
+        🔗 View ${matchedProduct}${titleShort ? ' — ' + titleShort : ''}</a>`;
+      addToRecentHistory(matchedProduct);
+    }
+  } else {
+    html += `<div style="margin-top:8px;font-size:15px;color:#dc2626;font-weight:700;">❌ Serial number has errors — see details above.</div>`;
+  }
+
+  feedback.innerHTML = html;
 }
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -626,32 +744,103 @@ document.addEventListener("DOMContentLoaded", function () {
 })();
 
 
-// **📌 搜索功能**
-function searchProduct() {
-  const input = document.getElementById("searchInput");
+// **📌 分類 Tab 前缀映射**
+const categoryPrefixes = {
+  all: [],
+  refrigeration: ["MSF", "MPF", "MBF", "MCF", "MGF", "MBB", "MBC", "MKC", "SBB"],
+  cooking: ["AGR", "ATTG", "ATMG", "ATFS", "ATCB", "ATRC", "ATCM", "ACHP", "ATSP", "ATHC", "ATSB"],
+  ice: ["YR", "HD350"],
+  walkin: ["AWC"],
+  display: ["RDCS"],
+};
 
-  if (!input) {
-    console.error("❌ `searchInput` 未找到，检查 HTML 里是否有 `<input id='searchInput'>`");
-    return;
+let activeCategory = "all";
+
+function filterByCategory(cat, btn) {
+  activeCategory = cat;
+  // 更新 tab 樣式
+  document.querySelectorAll(".cat-tab").forEach(t => t.classList.remove("active"));
+  btn.classList.add("active");
+  // 清空搜索框，重新應用篩選
+  const input = document.getElementById("searchInput");
+  if (input) input.value = "";
+  applyFilters("");
+}
+
+function applyFilters(filterUpper) {
+  const prefixes = categoryPrefixes[activeCategory] || [];
+
+  // 關鍵字搜索匹配的額外前缀
+  const matchedPrefixes = [];
+  if (filterUpper.length > 0) {
+    keywordMap.forEach(({ keywords, prefixes: kPrefixes }) => {
+      if (keywords.some(kw => kw.toUpperCase().includes(filterUpper) || filterUpper.includes(kw.toUpperCase()))) {
+        matchedPrefixes.push(...kPrefixes);
+      }
+    });
   }
 
-  const filter = input.value.toUpperCase();
   const listItems = document.querySelectorAll("#productList li");
-
   let matchFound = false;
   listItems.forEach((item) => {
-    const text = item.textContent || item.innerText;
-    if (text.toUpperCase().includes(filter) && filter.length > 0) {
+    const modelCode = (item.dataset.model || "").toUpperCase();
+    const titleText = (item.dataset.title || "").toUpperCase();
+
+    // 分類篩選
+    const inCategory = activeCategory === "all" || prefixes.some(p => modelCode.startsWith(p.toUpperCase()));
+    if (!inCategory) { item.style.display = "none"; return; }
+
+    // 搜索篩選
+    if (filterUpper.length === 0) {
+      item.style.display = "list-item";
+      matchFound = true;
+      return;
+    }
+    const byCode = modelCode.includes(filterUpper) || titleText.includes(filterUpper);
+    const byKeyword = matchedPrefixes.some(p => modelCode.startsWith(p.toUpperCase()));
+    if (byCode || byKeyword) {
       item.style.display = "list-item";
       matchFound = true;
     } else {
-      item.style.display = "none"; // **输入为空时隐藏**
+      item.style.display = "none";
     }
   });
 
-  if (!matchFound && filter.length > 0) {
-    console.warn(`⚠️ 没有找到匹配的产品型号: "${filter}"`);
+  if (!matchFound && filterUpper.length > 0) {
+    console.warn(`⚠️ 没有找到匹配的产品: "${filterUpper}"`);
   }
+}
+
+// **📌 关键字 → 型号前缀映射**
+const keywordMap = [
+  { keywords: ["sandwich prep", "sandwich", "mega top salad", "mega top"], prefixes: ["MSF"] },
+  { keywords: ["pizza prep", "pizza"], prefixes: ["MPF"] },
+  { keywords: ["undercounter", "under counter", "worktop", "work top", "chef base"], prefixes: ["MGF"] },
+  { keywords: ["walk-in cooler", "walk in cooler", "walkin"], prefixes: ["AWC"] },
+  { keywords: ["ice maker", "ice machine"], prefixes: ["YR"] },
+  { keywords: ["ice dispenser"], prefixes: ["HD350"] },
+  { keywords: ["display case", "refrigerated display"], prefixes: ["RDCS"] },
+  { keywords: ["gas range"], prefixes: ["AGR"] },
+  { keywords: ["thermostatic griddle"], prefixes: ["ATTG"] },
+  { keywords: ["manual griddle"], prefixes: ["ATMG"] },
+  { keywords: ["griddle"], prefixes: ["ATTG", "ATMG"] },
+  { keywords: ["deep fryer", "fryer"], prefixes: ["ATFS"] },
+  { keywords: ["char rock broiler", "char rock", "char broiler"], prefixes: ["ATCB"] },
+  { keywords: ["radiant broiler"], prefixes: ["ATRC"] },
+  { keywords: ["cheesemelter"], prefixes: ["ATCM"] },
+  { keywords: ["hot plate"], prefixes: ["ACHP"] },
+  { keywords: ["holding cabinet", "warming cabinet"], prefixes: ["ATHC"] },
+  { keywords: ["stock pot stove", "stock pot"], prefixes: ["ATSP"] },
+  { keywords: ["glass door", "merchandiser"], prefixes: ["MCF"] },
+  { keywords: ["reach-in", "reach in", "top mount", "bottom mount"], prefixes: ["MBF"] },
+];
+
+// **📌 搜索功能**
+function searchProduct() {
+  const input = document.getElementById("searchInput");
+  if (!input) return;
+  const filter = input.value.trim();
+  applyFilters(filter.toUpperCase());
 }
 
 // (登录逻辑已移至上方 DOMContentLoaded 块)
@@ -659,12 +848,156 @@ function searchProduct() {
 // **📌 关闭公告栏**
 function closeAnnouncement() {
   const announcementBar = document.getElementById("announcementBar");
-  if (announcementBar) {
-    announcementBar.style.display = "none";
+  if (announcementBar) announcementBar.style.display = "none";
+}
+
+// **📌 公告動態管理**
+async function loadAnnouncement() {
+  try {
+    const res = await fetch('/api/announcement');
+    if (!res.ok) return;
+    const { lines } = await res.json();
+    const el = document.getElementById('announcementContent');
+    if (!el) return;
+    if (!lines || lines.length === 0) {
+      el.innerHTML = '<em style="color:#aaa;">No announcements.</em>';
+      return;
+    }
+    el.innerHTML = lines.map((l, i) => `${i + 1}. ${l}`).join('<br>');
+  } catch (e) {}
+}
+
+function toggleAnnouncementEdit() {
+  const editArea = document.getElementById('announcementEditArea');
+  const content = document.getElementById('announcementContent');
+  const textarea = document.getElementById('announcementEdit');
+  if (!editArea || !content || !textarea) return;
+
+  const isEditing = editArea.style.display !== 'none';
+  if (isEditing) {
+    editArea.style.display = 'none';
+    content.style.display = '';
+  } else {
+    // 把當前公告文字填入 textarea（每行一條）
+    const lines = content.innerText.replace(/^\d+\.\s*/gm, '').split('\n').filter(Boolean);
+    textarea.value = lines.join('\n');
+    editArea.style.display = '';
+    content.style.display = 'none';
+    textarea.focus();
   }
 }
 
+async function saveAnnouncement() {
+  const textarea = document.getElementById('announcementEdit');
+  if (!textarea) return;
+  const lines = textarea.value.split('\n').map(l => l.trim()).filter(Boolean);
+  try {
+    const res = await fetch('/api/announcement', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ lines })
+    });
+    if (res.ok) {
+      await loadAnnouncement();
+      toggleAnnouncementEdit();
+    } else {
+      alert('Save failed: ' + res.status);
+    }
+  } catch (e) {
+    alert('Error saving announcement');
+  }
+}
+
+// **📌 最近瀏覽紀錄**
+const RECENT_KEY = 'atosa_recent_viewed';
+const RECENT_MAX = 8;
+
+function getRecentHistory() {
+  try { return JSON.parse(localStorage.getItem(RECENT_KEY)) || []; } catch { return []; }
+}
+
+function addToRecentHistory(model) {
+  let list = getRecentHistory().filter(m => m !== model);
+  list.unshift(model);
+  if (list.length > RECENT_MAX) list = list.slice(0, RECENT_MAX);
+  localStorage.setItem(RECENT_KEY, JSON.stringify(list));
+}
+
+function clearRecentHistory() {
+  localStorage.removeItem(RECENT_KEY);
+  renderRecentHistory();
+}
+
+function renderRecentHistory() {
+  const container = document.getElementById('recentHistory');
+  const tagsEl = document.getElementById('recentTags');
+  if (!container || !tagsEl) return;
+  const list = getRecentHistory();
+  if (list.length === 0) { container.style.display = 'none'; return; }
+  container.style.display = 'block';
+  tagsEl.innerHTML = list.map(model => {
+    const title = productTitleMap[model];
+    const label = title ? title.replace(/^[^—–-]*[—–-]\s*/, '') : model;
+    return `<a class="recent-tag" href="product.html?model=${model}" target="_blank" title="${label}">${model}</a>`;
+  }).join('');
+}
+
+// **📌 暗色模式**
+(function () {
+  const DARK_KEY = 'atosa_dark_mode';
+  const apply = (dark) => {
+    document.body.classList.toggle('dark-mode', dark);
+    const btn = document.getElementById('darkModeToggle');
+    if (btn) btn.textContent = dark ? '☀️' : '🌙';
+  };
+
+  // 初始應用（先套用，再等 DOMContentLoaded）
+  const saved = localStorage.getItem(DARK_KEY);
+  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const isDark = saved !== null ? saved === '1' : prefersDark;
+
+  if (isDark) document.body.classList.add('dark-mode');
+
+  document.addEventListener('DOMContentLoaded', () => {
+    apply(document.body.classList.contains('dark-mode'));
+    const btn = document.getElementById('darkModeToggle');
+    if (btn) {
+      btn.addEventListener('click', () => {
+        const nowDark = !document.body.classList.contains('dark-mode');
+        apply(nowDark);
+        localStorage.setItem(DARK_KEY, nowDark ? '1' : '0');
+      });
+    }
+  });
+})();
+
 // **📌 初始化**
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", async function () {
+  try {
+    const res = await fetch('/api/product-titles');
+    if (res.ok) productTitleMap = await res.json();
+  } catch (e) {}
   renderProductList();
+  applyFilters("");
+  renderRecentHistory();
+
+  // 載入公告
+  await loadAnnouncement();
+
+  // 若是管理員，顯示編輯按鈕
+  try {
+    const meRes = await fetch('/api/me');
+    if (meRes.ok) {
+      const { role } = await meRes.json();
+      if (role === 'superAdmin' || role === 'normalAdmin') {
+        const editBtn = document.getElementById('annEditBtn');
+        if (editBtn) editBtn.style.display = 'inline';
+      }
+    }
+  } catch (e) {}
+
+  // 若在 product 頁面，記錄當前型號
+  const urlParams = new URLSearchParams(window.location.search);
+  const model = urlParams.get('model');
+  if (model) addToRecentHistory(model.toUpperCase());
 });
