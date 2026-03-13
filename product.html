@@ -57,6 +57,72 @@
             border-left: 4px solid #ea580c;
             color: #c2410c;
         }
+
+        /* ── Active issue highlight ── */
+        #problemCategoryList li.active-issue a {
+            background: rgba(0,123,255,0.10);
+            color: #007BFF;
+            font-weight: 700;
+            border-radius: 4px;
+            display: block;
+            padding: 2px 6px;
+        }
+
+        /* ── Share / Print toolbar ── */
+        .sol-toolbar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+        .sol-toolbar-btn {
+            padding: 5px 13px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            background: white;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: background 0.15s;
+        }
+        .sol-toolbar-btn:hover { background: #f0f4ff; }
+        .sol-issue-label {
+            font-size: 13px;
+            color: #555;
+            margin-left: auto;
+            font-style: italic;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 240px;
+        }
+
+        /* ── Copy button inside accordion header ── */
+        .acc-copy {
+            margin-left: 6px;
+            padding: 1px 7px;
+            border-radius: 5px;
+            border: 1px solid rgba(0,0,0,0.15);
+            background: rgba(255,255,255,0.7);
+            cursor: pointer;
+            font-size: 11px;
+            line-height: 1.6;
+            color: inherit;
+        }
+        .acc-copy:hover { background: rgba(255,255,255,0.95); }
+
+        /* ── Print styles ── */
+        @media print {
+            .header-container .back-home-button,
+            .problem-box, .diagram-box, .file-box,
+            .sol-toolbar, .acc-copy, .acc-arrow { display: none !important; }
+            .grid-layout { display: block !important; }
+            .solution-box { width: 100% !important; max-width: 100% !important; }
+            .acc-wrap.collapsed .acc-bd { display: block !important; }
+            .acc-count { display: none !important; }
+            #customerSolution { display: none !important; }
+            .acc-hd { font-size: 13px !important; padding: 7px 10px !important; }
+        }
     </style>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -81,12 +147,20 @@
             <div class="frame solution-box">
                 <div class="solution-container">
 
+                    <!-- Share / Print toolbar -->
+                    <div class="sol-toolbar">
+                        <button class="sol-toolbar-btn" id="shareBtn" onclick="shareIssue()">🔗 Copy Link</button>
+                        <button class="sol-toolbar-btn" onclick="window.print()">🖨 Print</button>
+                        <span class="sol-issue-label" id="currentIssueLabel"></span>
+                    </div>
+
                     <!-- Level 1: Quick Guide — expanded by default, green -->
                     <div class="acc-wrap" id="quickGuide">
                         <div class="acc-hd" onclick="toggleAcc('quickGuide')">
                             <span class="acc-arrow">▼</span>
                             💡 Quick Guide
                             <span class="acc-count" id="quickGuideCount"></span>
+                            <button class="acc-copy" onclick="event.stopPropagation();copySection('quickGuideList',this)" title="Copy text">📋</button>
                         </div>
                         <div class="acc-bd">
                             <ul id="quickGuideList"><li><span style="color:grey;">Select an issue on the left.</span></li></ul>
@@ -99,6 +173,7 @@
                             <span class="acc-arrow">▼</span>
                             🔧 Technician Analysis
                             <span class="acc-count" id="technicianSolutionCount"></span>
+                            <button class="acc-copy" onclick="event.stopPropagation();copySection('technicianSolutionList',this)" title="Copy text">📋</button>
                         </div>
                         <div class="acc-bd">
                             <ul id="technicianSolutionList"><li><span style="color:grey;">Select an issue on the left.</span></li></ul>
@@ -111,6 +186,7 @@
                             <span class="acc-arrow">▼</span>
                             ⚠️ Non-warranty Issue
                             <span class="acc-count" id="customerSolutionCount"></span>
+                            <button class="acc-copy" onclick="event.stopPropagation();copySection('customerSolutionList',this)" title="Copy text">📋</button>
                         </div>
                         <div class="acc-bd">
                             <ul id="customerSolutionList"><li><span style="color:grey;">Select an issue on the left.</span></li></ul>
@@ -335,14 +411,18 @@
                 const problemCategoryList = document.getElementById('problemCategoryList');
                 data.models[model].issues.forEach(issueKey => {
                     const li = document.createElement('li');
+                    li.dataset.issue = issueKey;
                     li.innerHTML = `<a href="#" onclick="showSolution('${issueKey}')">${issueKey.charAt(0).toUpperCase() + issueKey.slice(1)}</a>`;
                     problemCategoryList.appendChild(li);
                 });
 
-                // 自动选中第一个问题
-                if (data.models[model].issues.length > 0) {
-                    showSolution(data.models[model].issues[0]);
-                }
+                // Auto-select: use ?issue= param if valid, otherwise first issue
+                const issueParam = params.get('issue');
+                const issues = data.models[model].issues;
+                const targetIssue = (issueParam && issues.includes(issueParam))
+                    ? issueParam
+                    : (issues.length > 0 ? issues[0] : null);
+                if (targetIssue) showSolution(targetIssue);
 
                 const modelDocumentsList = document.getElementById('modelDocumentsList');
                 data.models[model].documents.forEach(doc => {
@@ -413,6 +493,28 @@
         document.getElementById(id).classList.toggle('collapsed');
     }
 
+    // ── 複製解答文字 ──
+    function copySection(listId, btn) {
+        const el = document.getElementById(listId);
+        const text = el ? el.innerText.trim() : '';
+        if (!text) return;
+        navigator.clipboard.writeText(text).then(() => {
+            const orig = btn.textContent;
+            btn.textContent = '✅';
+            setTimeout(() => { btn.textContent = orig; }, 1800);
+        }).catch(() => { prompt('Copy this text:', text); });
+    }
+
+    // ── 複製當前問題鏈接 ──
+    function shareIssue() {
+        const btn = document.getElementById('shareBtn');
+        navigator.clipboard.writeText(location.href).then(() => {
+            const orig = btn.textContent;
+            btn.textContent = '✅ Copied!';
+            setTimeout(() => { btn.textContent = orig; }, 2000);
+        }).catch(() => { prompt('Copy this link:', location.href); });
+    }
+
     function showSolution(category) {
         fetch(jsonFile)
             .then(r => r.json())
@@ -447,6 +549,20 @@
 
                 // Always re-open Quick Guide when switching issues
                 document.getElementById('quickGuide').classList.remove('collapsed');
+
+                // Update URL with current issue (for shareable link)
+                const url = new URL(location.href);
+                url.searchParams.set('issue', category);
+                history.replaceState(null, '', url.toString());
+
+                // Show current issue label in toolbar
+                const label = document.getElementById('currentIssueLabel');
+                if (label) label.textContent = category.charAt(0).toUpperCase() + category.slice(1);
+
+                // Highlight active issue in left panel
+                document.querySelectorAll('#problemCategoryList li').forEach(li => {
+                    li.classList.toggle('active-issue', li.dataset.issue === category);
+                });
             })
             .catch(err => console.error('Error loading issue data:', err));
     }
