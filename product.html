@@ -2,6 +2,62 @@
 <html lang="en">
 <head>
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* ── Accordion ──────────────────────────────── */
+        .acc-wrap {
+            border-radius: 8px;
+            margin-bottom: 10px;
+            overflow: hidden;
+            border: 1px solid rgba(0,0,0,0.08);
+        }
+        .acc-hd {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 11px 16px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 700;
+            user-select: none;
+            transition: opacity 0.15s;
+        }
+        .acc-hd:hover { opacity: 0.82; }
+        .acc-arrow {
+            font-size: 11px;
+            display: inline-block;
+            transition: transform 0.2s ease;
+        }
+        .acc-wrap.collapsed .acc-arrow { transform: rotate(-90deg); }
+        .acc-wrap.collapsed .acc-bd    { display: none; }
+        .acc-count {
+            margin-left: auto;
+            padding: 1px 9px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            background: rgba(0,0,0,0.12);
+        }
+        .acc-bd { padding: 10px 16px 14px; }
+
+        /* Level 1 — green */
+        #quickGuide .acc-hd {
+            background: #f0fdf4;
+            border-left: 4px solid #16a34a;
+            color: #15803d;
+        }
+        /* Level 2 — blue */
+        #technicianSolution .acc-hd {
+            background: #eff6ff;
+            border-left: 4px solid #2563eb;
+            color: #1d4ed8;
+        }
+        /* Non-warranty — orange */
+        #customerSolution .acc-hd {
+            background: #fff7ed;
+            border-left: 4px solid #ea580c;
+            color: #c2410c;
+        }
+    </style>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Product</title>
@@ -24,14 +80,43 @@
 
             <div class="frame solution-box">
                 <div class="solution-container">
-                    <div class="solution-section" id="customerSolution">
-                        <div class="solution-header">Non-warranty Issue</div>
-                        <ul><li><span style="color:grey;">Select an issue on the left to see the solution for the customer.</span></li></ul>
+
+                    <!-- Level 1: Quick Guide — expanded by default, green -->
+                    <div class="acc-wrap" id="quickGuide">
+                        <div class="acc-hd" onclick="toggleAcc('quickGuide')">
+                            <span class="acc-arrow">▼</span>
+                            💡 Quick Guide
+                            <span class="acc-count" id="quickGuideCount"></span>
+                        </div>
+                        <div class="acc-bd">
+                            <ul id="quickGuideList"><li><span style="color:grey;">Select an issue on the left.</span></li></ul>
+                        </div>
                     </div>
-                    <div class="solution-section" id="technicianSolution">
-                        <div class="solution-header">Technician Solution</div>
-                        <ul><li><span style="color:grey;">Select an issue on the left to see the solution for the technician.</span></li></ul>
+
+                    <!-- Level 2: Technician Analysis — collapsed by default, blue -->
+                    <div class="acc-wrap collapsed" id="technicianSolution">
+                        <div class="acc-hd" onclick="toggleAcc('technicianSolution')">
+                            <span class="acc-arrow">▼</span>
+                            🔧 Technician Analysis
+                            <span class="acc-count" id="technicianSolutionCount"></span>
+                        </div>
+                        <div class="acc-bd">
+                            <ul id="technicianSolutionList"><li><span style="color:grey;">Select an issue on the left.</span></li></ul>
+                        </div>
                     </div>
+
+                    <!-- Non-warranty Issue — collapsed by default, orange -->
+                    <div class="acc-wrap collapsed" id="customerSolution">
+                        <div class="acc-hd" onclick="toggleAcc('customerSolution')">
+                            <span class="acc-arrow">▼</span>
+                            ⚠️ Non-warranty Issue
+                            <span class="acc-count" id="customerSolutionCount"></span>
+                        </div>
+                        <div class="acc-bd">
+                            <ul id="customerSolutionList"><li><span style="color:grey;">Select an issue on the left.</span></li></ul>
+                        </div>
+                    </div>
+
                 </div>
             </div>
 
@@ -324,23 +409,44 @@
         return html;
     }
 
+    function toggleAcc(id) {
+        document.getElementById(id).classList.toggle('collapsed');
+    }
+
     function showSolution(category) {
         fetch(jsonFile)
             .then(r => r.json())
             .then(data => {
-                const customerSolution    = document.getElementById('customerSolution');
-                const technicianSolution  = document.getElementById('technicianSolution');
+                const ci = data.common.issues[category] || {};
+                const mi = data.models[model][category]  || {};
 
-                const commonC = data.common.issues[category]?.customer    || [];
-                const commonT = data.common.issues[category]?.technician  || [];
-                const modelC  = data.models[model][category]?.customer    || [];
-                const modelT  = data.models[model][category]?.technician  || [];
+                const allQ = [...(ci.overview   || []), ...(mi.overview   || [])];
+                const allT = [...(ci.technician || []), ...(mi.technician || [])];
+                const allC = [...(ci.customer   || []), ...(mi.customer   || [])];
 
-                const allC = [...commonC, ...modelC];
-                const allT = [...commonT, ...modelT];
+                // Quick Guide
+                const qgList = document.getElementById('quickGuideList');
+                qgList.innerHTML = allQ.length
+                    ? allQ.map(s => `<li>${renderItem(s)}</li>`).join('')
+                    : '<li><span style="color:#aaa;font-size:13px;">No quick guide yet for this issue.</span></li>';
+                document.getElementById('quickGuideCount').textContent = allQ.length || '';
 
-                customerSolution.innerHTML   = `<div class="solution-header">Non-warranty Issue</div><ul>${allC.map(s => `<li>${renderItem(s)}</li>`).join('')}</ul>`;
-                technicianSolution.innerHTML = `<div class="solution-header">Technician Solution</div><ul>${allT.map(s => `<li>${renderItem(s)}</li>`).join('')}</ul>`;
+                // Technician Analysis
+                const techList = document.getElementById('technicianSolutionList');
+                techList.innerHTML = allT.length
+                    ? allT.map(s => `<li>${renderItem(s)}</li>`).join('')
+                    : '<li><span style="color:#aaa;font-size:13px;">No data.</span></li>';
+                document.getElementById('technicianSolutionCount').textContent = allT.length || '';
+
+                // Non-warranty Issue
+                const custList = document.getElementById('customerSolutionList');
+                custList.innerHTML = allC.length
+                    ? allC.map(s => `<li>${renderItem(s)}</li>`).join('')
+                    : '<li><span style="color:#aaa;font-size:13px;">No data.</span></li>';
+                document.getElementById('customerSolutionCount').textContent = allC.length || '';
+
+                // Always re-open Quick Guide when switching issues
+                document.getElementById('quickGuide').classList.remove('collapsed');
             })
             .catch(err => console.error('Error loading issue data:', err));
     }
