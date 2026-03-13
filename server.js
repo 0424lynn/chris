@@ -118,7 +118,7 @@ app.get('/api/announcement', (req, res) => {
 app.post('/api/announcement', (req, res) => {
   const fs = require('fs');
   const role = req.session?.user?.role;
-  if (role !== 'superAdmin' && role !== 'normalAdmin') {
+  if (role !== 'superAdmin') {
     return res.status(403).json({ error: 'Forbidden' });
   }
   const { lines } = req.body;

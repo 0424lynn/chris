@@ -989,7 +989,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     const meRes = await fetch('/api/me');
     if (meRes.ok) {
       const { role } = await meRes.json();
-      if (role === 'superAdmin' || role === 'normalAdmin') {
+      if (role === 'superAdmin') {
         const editBtn = document.getElementById('annEditBtn');
         if (editBtn) editBtn.style.display = 'inline';
       }
