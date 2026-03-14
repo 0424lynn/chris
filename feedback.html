@@ -272,7 +272,7 @@
           <strong>${escHtml(item.author)}</strong> &nbsp;·&nbsp; ${formatTs(item.ts)}
         </span>
         ${isAdmin
-          ? `<button class="fb-delete" onclick="deleteFeedback(${item.id})" title="Delete">✕</button>`
+          ? `<button class="fb-delete" onclick="deleteFeedback('${item.id}')" title="Delete">✕</button>`
           : ''}
       </div>
     `).join('');
@@ -313,7 +313,7 @@
             <strong>${escHtml(item.author)}</strong> &nbsp;·&nbsp; ${formatTs(item.ts)}
           </span>
           ${isAdmin
-            ? `<button class="fb-delete" onclick="deleteFeedback(${item.id})" title="Delete">✕</button>`
+            ? `<button class="fb-delete" onclick="deleteFeedback('${item.id}')" title="Delete">✕</button>`
             : ''}
         </div>`;
       feed.prepend(div.firstElementChild);
