@@ -88,6 +88,40 @@
         .sol-toolbar-btn:hover { background: #f0f4ff; }
         #bookmarkBtn.bookmarked { background: #fff8e1; border-color: #f59e0b; color: #92400e; }
         #bookmarkBtn.bookmarked:hover { background: #fef3c7; }
+
+        /* ── Fix Worked button ── */
+        .fix-worked-wrap {
+            margin-top: 14px;
+            padding-top: 12px;
+            border-top: 1px dashed #c7d2fe;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #fixWorkedBtn {
+            padding: 6px 16px;
+            border-radius: 6px;
+            border: 1.5px solid #16a34a;
+            background: #f0fdf4;
+            color: #15803d;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s, transform 0.1s;
+        }
+        #fixWorkedBtn:hover { background: #dcfce7; }
+        #fixWorkedBtn:active { transform: scale(0.96); }
+        #fixWorkedBtn.fix-logged {
+            background: #15803d;
+            color: white;
+            border-color: #15803d;
+        }
+        #fixWorkedBtn.fix-logged:hover { background: #166534; }
+        .fix-count-label {
+            font-size: 12px;
+            color: #6b7280;
+        }
+        .fix-count-label strong { color: #15803d; }
         .sol-issue-label {
             font-size: 13px;
             color: #555;
@@ -180,6 +214,10 @@
                         </div>
                         <div class="acc-bd">
                             <ul id="technicianSolutionList"><li><span style="color:grey;">Select an issue on the left.</span></li></ul>
+                            <div class="fix-worked-wrap" id="fixWorkedWrap" style="display:none;">
+                                <button id="fixWorkedBtn" onclick="markFixWorked()">✅ This fix worked</button>
+                                <span class="fix-count-label" id="fixCountLabel"></span>
+                            </div>
                         </div>
                     </div>
 
@@ -543,6 +581,46 @@
         updateBookmarkBtn();
     }
 
+    // ── This fix worked ──────────────────────────────────────────────────────────
+    function _getFixLog()   { try { return JSON.parse(localStorage.getItem('atosa_fix_log') || '[]'); } catch { return []; } }
+    function _saveFixLog(l) { localStorage.setItem('atosa_fix_log', JSON.stringify(l)); }
+
+    function getFixCount(m, iss) {
+        return _getFixLog().filter(e => e.model === m && e.issue === iss).length;
+    }
+
+    function updateFixBtn() {
+        const wrap  = document.getElementById('fixWorkedWrap');
+        const btn   = document.getElementById('fixWorkedBtn');
+        const label = document.getElementById('fixCountLabel');
+        const issue = _currentIssue();
+        if (!wrap || !issue || !model) { if (wrap) wrap.style.display = 'none'; return; }
+        wrap.style.display = '';
+        const cnt = getFixCount(model, issue);
+        if (cnt > 0) {
+            btn.textContent = '✅ Worked!';
+            btn.classList.add('fix-logged');
+            label.innerHTML = `Reported solved <strong>${cnt}</strong> time${cnt > 1 ? 's' : ''}`;
+        } else {
+            btn.textContent = '✅ This fix worked';
+            btn.classList.remove('fix-logged');
+            label.textContent = '';
+        }
+    }
+
+    function markFixWorked() {
+        const issue = _currentIssue();
+        if (!issue || !model) return;
+        const log = _getFixLog();
+        log.push({ model, issue, ts: Date.now() });
+        _saveFixLog(log);
+        updateFixBtn();
+        // brief pulse animation
+        const btn = document.getElementById('fixWorkedBtn');
+        btn.style.transform = 'scale(1.08)';
+        setTimeout(() => { btn.style.transform = ''; }, 200);
+    }
+
     // ── 複製當前問題鏈接 ──
     function shareIssue() {
         const btn = document.getElementById('shareBtn');
@@ -593,8 +671,9 @@
                 url.searchParams.set('issue', category);
                 history.replaceState(null, '', url.toString());
 
-                // Update bookmark button state
+                // Update bookmark + fix-worked button state
                 updateBookmarkBtn();
+                updateFixBtn();
 
                 // Show current issue label in toolbar
                 const label = document.getElementById('currentIssueLabel');
