@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin — Content Manager</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background: #f0f2f7; color: #1e293b; height: 100vh; display: flex; flex-direction: column; }
+
+    /* ── Top bar ── */
+    .topbar {
+      background: #1e293b; color: white; padding: 0 20px;
+      display: flex; align-items: center; gap: 16px; height: 50px; flex-shrink: 0;
+    }
+    .topbar a { color: #94a3b8; text-decoration: none; font-size: 13px; }
+    .topbar a:hover { color: white; }
+    .topbar h1 { font-size: 15px; font-weight: 700; color: white; }
+    .topbar-right { margin-left: auto; font-size: 12px; color: #64748b; }
+
+    /* ── Layout ── */
+    .layout { display: flex; flex: 1; overflow: hidden; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 240px; flex-shrink: 0;
+      background: white; border-right: 1px solid #e2e8f0;
+      overflow-y: auto; padding: 12px 0;
+    }
+    .sidebar-title {
+      font-size: 11px; font-weight: 700; color: #94a3b8;
+      letter-spacing: .6px; padding: 4px 16px 8px; text-transform: uppercase;
+    }
+    .family-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 16px; cursor: pointer; font-size: 13px;
+      border-left: 3px solid transparent; transition: all .12s;
+    }
+    .family-item:hover { background: #f8fafc; }
+    .family-item.active { background: #eff6ff; border-left-color: #3b82f6; color: #2563eb; font-weight: 600; }
+    .family-badge { font-size: 11px; color: #94a3b8; background: #f1f5f9; padding: 1px 6px; border-radius: 10px; }
+    .family-item.active .family-badge { background: #dbeafe; color: #3b82f6; }
+
+    /* ── Main panel ── */
+    .main { flex: 1; overflow-y: auto; padding: 24px 28px; }
+    .main-placeholder { text-align: center; color: #94a3b8; margin-top: 80px; font-size: 15px; }
+
+    .panel-header {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px;
+    }
+    .panel-title { font-size: 1.1rem; font-weight: 700; }
+    .btn { padding: 7px 16px; border-radius: 7px; border: none; cursor: pointer; font-size: 13px; font-weight: 600; transition: opacity .15s; }
+    .btn:hover { opacity: .85; }
+    .btn-primary { background: #3b82f6; color: white; }
+    .btn-danger  { background: #ef4444; color: white; font-size: 12px; padding: 4px 10px; }
+    .btn-edit    { background: #e0f2fe; color: #0369a1; font-size: 12px; padding: 4px 10px; }
+    .btn-sm-gray { background: #f1f5f9; color: #475569; font-size: 12px; padding: 4px 10px; }
+
+    /* ── Issue table ── */
+    .issue-table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 6px rgba(0,0,0,.07); }
+    .issue-table th {
+      background: #f8fafc; text-align: left; padding: 10px 14px;
+      font-size: 12px; color: #64748b; font-weight: 700; border-bottom: 1px solid #e2e8f0;
+    }
+    .issue-table td { padding: 10px 14px; font-size: 13px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+    .issue-table tr:last-child td { border-bottom: none; }
+    .issue-table tr:hover td { background: #fafafa; }
+    .pill { display: inline-block; font-size: 11px; padding: 2px 7px; border-radius: 10px; font-weight: 600; }
+    .pill-g { background: #dcfce7; color: #16a34a; }
+    .pill-b { background: #dbeafe; color: #2563eb; }
+    .pill-o { background: #ffedd5; color: #c2410c; }
+    .pill-0 { background: #f1f5f9; color: #94a3b8; }
+    .actions { display: flex; gap: 6px; }
+
+    /* ── Modal overlay ── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.45); z-index: 1000;
+      align-items: flex-start; justify-content: center; padding: 30px 20px; overflow-y: auto;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: white; border-radius: 14px; width: 100%; max-width: 780px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.25); padding: 28px 30px;
+      animation: mdIn .18s ease;
+    }
+    @keyframes mdIn { from { opacity:0; transform: translateY(-12px); } to { opacity:1; transform:none; } }
+    .modal-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .modal-title { font-size: 1rem; font-weight: 700; }
+    .modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: #94a3b8; }
+    .modal-close:hover { color: #ef4444; }
+
+    .form-row { display: flex; gap: 16px; margin-bottom: 14px; }
+    .form-field { flex: 1; }
+    .form-field label { display: block; font-size: 12px; font-weight: 700; color: #64748b; margin-bottom: 5px; }
+    .form-field input, .form-field textarea {
+      width: 100%; padding: 8px 10px; border: 1.5px solid #e2e8f0; border-radius: 7px;
+      font-size: 13px; outline: none; font-family: Arial, sans-serif; transition: border-color .15s;
+    }
+    .form-field input:focus, .form-field textarea:focus { border-color: #3b82f6; }
+
+    /* ── Tier sections ── */
+    .tier-section { margin-bottom: 20px; }
+    .tier-hd {
+      display: flex; align-items: center; gap: 8px; padding: 8px 12px;
+      border-radius: 8px; margin-bottom: 10px; font-size: 13px; font-weight: 700;
+    }
+    .tier-hd.green { background: #f0fdf4; color: #166534; }
+    .tier-hd.blue  { background: #eff6ff; color: #1e40af; }
+    .tier-hd.orange{ background: #fff7ed; color: #9a3412; }
+    .tier-count { font-size: 11px; font-weight: 400; opacity: .7; margin-left: auto; }
+
+    /* ── Step cards ── */
+    .step-card {
+      border: 1.5px solid #e2e8f0; border-radius: 8px;
+      padding: 10px 12px; margin-bottom: 8px; background: #fafafa; position: relative;
+    }
+    .step-card .row1 { display: flex; gap: 8px; align-items: flex-start; }
+    .step-card .row1 textarea {
+      flex: 1; border: 1px solid #d1d5db; border-radius: 6px; padding: 6px 8px;
+      font-size: 13px; resize: vertical; min-height: 44px; font-family: Arial, sans-serif;
+      outline: none;
+    }
+    .step-card .row1 textarea:focus { border-color: #3b82f6; }
+    .step-remove {
+      background: none; border: none; color: #d1d5db; cursor: pointer;
+      font-size: 16px; padding: 2px 5px; flex-shrink: 0; line-height: 1;
+    }
+    .step-remove:hover { color: #ef4444; }
+    .step-extras { display: flex; gap: 8px; margin-top: 6px; }
+    .step-extras input {
+      flex: 1; border: 1px solid #e2e8f0; border-radius: 6px; padding: 5px 8px;
+      font-size: 12px; outline: none; background: white;
+    }
+    .step-extras input:focus { border-color: #3b82f6; }
+    .step-extras input.red-input { border-left: 3px solid #ef4444; }
+    .step-substeps {
+      width: 100%; margin-top: 6px; border: 1px solid #e2e8f0; border-radius: 6px;
+      padding: 5px 8px; font-size: 12px; resize: vertical; min-height: 52px;
+      font-family: monospace; outline: none; background: white;
+    }
+    .step-substeps:focus { border-color: #3b82f6; }
+    .step-substeps-label { font-size: 10px; color: #94a3b8; margin-top: 3px; display: block; }
+
+    .add-step-btn {
+      display: block; width: 100%; padding: 7px; border: 1.5px dashed #cbd5e1;
+      border-radius: 7px; background: none; color: #64748b; font-size: 12px;
+      cursor: pointer; margin-top: 2px; text-align: center; transition: all .12s;
+    }
+    .add-step-btn:hover { border-color: #3b82f6; color: #3b82f6; background: #eff6ff; }
+
+    /* ── Modal footer ── */
+    .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; padding-top: 18px; border-top: 1px solid #f1f5f9; }
+    .btn-cancel { background: #f1f5f9; color: #475569; padding: 9px 20px; border-radius: 7px; border: none; cursor: pointer; font-size: 14px; font-weight: 600; }
+    .btn-save   { background: #2563eb; color: white; padding: 9px 24px; border-radius: 7px; border: none; cursor: pointer; font-size: 14px; font-weight: 700; }
+    .btn-save:hover { background: #1d4ed8; }
+    #saveStatus { font-size: 13px; align-self: center; font-weight: 600; }
+    #saveStatus.ok  { color: #16a34a; }
+    #saveStatus.err { color: #dc2626; }
+  </style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+  <a href="dashboard.html">← Dashboard</a>
+  <span style="color:#475569">|</span>
+  <h1>⚙️ Content Manager</h1>
+  <div class="topbar-right" id="topbarInfo">Loading...</div>
+</div>
+
+<!-- Layout -->
+<div class="layout">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-title">Model Families</div>
+    <div id="familyList"><div style="padding:16px;color:#94a3b8;font-size:13px;">Loading...</div></div>
+  </div>
+
+  <!-- Main panel -->
+  <div class="main" id="mainPanel">
+    <div class="main-placeholder">← Select a model family to manage its issues</div>
+  </div>
+</div>
+
+<!-- Edit modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-hd">
+      <span class="modal-title" id="modalTitle">Edit Issue</span>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+
+    <div class="form-row">
+      <div class="form-field">
+        <label>Issue Key (internal ID)</label>
+        <input type="text" id="fIssueKey" placeholder="e.g. noise"/>
+      </div>
+      <div class="form-field">
+        <label>Label (display name)</label>
+        <input type="text" id="fLabel" placeholder="e.g. Noise Issue"/>
+      </div>
+    </div>
+
+    <!-- Quick Guide -->
+    <div class="tier-section">
+      <div class="tier-hd green">🟢 Quick Guide (Overview) <span class="tier-count" id="countOverview"></span></div>
+      <div id="stepsOverview"></div>
+      <button class="add-step-btn" onclick="addStep('overview')">+ Add Step</button>
+    </div>
+
+    <!-- Technician -->
+    <div class="tier-section">
+      <div class="tier-hd blue">🔵 Technician Analysis <span class="tier-count" id="countTechnician"></span></div>
+      <div id="stepsTechnician"></div>
+      <button class="add-step-btn" onclick="addStep('technician')">+ Add Step</button>
+    </div>
+
+    <!-- Non-warranty -->
+    <div class="tier-section">
+      <div class="tier-hd orange">🟠 Non-warranty (Customer) <span class="tier-count" id="countCustomer"></span></div>
+      <div id="stepsCustomer"></div>
+      <button class="add-step-btn" onclick="addStep('customer')">+ Add Step</button>
+    </div>
+
+    <div class="modal-footer">
+      <span id="saveStatus"></span>
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" onclick="saveIssue()">💾 Save to Database</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let families    = [];
+  let currentKey  = null; // selected family key
+  let currentData = null; // full family data object
+  let editingIssueKey = null; // original key of issue being edited (null = new)
+
+  // ── Auth check ──────────────────────────────────────────────────────────────
+  (async function () {
+    try {
+      const r = await fetch('/api/me');
+      if (!r.ok) throw new Error();
+      const { role } = await r.json();
+      if (role !== 'superAdmin') throw new Error('not superAdmin');
+      document.getElementById('topbarInfo').textContent = 'Logged in as superAdmin';
+    } catch {
+      alert('Access denied. SuperAdmin only.');
+      window.location.href = '/dashboard.html';
+    }
+    loadFamilies();
+  })();
+
+  // ── Load sidebar ─────────────────────────────────────────────────────────────
+  async function loadFamilies() {
+    const r    = await fetch('/api/admin/families');
+    families   = await r.json();
+    const list = document.getElementById('familyList');
+    list.innerHTML = families.map(f => `
+      <div class="family-item" id="fi-${esc(f.key)}" onclick="selectFamily('${esc(f.key)}')">
+        <span>${f.key.replace('modelData','')}</span>
+        <span class="family-badge">${f.issueCount}</span>
+      </div>
+    `).join('');
+  }
+
+  // ── Select family ────────────────────────────────────────────────────────────
+  async function selectFamily(key) {
+    // highlight
+    document.querySelectorAll('.family-item').forEach(el => el.classList.remove('active'));
+    const el = document.getElementById('fi-' + key);
+    if (el) el.classList.add('active');
+
+    currentKey = key;
+    document.getElementById('mainPanel').innerHTML = '<div style="padding:40px;color:#94a3b8;">Loading...</div>';
+
+    const r    = await fetch('/api/admin/family/' + encodeURIComponent(key));
+    currentData = await r.json();
+    renderIssueTable();
+  }
+
+  // ── Render issue table ───────────────────────────────────────────────────────
+  function renderIssueTable() {
+    const issues = currentData.common?.issues || {};
+    const keys   = Object.keys(issues);
+    const familyLabel = currentKey.replace('modelData', '');
+
+    document.getElementById('mainPanel').innerHTML = `
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">${familyLabel}</div>
+          <div style="font-size:12px;color:#94a3b8;margin-top:2px;">${keys.length} common issues</div>
+        </div>
+        <button class="btn btn-primary" onclick="openNewIssue()">+ Add Issue</button>
+      </div>
+      <table class="issue-table">
+        <thead>
+          <tr>
+            <th style="width:200px">Issue Key</th>
+            <th>Label</th>
+            <th style="width:90px;text-align:center">🟢 Guide</th>
+            <th style="width:90px;text-align:center">🔵 Tech</th>
+            <th style="width:90px;text-align:center">🟠 Non-W</th>
+            <th style="width:110px">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${keys.map(k => {
+            const iss  = issues[k];
+            const nOv  = (iss.overview   || []).length;
+            const nTe  = (iss.technician || []).length;
+            const nCu  = (iss.customer   || []).length;
+            const lbl  = iss.label ? iss.label.replace(/<[^>]+>/g,'') : k;
+            return `<tr>
+              <td><code style="font-size:12px;color:#475569">${esc(k)}</code></td>
+              <td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(lbl)}</td>
+              <td style="text-align:center"><span class="pill ${nOv?'pill-g':'pill-0'}">${nOv}</span></td>
+              <td style="text-align:center"><span class="pill ${nTe?'pill-b':'pill-0'}">${nTe}</span></td>
+              <td style="text-align:center"><span class="pill ${nCu?'pill-o':'pill-0'}">${nCu}</span></td>
+              <td><div class="actions">
+                <button class="btn btn-edit" onclick="openEdit('${esc(k)}')">✏️ Edit</button>
+                <button class="btn btn-danger" onclick="deleteIssue('${esc(k)}')">✕</button>
+              </div></td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    `;
+  }
+
+  // ── Open edit modal ──────────────────────────────────────────────────────────
+  function openEdit(issueKey) {
+    editingIssueKey = issueKey;
+    const iss = (currentData.common?.issues || {})[issueKey] || {};
+
+    document.getElementById('modalTitle').textContent = 'Edit Issue: ' + issueKey;
+    document.getElementById('fIssueKey').value = issueKey;
+    document.getElementById('fIssueKey').disabled = true; // can't rename key (breaks references)
+    document.getElementById('fLabel').value = iss.label || '';
+    document.getElementById('saveStatus').textContent = '';
+
+    renderSteps('overview',   iss.overview   || []);
+    renderSteps('technician', iss.technician || []);
+    renderSteps('customer',   iss.customer   || []);
+
+    document.getElementById('modalOverlay').classList.add('open');
+  }
+
+  function openNewIssue() {
+    editingIssueKey = null;
+    document.getElementById('modalTitle').textContent = 'Add New Issue';
+    document.getElementById('fIssueKey').value = '';
+    document.getElementById('fIssueKey').disabled = false;
+    document.getElementById('fLabel').value = '';
+    document.getElementById('saveStatus').textContent = '';
+    renderSteps('overview',   []);
+    renderSteps('technician', []);
+    renderSteps('customer',   []);
+    document.getElementById('modalOverlay').classList.add('open');
+  }
+
+  function closeModal() {
+    document.getElementById('modalOverlay').classList.remove('open');
+  }
+
+  // ── Render step cards ────────────────────────────────────────────────────────
+  function renderSteps(tier, steps) {
+    const container = document.getElementById('steps' + cap(tier));
+    container.innerHTML = steps.map((s, i) => stepCardHTML(tier, i, s)).join('');
+    updateCount(tier, steps.length);
+  }
+
+  function stepCardHTML(tier, idx, s) {
+    const text     = typeof s === 'string' ? s : (s.text  || '');
+    const red      = typeof s === 'string' ? '' : (s.red   || '');
+    const subSteps = typeof s === 'string' ? '' : (s.steps ? s.steps.join('\n') : '');
+    return `
+      <div class="step-card" data-tier="${tier}" data-idx="${idx}">
+        <div class="row1">
+          <textarea placeholder="Step text..." oninput="updateCount('${tier}')">${esc(text)}</textarea>
+          <button class="step-remove" onclick="removeStep(this)">✕</button>
+        </div>
+        <div class="step-extras">
+          <input class="red-input" type="text" placeholder="⚠ Red note (optional)" value="${esc(red)}"/>
+        </div>
+        ${subSteps !== '' || true ? `
+          <textarea class="step-substeps" placeholder="Sub-steps (one per line, optional)">${esc(subSteps)}</textarea>
+          <span class="step-substeps-label">Sub-steps: one line = one bullet</span>
+        ` : ''}
+      </div>`;
+  }
+
+  function addStep(tier) {
+    const container = document.getElementById('steps' + cap(tier));
+    const idx = container.children.length;
+    const div = document.createElement('div');
+    div.innerHTML = stepCardHTML(tier, idx, { text:'', red:'', steps:[] });
+    container.appendChild(div.firstElementChild);
+    updateCount(tier);
+    container.lastElementChild.querySelector('textarea').focus();
+  }
+
+  function removeStep(btn) {
+    const card = btn.closest('.step-card');
+    const tier = card.dataset.tier;
+    card.remove();
+    updateCount(tier);
+  }
+
+  function updateCount(tier) {
+    const container = document.getElementById('steps' + cap(tier));
+    const n = container ? container.children.length : 0;
+    const el = document.getElementById('count' + cap(tier));
+    if (el) el.textContent = n + ' step' + (n !== 1 ? 's' : '');
+  }
+
+  // ── Collect steps from DOM ───────────────────────────────────────────────────
+  function collectSteps(tier) {
+    const cards = document.getElementById('steps' + cap(tier)).querySelectorAll('.step-card');
+    return Array.from(cards).map(card => {
+      const text  = card.querySelector('.row1 textarea').value.trim();
+      const red   = card.querySelector('.red-input').value.trim();
+      const subEl = card.querySelector('.step-substeps');
+      const subs  = subEl ? subEl.value.split('\n').map(l=>l.trim()).filter(Boolean) : [];
+      const obj   = { text };
+      if (red)        obj.red   = red;
+      if (subs.length) obj.steps = subs;
+      return obj;
+    }).filter(o => o.text);
+  }
+
+  // ── Save issue ───────────────────────────────────────────────────────────────
+  async function saveIssue() {
+    const keyVal   = document.getElementById('fIssueKey').value.trim();
+    const labelVal = document.getElementById('fLabel').value.trim();
+    const st       = document.getElementById('saveStatus');
+
+    if (!keyVal) { setSaveStatus('Issue key is required', 'err'); return; }
+
+    const issueObj = {
+      label:      labelVal || keyVal,
+      overview:   collectSteps('overview'),
+      technician: collectSteps('technician'),
+      customer:   collectSteps('customer')
+    };
+
+    // Remove empty arrays to keep data clean
+    if (!issueObj.overview.length)   delete issueObj.overview;
+    if (!issueObj.technician.length) delete issueObj.technician;
+    if (!issueObj.customer.length)   delete issueObj.customer;
+
+    if (!currentData.common)        currentData.common = {};
+    if (!currentData.common.issues) currentData.common.issues = {};
+
+    // If renaming (new issue), add key to all model issue arrays
+    if (!editingIssueKey && !currentData.common.issues[keyVal]) {
+      currentData.common.issues[keyVal] = issueObj;
+      // Add to each model's issues array
+      Object.values(currentData.models || {}).forEach(m => {
+        if (Array.isArray(m.issues) && !m.issues.includes(keyVal)) m.issues.push(keyVal);
+      });
+    } else {
+      currentData.common.issues[keyVal] = issueObj;
+    }
+
+    setSaveStatus('Saving...', '');
+    try {
+      const r = await fetch('/api/admin/family/' + encodeURIComponent(currentKey), {
+        method:  'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ data: currentData })
+      });
+      if (!r.ok) throw new Error((await r.json()).error);
+      setSaveStatus('✅ Saved!', 'ok');
+      setTimeout(() => {
+        closeModal();
+        // Refresh sidebar badge
+        loadFamilies().then(() => {
+          document.querySelectorAll('.family-item').forEach(el => el.classList.remove('active'));
+          const el = document.getElementById('fi-' + currentKey);
+          if (el) el.classList.add('active');
+        });
+        renderIssueTable();
+      }, 700);
+    } catch (e) {
+      setSaveStatus('❌ ' + e.message, 'err');
+    }
+  }
+
+  // ── Delete issue ─────────────────────────────────────────────────────────────
+  async function deleteIssue(issueKey) {
+    if (!confirm(`Delete issue "${issueKey}"? This cannot be undone.`)) return;
+
+    delete currentData.common.issues[issueKey];
+    // Remove from all model issue arrays
+    Object.values(currentData.models || {}).forEach(m => {
+      if (Array.isArray(m.issues)) m.issues = m.issues.filter(k => k !== issueKey);
+    });
+
+    try {
+      const r = await fetch('/api/admin/family/' + encodeURIComponent(currentKey), {
+        method:  'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ data: currentData })
+      });
+      if (!r.ok) throw new Error();
+      renderIssueTable();
+    } catch { alert('Delete failed'); }
+  }
+
+  // ── Helpers ──────────────────────────────────────────────────────────────────
+  function setSaveStatus(msg, cls) {
+    const el = document.getElementById('saveStatus');
+    el.textContent = msg;
+    el.className = cls;
+  }
+  function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+
+  // Close modal on overlay click
+  document.getElementById('modalOverlay').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+</script>
+</body>
+</html>

@@ -185,6 +185,47 @@ app.delete('/api/feedback/:id', (req, res) => {
   res.json({ ok: true });
 });
 
+// ── API: Admin — Content Manager ──────────────────────────────────────────────
+function superAdminOnly(req, res, next) {
+  if (req.session?.user?.role !== 'superAdmin')
+    return res.status(403).json({ error: 'Forbidden' });
+  next();
+}
+
+// List all families with counts
+app.get('/api/admin/families', superAdminOnly, async (req, res) => {
+  try {
+    const docs = await ModelData.find({}, { _id: 1, 'data.models': 1, 'data.common': 1 });
+    const list = docs.map(doc => ({
+      key:        doc._id,
+      modelCount: Object.keys(doc.data?.models  || {}).length,
+      issueCount: Object.keys(doc.data?.common?.issues || {}).length
+    })).sort((a, b) => a.key.localeCompare(b.key));
+    res.json(list);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// Get full family data
+app.get('/api/admin/family/:key', superAdminOnly, async (req, res) => {
+  try {
+    const doc = await ModelData.findById(req.params.key);
+    if (!doc) return res.status(404).json({ error: 'Not found' });
+    res.json(doc.data);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// Save full family data
+app.put('/api/admin/family/:key', superAdminOnly, async (req, res) => {
+  try {
+    const { data } = req.body;
+    if (!data) return res.status(400).json({ error: 'Missing data' });
+    await ModelData.findByIdAndUpdate(
+      req.params.key, { data }, { upsert: true, new: true }
+    );
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // ── API: Model Data (from MongoDB) ────────────────────────────────────────────
 app.get('/api/modeldata/:fileKey', async (req, res) => {
   if (!req.session?.user) return res.status(401).json({ error: 'Unauthorized' });

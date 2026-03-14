@@ -992,6 +992,8 @@ document.addEventListener("DOMContentLoaded", async function () {
       if (role === 'superAdmin') {
         const editBtn = document.getElementById('annEditBtn');
         if (editBtn) editBtn.style.display = 'inline';
+        const adminBtn = document.getElementById('adminBtn');
+        if (adminBtn) adminBtn.style.display = 'inline-block';
       }
     }
   } catch (e) {}
