@@ -114,7 +114,6 @@
     <p class="hint">仅 admin/4321 可见</p>
     <a class="btn" href="${TECH_MAP_URL}"      target="_blank" rel="noopener noreferrer">🚀 TECH MAP</a>
     <a class="btn" href="${DATA_ANALYSIS_URL}" target="_blank" rel="noopener noreferrer">📊 Data Analysis</a>
-    <a class="btn" href="${DAILY_FOLLOW_URL}"  target="_blank" rel="noopener noreferrer">🗓 Daily Follow-up</a>  <!-- ← 新增按钮 -->
     <a class="btn" href="${ISSUE_TRACKER_URL}" target="_blank" rel="noopener noreferrer">🧩 Product issue-tracker</a>
     <a class="btn" href="${TECH_BONUS_URL}" target="_blank" rel="noopener noreferrer">🧰 In-House Tech Center Login</a>
     <div class="spacer"></div>
