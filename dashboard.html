@@ -375,6 +375,49 @@
       color: white;
     }
 
+    /* ── Bookmarks Bar ── */
+    .bookmarks-bar {
+      margin-bottom: 10px;
+      font-size: 13px;
+      color: #555;
+    }
+    .bookmarks-bar > span:first-child {
+      font-weight: 600;
+      margin-right: 6px;
+    }
+    .bookmark-tag {
+      display: inline-block;
+      margin: 2px 2px;
+      padding: 3px 10px;
+      background: rgba(255,248,225,0.95);
+      border: 1px solid #f59e0b;
+      border-radius: 12px;
+      color: #92400e;
+      text-decoration: none;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .bookmark-tag:hover { background: #fef3c7; }
+    .bookmark-remove {
+      background: none;
+      border: none;
+      color: #bbb;
+      font-size: 11px;
+      cursor: pointer;
+      padding: 0 2px;
+      vertical-align: middle;
+      margin-left: -2px;
+    }
+    .bookmark-remove:hover { color: #e00; }
+    body.dark-mode .bookmarks-bar { color: #94a3b8; }
+    body.dark-mode .bookmark-tag {
+      background: rgba(30,41,59,0.85);
+      border-color: #b45309;
+      color: #fcd34d;
+    }
+    body.dark-mode .bookmark-tag:hover { background: #3b2800; }
+
     /* ── Dark Mode Toggle Button ── */
     #darkModeToggle {
       position: absolute;
@@ -533,6 +576,13 @@
       <button class="recent-clear" onclick="clearRecentHistory()" title="Clear history">✕ clear</button>
     </div>
 
+    <!-- ✅ Bookmarks Bar -->
+    <div class="bookmarks-bar" id="bookmarksBar" style="display:none;">
+      <span>⭐ Bookmarks:</span>
+      <span id="bookmarkTags"></span>
+      <button class="recent-clear" onclick="clearAllBookmarks()" title="Clear all bookmarks">✕ clear all</button>
+    </div>
+
     <!-- ✅ Category Tabs -->
     <div class="category-tabs" id="categoryTabs">
       <button class="cat-tab active" data-cat="all" onclick="filterByCategory('all', this)">All</button>
@@ -548,6 +598,34 @@
     </div>
 
   </div>
+
+  <!-- ✅ Bookmarks JS -->
+  <script>
+  function loadBookmarks() {
+    const bar  = document.getElementById('bookmarksBar');
+    const tags = document.getElementById('bookmarkTags');
+    let bms = [];
+    try { bms = JSON.parse(localStorage.getItem('atosa_bookmarks') || '[]'); } catch {}
+    if (!bms.length) { bar.style.display = 'none'; return; }
+    bar.style.display = '';
+    tags.innerHTML = bms.map((b, i) =>
+      `<a class="bookmark-tag" href="product.html?model=${encodeURIComponent(b.model)}&issue=${encodeURIComponent(b.issue)}">${b.label}</a>` +
+      `<button class="bookmark-remove" onclick="removeBookmark(${i})" title="Remove">✕</button>`
+    ).join('');
+  }
+  function removeBookmark(idx) {
+    let bms = [];
+    try { bms = JSON.parse(localStorage.getItem('atosa_bookmarks') || '[]'); } catch {}
+    bms.splice(idx, 1);
+    localStorage.setItem('atosa_bookmarks', JSON.stringify(bms));
+    loadBookmarks();
+  }
+  function clearAllBookmarks() {
+    localStorage.removeItem('atosa_bookmarks');
+    loadBookmarks();
+  }
+  document.addEventListener('DOMContentLoaded', loadBookmarks);
+  </script>
 
   <!-- ✅ Add script.js reference -->
   <script src="script.js"></script>

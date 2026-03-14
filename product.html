@@ -86,6 +86,8 @@
             transition: background 0.15s;
         }
         .sol-toolbar-btn:hover { background: #f0f4ff; }
+        #bookmarkBtn.bookmarked { background: #fff8e1; border-color: #f59e0b; color: #92400e; }
+        #bookmarkBtn.bookmarked:hover { background: #fef3c7; }
         .sol-issue-label {
             font-size: 13px;
             color: #555;
@@ -151,6 +153,7 @@
                     <div class="sol-toolbar">
                         <button class="sol-toolbar-btn" id="shareBtn" onclick="shareIssue()">🔗 Copy Link</button>
                         <button class="sol-toolbar-btn" onclick="window.print()">🖨 Print</button>
+                        <button class="sol-toolbar-btn" id="bookmarkBtn" onclick="toggleBookmark()">☆ Save</button>
                         <span class="sol-issue-label" id="currentIssueLabel"></span>
                     </div>
 
@@ -505,6 +508,41 @@
         }).catch(() => { prompt('Copy this text:', text); });
     }
 
+    // ── 收藏夾 ──────────────────────────────────────────────────────────────────
+    function _getBM()       { try { return JSON.parse(localStorage.getItem('atosa_bookmarks') || '[]'); } catch { return []; } }
+    function _saveBM(bms)   { localStorage.setItem('atosa_bookmarks', JSON.stringify(bms)); }
+
+    function _currentIssue() {
+        return new URL(location.href).searchParams.get('issue') || '';
+    }
+
+    function updateBookmarkBtn() {
+        const btn = document.getElementById('bookmarkBtn');
+        if (!btn) return;
+        const issue = _currentIssue();
+        if (!issue || !model) { btn.style.display = 'none'; return; }
+        btn.style.display = '';
+        const saved = _getBM().some(b => b.model === model && b.issue === issue);
+        btn.textContent = saved ? '⭐ Saved' : '☆ Save';
+        btn.classList.toggle('bookmarked', saved);
+    }
+
+    function toggleBookmark() {
+        const issue = _currentIssue();
+        if (!issue || !model) return;
+        let bms = _getBM();
+        const idx = bms.findIndex(b => b.model === model && b.issue === issue);
+        if (idx >= 0) {
+            bms.splice(idx, 1);
+        } else {
+            const issueLabel = issue.charAt(0).toUpperCase() + issue.slice(1);
+            bms.unshift({ model, issue, label: `${model} — ${issueLabel}` });
+            if (bms.length > 50) bms = bms.slice(0, 50);
+        }
+        _saveBM(bms);
+        updateBookmarkBtn();
+    }
+
     // ── 複製當前問題鏈接 ──
     function shareIssue() {
         const btn = document.getElementById('shareBtn');
@@ -554,6 +592,9 @@
                 const url = new URL(location.href);
                 url.searchParams.set('issue', category);
                 history.replaceState(null, '', url.toString());
+
+                // Update bookmark button state
+                updateBookmarkBtn();
 
                 // Show current issue label in toolbar
                 const label = document.getElementById('currentIssueLabel');
