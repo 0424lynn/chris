@@ -127,6 +127,48 @@ app.post('/api/announcement', (req, res) => {
   res.json({ ok: true });
 });
 
+// ── API: Feedback / Suggestions ───────────────────────────────────────────────
+const FEEDBACK_FILE = path.join(__dirname, 'feedback.json');
+
+function readFeedback() {
+  const fs = require('fs');
+  try { return JSON.parse(fs.readFileSync(FEEDBACK_FILE, 'utf8')); } catch { return []; }
+}
+function writeFeedback(data) {
+  const fs = require('fs');
+  fs.writeFileSync(FEEDBACK_FILE, JSON.stringify(data, null, 2), 'utf8');
+}
+
+app.get('/api/feedback', (req, res) => {
+  if (!req.session?.user) return res.status(401).json({ error: 'Unauthorized' });
+  res.json(readFeedback());
+});
+
+app.post('/api/feedback', (req, res) => {
+  if (!req.session?.user) return res.status(401).json({ error: 'Unauthorized' });
+  const { text } = req.body;
+  if (!text || !text.trim()) return res.status(400).json({ error: 'Empty text' });
+  const data = readFeedback();
+  const item = {
+    id: Date.now(),
+    text: text.trim().slice(0, 1000),
+    author: req.session.user.username,
+    ts: Date.now()
+  };
+  data.unshift(item);
+  writeFeedback(data);
+  res.json(item);
+});
+
+app.delete('/api/feedback/:id', (req, res) => {
+  if (req.session?.user?.role !== 'superAdmin')
+    return res.status(403).json({ error: 'Forbidden' });
+  const id = parseInt(req.params.id);
+  const data = readFeedback().filter(x => x.id !== id);
+  writeFeedback(data);
+  res.json({ ok: true });
+});
+
 // ── API: Product Titles ───────────────────────────────────────────────────────
 app.get('/api/product-titles', (req, res) => {
   const fs = require('fs');
