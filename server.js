@@ -300,8 +300,9 @@ app.get('/api/product-titles', async (req, res) => {
 });
 
 // ── API: Embedded App URLs (admin only, URLs never exposed to frontend JS) ────
+const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'atosa_admin_2024';
 const APP_REGISTRY = {
-  techmap:      { label: '🚀 Tech Map',               url: process.env.APP_TECHMAP      || 'https://tech-map.streamlit.app/?embed=true' },
+  techmap:      { label: '🚀 Tech Map',               url: process.env.APP_TECHMAP      || `https://tech-map.streamlit.app/?embed=true&admin_token=${ADMIN_TOKEN}` },
   dataanalysis: { label: '📊 Data Analysis',           url: process.env.APP_DATAANALYSIS || 'https://after-sales-service-report.streamlit.app/?guest=1&debug=1&embed=true#可视化' },
   issuetracker: { label: '🧩 Product Issue Tracker',   url: process.env.APP_ISSUETRACKER || 'https://issue-tracker.streamlit.app/?tab=list&embed=true' },
   techbonus:    { label: '🧰 In-House Tech Center',     url: process.env.APP_TECHBONUS    || 'https://tech-bonus.streamlit.app/?embed=true' },
