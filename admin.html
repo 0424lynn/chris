@@ -249,6 +249,7 @@
     } catch {
       alert('Access denied. SuperAdmin only.');
       window.location.href = '/dashboard.html';
+      return;
     }
     loadFamilies();
   })();
