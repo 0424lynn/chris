@@ -149,6 +149,23 @@
     }
     .add-step-btn:hover { border-color: #3b82f6; color: #3b82f6; background: #eff6ff; }
 
+    /* ── Model overrides ── */
+    .model-overrides-section { margin-top: 20px; border-top: 2px dashed #e2e8f0; padding-top: 16px; }
+    .model-overrides-title { font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 12px; }
+    .model-override-item { border: 1.5px solid #e2e8f0; border-radius: 8px; margin-bottom: 8px; overflow: hidden; }
+    .model-override-hd {
+      display: flex; align-items: center; gap: 8px; padding: 9px 14px;
+      background: #f8fafc; cursor: pointer; font-size: 13px; font-weight: 600;
+      user-select: none; transition: background .1s;
+    }
+    .model-override-hd:hover { background: #f1f5f9; }
+    .model-badge { font-size: 11px; padding: 2px 8px; border-radius: 10px; background: #f1f5f9; color: #94a3b8; }
+    .model-badge.has-data { background: #dcfce7; color: #166534; }
+    .model-override-arrow { margin-left: auto; color: #94a3b8; font-size: 11px; transition: transform .15s; }
+    .model-override-body { display: none; padding: 14px; border-top: 1px solid #e2e8f0; background: #fafbff; }
+    .model-override-body.open { display: block; }
+    .model-override-body.open + .model-override-hd .model-override-arrow { transform: rotate(180deg); }
+
     /* ── Modal footer ── */
     .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; padding-top: 18px; border-top: 1px solid #f1f5f9; }
     .btn-cancel { background: #f1f5f9; color: #475569; padding: 9px 20px; border-radius: 7px; border: none; cursor: pointer; font-size: 14px; font-weight: 600; }
@@ -222,6 +239,14 @@
       <div class="tier-hd orange">🟠 Non-warranty (Customer) <span class="tier-count" id="countCustomer"></span></div>
       <div id="stepsCustomer"></div>
       <button class="add-step-btn" onclick="addStep('customer')">+ Add Step</button>
+    </div>
+
+    <!-- Model-Specific Extras -->
+    <div class="model-overrides-section">
+      <div class="model-overrides-title">📋 Model-Specific Extras
+        <span style="font-weight:400;color:#94a3b8;font-size:11px;margin-left:6px;">(appended after common steps, per model)</span>
+      </div>
+      <div id="modelOverridesList"></div>
     </div>
 
     <div class="modal-footer">
@@ -345,6 +370,7 @@
     renderSteps('overview',   iss.overview   || []);
     renderSteps('technician', iss.technician || []);
     renderSteps('customer',   iss.customer   || []);
+    renderModelOverrides(issueKey);
 
     document.getElementById('modalOverlay').classList.add('open');
   }
@@ -359,6 +385,7 @@
     renderSteps('overview',   []);
     renderSteps('technician', []);
     renderSteps('customer',   []);
+    renderModelOverrides(null);
     document.getElementById('modalOverlay').classList.add('open');
   }
 
@@ -466,6 +493,23 @@
       currentData.common.issues[keyVal] = issueObj;
     }
 
+    // Save model-specific overrides
+    Object.keys(currentData.models || {}).forEach(modelCode => {
+      const ov = collectModelSteps(modelCode, 'overview');
+      const te = collectModelSteps(modelCode, 'technician');
+      const cu = collectModelSteps(modelCode, 'customer');
+      if (!currentData.models[modelCode]) currentData.models[modelCode] = {};
+      if (ov.length || te.length || cu.length) {
+        if (!currentData.models[modelCode][keyVal]) currentData.models[modelCode][keyVal] = {};
+        if (ov.length) currentData.models[modelCode][keyVal].overview   = ov; else delete currentData.models[modelCode][keyVal].overview;
+        if (te.length) currentData.models[modelCode][keyVal].technician = te; else delete currentData.models[modelCode][keyVal].technician;
+        if (cu.length) currentData.models[modelCode][keyVal].customer   = cu; else delete currentData.models[modelCode][keyVal].customer;
+      } else {
+        // Clean up empty override
+        if (currentData.models[modelCode][keyVal]) delete currentData.models[modelCode][keyVal];
+      }
+    });
+
     setSaveStatus('Saving...', '');
     try {
       const r = await fetch('/api/admin/family/' + encodeURIComponent(currentKey), {
@@ -520,6 +564,122 @@
   function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
   function esc(s) {
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+
+  // ── Model override helpers ────────────────────────────────────────────────────
+  function renderModelOverrides(issueKey) {
+    const models = Object.keys(currentData?.models || {}).sort();
+    const container = document.getElementById('modelOverridesList');
+    if (!models.length) { container.innerHTML = '<div style="color:#94a3b8;font-size:13px;">No models in this family.</div>'; return; }
+
+    container.innerHTML = models.map(mc => {
+      const mData  = issueKey ? ((currentData.models[mc] || {})[issueKey] || {}) : {};
+      const count  = (mData.overview?.length||0) + (mData.technician?.length||0) + (mData.customer?.length||0);
+      const badge  = count ? `<span class="model-badge has-data">${count} extra step${count>1?'s':''}</span>` : `<span class="model-badge">none</span>`;
+      return `
+        <div class="model-override-item">
+          <div class="model-override-hd" onclick="toggleModelOverride('${mc}')">
+            <span>${mc}</span>${badge}
+            <span class="model-override-arrow" id="marrow-${mc}">▼</span>
+          </div>
+          <div class="model-override-body${count ? ' open' : ''}" id="mob-${mc}">
+            <div style="margin-bottom:12px;">
+              <div class="tier-hd green" style="margin-bottom:6px;">🟢 Extra Overview <span class="tier-count" id="mcount-overview-${mc}"></span></div>
+              <div id="msteps-overview-${mc}"></div>
+              <button class="add-step-btn" onclick="addModelStep('${mc}','overview')">+ Add Step</button>
+            </div>
+            <div style="margin-bottom:12px;">
+              <div class="tier-hd blue" style="margin-bottom:6px;">🔵 Extra Technician <span class="tier-count" id="mcount-technician-${mc}"></span></div>
+              <div id="msteps-technician-${mc}"></div>
+              <button class="add-step-btn" onclick="addModelStep('${mc}','technician')">+ Add Step</button>
+            </div>
+            <div>
+              <div class="tier-hd orange" style="margin-bottom:6px;">🟠 Extra Non-warranty <span class="tier-count" id="mcount-customer-${mc}"></span></div>
+              <div id="msteps-customer-${mc}"></div>
+              <button class="add-step-btn" onclick="addModelStep('${mc}','customer')">+ Add Step</button>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+
+    // Populate existing steps
+    models.forEach(mc => {
+      const mData = issueKey ? ((currentData.models[mc] || {})[issueKey] || {}) : {};
+      renderModelSteps(mc, 'overview',   mData.overview   || []);
+      renderModelSteps(mc, 'technician', mData.technician || []);
+      renderModelSteps(mc, 'customer',   mData.customer   || []);
+    });
+  }
+
+  function toggleModelOverride(mc) {
+    const body = document.getElementById('mob-' + mc);
+    const arrow = document.getElementById('marrow-' + mc);
+    if (!body) return;
+    const open = body.classList.toggle('open');
+    if (arrow) arrow.style.transform = open ? 'rotate(180deg)' : '';
+  }
+
+  function renderModelSteps(mc, tier, steps) {
+    const el = document.getElementById(`msteps-${tier}-${mc}`);
+    if (!el) return;
+    el.innerHTML = steps.map((s, i) => modelStepCardHTML(mc, tier, i, s)).join('');
+    updateModelCount(mc, tier);
+  }
+
+  function modelStepCardHTML(mc, tier, idx, s) {
+    const text = typeof s === 'string' ? s : (s.text || '');
+    const red  = typeof s === 'string' ? '' : (s.red || '');
+    const subs = typeof s === 'string' ? '' : (s.steps ? s.steps.join('\n') : '');
+    return `
+      <div class="step-card" data-model="${mc}" data-tier="${tier}" data-idx="${idx}">
+        <div class="row1">
+          <textarea placeholder="Step text..." oninput="updateModelCount('${mc}','${tier}')">${esc(text)}</textarea>
+          <button class="step-remove" onclick="removeModelStep(this)">✕</button>
+        </div>
+        <div class="step-extras">
+          <input class="red-input" type="text" placeholder="⚠ Red note (optional)" value="${esc(red)}"/>
+        </div>
+        <textarea class="step-substeps" placeholder="Sub-steps (one per line, optional)">${esc(subs)}</textarea>
+        <span class="step-substeps-label">Sub-steps: one line = one bullet</span>
+      </div>`;
+  }
+
+  function addModelStep(mc, tier) {
+    const el = document.getElementById(`msteps-${tier}-${mc}`);
+    if (!el) return;
+    const div = document.createElement('div');
+    div.innerHTML = modelStepCardHTML(mc, tier, el.children.length, { text:'', red:'', steps:[] });
+    el.appendChild(div.firstElementChild);
+    updateModelCount(mc, tier);
+    el.lastElementChild.querySelector('textarea').focus();
+  }
+
+  function removeModelStep(btn) {
+    const card = btn.closest('.step-card');
+    card.remove();
+    updateModelCount(card.dataset.model, card.dataset.tier);
+  }
+
+  function updateModelCount(mc, tier) {
+    const el = document.getElementById(`msteps-${tier}-${mc}`);
+    const n  = el ? el.children.length : 0;
+    const ct = document.getElementById(`mcount-${tier}-${mc}`);
+    if (ct) ct.textContent = n ? n + ' step' + (n !== 1 ? 's' : '') : '';
+  }
+
+  function collectModelSteps(mc, tier) {
+    const el = document.getElementById(`msteps-${tier}-${mc}`);
+    if (!el) return [];
+    return Array.from(el.querySelectorAll('.step-card')).map(card => {
+      const text = card.querySelector('.row1 textarea').value.trim();
+      const red  = card.querySelector('.red-input').value.trim();
+      const subEl = card.querySelector('.step-substeps');
+      const subs  = subEl ? subEl.value.split('\n').map(l=>l.trim()).filter(Boolean) : [];
+      const obj = { text };
+      if (red) obj.red = red;
+      if (subs.length) obj.steps = subs;
+      return obj;
+    }).filter(o => o.text);
   }
 
   // Close modal on overlay click
