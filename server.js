@@ -2,7 +2,23 @@ const express  = require('express');
 const path     = require('path');
 const session  = require('express-session');
 const bcrypt   = require('bcrypt');
+const mongoose = require('mongoose');
 require('dotenv').config();
+
+// ── MongoDB ────────────────────────────────────────────────────────────────────
+const ModelData = mongoose.model(
+  'ModelData',
+  new mongoose.Schema({ _id: String, data: Object }, { strict: false }),
+  'modeldata'
+);
+
+if (process.env.MONGODB_URI) {
+  mongoose.connect(process.env.MONGODB_URI)
+    .then(() => console.log('MongoDB connected'))
+    .catch(err => console.error('MongoDB error:', err.message));
+} else {
+  console.warn('MONGODB_URI not set — modeldata API will fall back to files');
+}
 
 const app = express();
 app.set('trust proxy', 1); // Render 反向代理
@@ -169,24 +185,53 @@ app.delete('/api/feedback/:id', (req, res) => {
   res.json({ ok: true });
 });
 
+// ── API: Model Data (from MongoDB) ────────────────────────────────────────────
+app.get('/api/modeldata/:fileKey', async (req, res) => {
+  if (!req.session?.user) return res.status(401).json({ error: 'Unauthorized' });
+  try {
+    const doc = await ModelData.findById(req.params.fileKey);
+    if (!doc) return res.status(404).json({ error: 'Not found' });
+    res.json(doc.data);
+  } catch (e) {
+    // Fallback to local file if MongoDB unavailable
+    const fs = require('fs');
+    try {
+      const data = JSON.parse(fs.readFileSync(
+        path.join(__dirname, req.params.fileKey + '.json'), 'utf8'
+      ));
+      res.json(data);
+    } catch { res.status(500).json({ error: 'Data not available' }); }
+  }
+});
+
 // ── API: Product Titles ───────────────────────────────────────────────────────
-app.get('/api/product-titles', (req, res) => {
-  const fs = require('fs');
+app.get('/api/product-titles', async (req, res) => {
   const titleMap = {};
   try {
-    const files = fs.readdirSync(__dirname).filter(f => f.endsWith('modelData.json'));
-    files.forEach(file => {
-      try {
-        const data = JSON.parse(fs.readFileSync(path.join(__dirname, file), 'utf8'));
-        const models = data.models || {};
-        Object.entries(models).forEach(([code, info]) => {
-          if (info.title && !info.title.includes('<span')) {
-            titleMap[code] = info.title.trim();
-          }
-        });
-      } catch (e) {}
+    const docs = await ModelData.find({}, { 'data.models': 1 });
+    docs.forEach(doc => {
+      const models = doc.data?.models || {};
+      Object.entries(models).forEach(([code, info]) => {
+        if (info.title && !info.title.includes('<span')) {
+          titleMap[code] = info.title.trim();
+        }
+      });
     });
-  } catch (e) {}
+  } catch {
+    // Fallback to files
+    const fs = require('fs');
+    try {
+      const files = fs.readdirSync(__dirname).filter(f => f.endsWith('modelData.json'));
+      files.forEach(file => {
+        try {
+          const data = JSON.parse(fs.readFileSync(path.join(__dirname, file), 'utf8'));
+          Object.entries(data.models || {}).forEach(([code, info]) => {
+            if (info.title && !info.title.includes('<span')) titleMap[code] = info.title.trim();
+          });
+        } catch (e) {}
+      });
+    } catch (e) {}
+  }
   res.json(titleMap);
 });
 

@@ -436,13 +436,15 @@
     const params   = new URLSearchParams(location.search);
     const model    = params.get('model');
     const jsonFile = MODEL_JSON_MAP[model];
+    // API path derived from filename (e.g. "MSFmodelData.json" → "/api/modeldata/MSFmodelData")
+    const apiUrl   = jsonFile ? '/api/modeldata/' + jsonFile.replace('.json', '') : null;
 
     if (!model || !jsonFile) {
         document.getElementById('product-title').innerText = 'Model not found: ' + (model || '(none)');
     } else {
         document.title = model;
 
-        fetch(jsonFile)
+        fetch(apiUrl)
             .then(r => r.json())
             .then(data => {
                 document.getElementById('product-title').innerText = data.models[model].title;
@@ -632,7 +634,7 @@
     }
 
     function showSolution(category) {
-        fetch(jsonFile)
+        fetch(apiUrl)
             .then(r => r.json())
             .then(data => {
                 const ci = data.common.issues[category] || {};
