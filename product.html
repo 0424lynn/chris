@@ -439,6 +439,9 @@
     // API path derived from filename (e.g. "MSFmodelData.json" → "/api/modeldata/MSFmodelData")
     const apiUrl   = jsonFile ? '/api/modeldata/' + jsonFile.replace('.json', '') : null;
 
+    // Cache fetched data here so showSolution doesn't re-fetch on every click
+    let pageData = null;
+
     if (!model || !jsonFile) {
         document.getElementById('product-title').innerText = 'Model not found: ' + (model || '(none)');
     } else {
@@ -447,6 +450,7 @@
         fetch(apiUrl)
             .then(r => r.json())
             .then(data => {
+                pageData = data; // ← cache it
                 document.getElementById('product-title').innerText = data.models[model].title;
                 document.getElementById('product-image').src       = data.models[model].image;
                 document.getElementById('product-diagram').src     = data.models[model].diagram;
@@ -634,9 +638,8 @@
     }
 
     function showSolution(category) {
-        fetch(apiUrl)
-            .then(r => r.json())
-            .then(data => {
+        if (!pageData) return; // data not loaded yet
+        (function(data) {
                 const ci = data.common.issues[category] || {};
                 const mi = data.models[model][category]  || {};
 
@@ -685,8 +688,7 @@
                 document.querySelectorAll('#problemCategoryList li').forEach(li => {
                     li.classList.toggle('active-issue', li.dataset.issue === category);
                 });
-            })
-            .catch(err => console.error('Error loading issue data:', err));
+        })(pageData);
     }
 
     // ── 未登入時 Back → ✕ Close ──

@@ -185,6 +185,20 @@ app.delete('/api/feedback/:id', (req, res) => {
   res.json({ ok: true });
 });
 
+// ── In-memory cache for model data ────────────────────────────────────────────
+const _mdCache   = new Map(); // fileKey → { data, ts }
+const _CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+
+async function cachedModelData(key) {
+  const hit = _mdCache.get(key);
+  if (hit && Date.now() - hit.ts < _CACHE_TTL) return hit.data;
+  const doc = await ModelData.findById(key);
+  if (doc) _mdCache.set(key, { data: doc.data, ts: Date.now() });
+  return doc?.data || null;
+}
+function invalidateCache(key) { _mdCache.delete(key); }
+function invalidateAllCache()  { _mdCache.clear(); }
+
 // ── API: Admin — Content Manager ──────────────────────────────────────────────
 function superAdminOnly(req, res, next) {
   if (req.session?.user?.role !== 'superAdmin')
@@ -222,17 +236,19 @@ app.put('/api/admin/family/:key', superAdminOnly, async (req, res) => {
     await ModelData.findByIdAndUpdate(
       req.params.key, { data }, { upsert: true, new: true }
     );
+    invalidateCache(req.params.key); // flush cache so changes are live immediately
+    _titlesCacheTs = 0; // also invalidate titles cache
     res.json({ ok: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// ── API: Model Data (from MongoDB) ────────────────────────────────────────────
+// ── API: Model Data (from MongoDB, cached) ────────────────────────────────────
 app.get('/api/modeldata/:fileKey', async (req, res) => {
   if (!req.session?.user) return res.status(401).json({ error: 'Unauthorized' });
   try {
-    const doc = await ModelData.findById(req.params.fileKey);
-    if (!doc) return res.status(404).json({ error: 'Not found' });
-    res.json(doc.data);
+    const data = await cachedModelData(req.params.fileKey);
+    if (!data) return res.status(404).json({ error: 'Not found' });
+    res.json(data);
   } catch (e) {
     // Fallback to local file if MongoDB unavailable
     const fs = require('fs');
@@ -245,8 +261,15 @@ app.get('/api/modeldata/:fileKey', async (req, res) => {
   }
 });
 
-// ── API: Product Titles ───────────────────────────────────────────────────────
+// ── API: Product Titles (cached via modelData cache) ─────────────────────────
+let _titlesCache = null;
+let _titlesCacheTs = 0;
+
 app.get('/api/product-titles', async (req, res) => {
+  // Use cached titles if fresh
+  if (_titlesCache && Date.now() - _titlesCacheTs < _CACHE_TTL) {
+    return res.json(_titlesCache);
+  }
   const titleMap = {};
   try {
     const docs = await ModelData.find({}, { 'data.models': 1 });
@@ -258,6 +281,8 @@ app.get('/api/product-titles', async (req, res) => {
         }
       });
     });
+    _titlesCache   = titleMap;
+    _titlesCacheTs = Date.now();
   } catch {
     // Fallback to files
     const fs = require('fs');
