@@ -299,6 +299,23 @@ app.get('/api/product-titles', async (req, res) => {
   res.json(titleMap);
 });
 
+// ── API: Embedded App URLs (admin only, URLs never exposed to frontend JS) ────
+const APP_REGISTRY = {
+  techmap:      { label: '🚀 Tech Map',               url: process.env.APP_TECHMAP      || 'https://tech-map.streamlit.app/?embed=true' },
+  dataanalysis: { label: '📊 Data Analysis',           url: process.env.APP_DATAANALYSIS || 'https://after-sales-service-report.streamlit.app/?guest=1&debug=1&embed=true#可视化' },
+  issuetracker: { label: '🧩 Product Issue Tracker',   url: process.env.APP_ISSUETRACKER || 'https://issue-tracker.streamlit.app/?tab=list&embed=true' },
+  techbonus:    { label: '🧰 In-House Tech Center',     url: process.env.APP_TECHBONUS    || 'https://tech-bonus.streamlit.app/?embed=true' },
+};
+
+app.get('/api/app-url/:name', (req, res) => {
+  const role = req.session?.user?.role;
+  if (role !== 'superAdmin' && role !== 'normalAdmin')
+    return res.status(403).json({ error: 'Forbidden' });
+  const app = APP_REGISTRY[req.params.name];
+  if (!app) return res.status(404).json({ error: 'Unknown app' });
+  res.json({ url: app.url, label: app.label });
+});
+
 // ── Static Files ──────────────────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname)));
 

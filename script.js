@@ -61,12 +61,8 @@
 /* === Admin 专用侧栏（仅 admin/4321 可见；仅 dashboard.html 生效） === */
 (function () {
   const DASH_MATCH = /\/dashboard\.html\b/i;
-  // ——— 三个按钮：Tech Map / Data Analysis / Daily Follow-up ———
-  const TECH_MAP_URL       = "https://tech-map.streamlit.app/";
-  const DATA_ANALYSIS_URL  = "https://after-sales-service-report.streamlit.app/?guest=1&debug=1#可视化";
-  const DAILY_FOLLOW_URL   = "https://daily-follow-up.streamlit.app/";   // ← 新增
-  const ISSUE_TRACKER_URL  = "https://issue-tracker.streamlit.app/?tab=list"; // ← 新增
-  const TECH_BONUS_URL = "https://tech-bonus.streamlit.app/"; // ← 新增
+  // ——— App viewer URLs (actual URLs stored server-side only) ———
+  const V = name => `/viewer.html?app=${name}`;
 
   if (!DASH_MATCH.test(location.pathname)) return;
   const userRole = (localStorage.getItem("userRole") || "").trim();
@@ -112,10 +108,10 @@
   side.innerHTML = `
     <h3>ADMIN PANEL</h3>
     <p class="hint">仅 admin/4321 可见</p>
-    <a class="btn" href="${TECH_MAP_URL}"      target="_blank" rel="noopener noreferrer">🚀 TECH MAP</a>
-    <a class="btn" href="${DATA_ANALYSIS_URL}" target="_blank" rel="noopener noreferrer">📊 Data Analysis</a>
-    <a class="btn" href="${ISSUE_TRACKER_URL}" target="_blank" rel="noopener noreferrer">🧩 Product issue-tracker</a>
-    <a class="btn" href="${TECH_BONUS_URL}" target="_blank" rel="noopener noreferrer">🧰 In-House Tech Center Login</a>
+    <a class="btn" href="${V('techmap')}">🚀 TECH MAP</a>
+    <a class="btn" href="${V('dataanalysis')}">📊 Data Analysis</a>
+    <a class="btn" href="${V('issuetracker')}">🧩 Product Issue Tracker</a>
+    <a class="btn" href="${V('techbonus')}">🧰 In-House Tech Center</a>
     <div class="spacer"></div>
     <div class="foot">Secure · SuperAdmin</div>
   `;
