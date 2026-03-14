@@ -567,6 +567,28 @@
             .catch(err => console.error('Error loading issue data:', err));
     }
 
+    // ── 未登入時 Back → ✕ Close ──
+    (async function () {
+        try {
+            const res = await fetch('/api/me');
+            if (!res.ok) throw new Error('not logged in');
+            const { role } = await res.json();
+            if (!role) throw new Error('no role');
+            // 已登入，保持 Back 原樣
+        } catch {
+            const btn = document.querySelector('.back-home-button');
+            if (btn) {
+                btn.textContent = '✕ Close';
+                btn.removeAttribute('href');
+                btn.style.cursor = 'pointer';
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    window.close();
+                });
+            }
+        }
+    })();
+
     function searchProblemCategory() {
         const val   = document.getElementById('problemCategorySearch').value.toLowerCase();
         const items = document.getElementById('problemCategoryList').getElementsByTagName('li');
