@@ -302,7 +302,7 @@ app.get('/api/product-titles', async (req, res) => {
 // ── API: Embedded App URLs (admin only, URLs never exposed to frontend JS) ────
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'atosa_admin_2024';
 const APP_REGISTRY = {
-  techmap:      { label: '🚀 Tech Map',               url: process.env.APP_TECHMAP      || `https://tech-map.streamlit.app/?embed=true&admin_token=${ADMIN_TOKEN}` },
+  techmap:      { label: '🚀 Tech Map',               url: process.env.APP_TECHMAP      || `https://tech-map.onrender.com/?embed=true&admin_token=${ADMIN_TOKEN}` },
   dataanalysis: { label: '📊 Data Analysis',           url: process.env.APP_DATAANALYSIS || 'https://after-sales-service-report.streamlit.app/?guest=1&debug=1&embed=true#可视化' },
   issuetracker: { label: '🧩 Product Issue Tracker',   url: process.env.APP_ISSUETRACKER || 'https://issue-tracker.streamlit.app/?tab=list&embed=true' },
   techbonus:    { label: '🧰 In-House Tech Center',     url: process.env.APP_TECHBONUS    || 'https://tech-bonus.streamlit.app/?embed=true' },
@@ -316,6 +316,24 @@ app.get('/api/app-url/:name', (req, res) => {
   if (!app) return res.status(404).json({ error: 'Unknown app' });
   res.json({ url: app.url, label: app.label });
 });
+
+// ── Keep-alive pings (prevent Render free services from sleeping) ──────────
+const PING_TARGETS = [
+  process.env.APP_TECHMAP      ? process.env.APP_TECHMAP.split('?')[0]      : 'https://tech-map.onrender.com',
+  process.env.APP_ISSUETRACKER ? process.env.APP_ISSUETRACKER.split('?')[0] : null,
+  process.env.APP_DATAANALYSIS ? process.env.APP_DATAANALYSIS.split('?')[0] : null,
+  process.env.APP_TECHBONUS    ? process.env.APP_TECHBONUS.split('?')[0]    : null,
+].filter(Boolean);
+
+setInterval(() => {
+  PING_TARGETS.forEach(url => {
+    const mod = url.startsWith('https') ? require('https') : require('http');
+    mod.get(url, res => {
+      res.resume(); // discard response body
+    }).on('error', () => {}); // silently ignore errors
+  });
+}, 10 * 60 * 1000); // every 10 minutes
+// ─────────────────────────────────────────────────────────────────────────────
 
 // ── Static Files ──────────────────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname)));
