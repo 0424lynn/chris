@@ -12,6 +12,13 @@ const ModelData = mongoose.model(
   'modeldata'
 );
 
+const FeedbackSchema = new mongoose.Schema({
+  text:   { type: String, required: true },
+  author: { type: String, required: true },
+  ts:     { type: Number, required: true }
+});
+const Feedback = mongoose.model('Feedback', FeedbackSchema, 'feedback');
+
 if (process.env.MONGODB_URI) {
   mongoose.connect(process.env.MONGODB_URI)
     .then(() => console.log('MongoDB connected'))
@@ -143,46 +150,37 @@ app.post('/api/announcement', (req, res) => {
   res.json({ ok: true });
 });
 
-// ── API: Feedback / Suggestions ───────────────────────────────────────────────
-const FEEDBACK_FILE = path.join(__dirname, 'feedback.json');
-
-function readFeedback() {
-  const fs = require('fs');
-  try { return JSON.parse(fs.readFileSync(FEEDBACK_FILE, 'utf8')); } catch { return []; }
-}
-function writeFeedback(data) {
-  const fs = require('fs');
-  fs.writeFileSync(FEEDBACK_FILE, JSON.stringify(data, null, 2), 'utf8');
-}
-
-app.get('/api/feedback', (req, res) => {
+// ── API: Feedback / Suggestions (MongoDB) ────────────────────────────────────
+app.get('/api/feedback', async (req, res) => {
   if (!req.session?.user) return res.status(401).json({ error: 'Unauthorized' });
-  res.json(readFeedback());
+  try {
+    const items = await Feedback.find().sort({ ts: -1 }).lean();
+    res.json(items.map(i => ({ id: i._id, text: i.text, author: i.author, ts: i.ts })));
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-app.post('/api/feedback', (req, res) => {
+app.post('/api/feedback', async (req, res) => {
   if (!req.session?.user) return res.status(401).json({ error: 'Unauthorized' });
   const { text } = req.body;
   if (!text || !text.trim()) return res.status(400).json({ error: 'Empty text' });
-  const data = readFeedback();
-  const item = {
-    id: Date.now(),
-    text: text.trim().slice(0, 1000),
-    author: req.session.user.username,
-    ts: Date.now()
-  };
-  data.unshift(item);
-  writeFeedback(data);
-  res.json(item);
+  try {
+    const item = await Feedback.create({
+      text:   text.trim().slice(0, 1000),
+      author: req.session.user.username,
+      ts:     Date.now()
+    });
+    res.json({ id: item._id, text: item.text, author: item.author, ts: item.ts });
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-app.delete('/api/feedback/:id', (req, res) => {
-  if (req.session?.user?.role !== 'superAdmin')
+app.delete('/api/feedback/:id', async (req, res) => {
+  const role = req.session?.user?.role;
+  if (role !== 'superAdmin' && role !== 'normalAdmin')
     return res.status(403).json({ error: 'Forbidden' });
-  const id = parseInt(req.params.id);
-  const data = readFeedback().filter(x => x.id !== id);
-  writeFeedback(data);
-  res.json({ ok: true });
+  try {
+    await Feedback.findByIdAndDelete(req.params.id);
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 // ── In-memory cache for model data ────────────────────────────────────────────
