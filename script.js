@@ -211,7 +211,7 @@ document.addEventListener("DOMContentLoaded", function () {
       "MSF8303GR", "MSF8304GR", 
       "MSF8305GR",  "MSF8306GR", 
       "MSF8307GR", 
-      "test","MBF15FSGR",
+      "MBF15FSGR",
 "MBF15RSGR",
 "MBF8001GR",
 "MBF8002GR",
