@@ -227,12 +227,12 @@
             color: inherit;
         }
         .acc-bd {
-            padding: 12px 16px 16px;
+            padding: 14px 18px 18px;
             color: #e2e8f0;
-            font-size: 14px;
-            line-height: 1.7;
+            font-size: 15px;
+            line-height: 1.75;
         }
-        .acc-bd li { margin-bottom: 8px; }
+        .acc-bd li { margin-bottom: 14px; list-style: disc; margin-left: 4px; }
 
         /* Level 1 — green (dark theme) */
         #quickGuide .acc-hd {
@@ -713,23 +713,30 @@
     function renderItem(item) {
         if (typeof item === 'string') return item; // 旧 HTML 字符串，直接渲染
 
-        let html = item.text || '';
+        let html = '';
 
+        // Main title — larger and bold
+        if (item.text) {
+            html += `<span style="font-size:16px;font-weight:700;color:#f1f5f9;">${item.text}</span>`;
+        }
+
+        // Red / note text (mapped to soft red for dark theme)
         if (item.red) {
-            html += `<br><span style="color:${item.color || 'red'}">${item.red}</span>`;
+            const clr = (item.color && item.color !== 'red') ? item.color : '#f87171';
+            html += `<br><span style="color:${clr};font-size:13.5px;">${item.red}</span>`;
         }
         if (item.link) {
-            html += ` <a href="${item.link.url}" target="_blank">${item.link.label}</a>`;
+            html += ` <a href="${item.link.url}" target="_blank" style="color:#60a5fa;">${item.link.label}</a>`;
         }
         if (item.steps && item.steps.length) {
             item.steps.forEach((step, i) => {
                 if (typeof step === 'string') {
-                    html += `<br>${i + 1}.<span style="color:red">${step}</span>`;
+                    html += `<br><span style="color:#f87171;font-size:13.5px;">${i + 1}. ${step}</span>`;
                 } else {
-                    html += `<br>${i + 1}.<span style="color:red">${step.text || ''}`;
-                    if (step.red) html += ` <span style="color:red">${step.red}</span>`;
+                    html += `<br><span style="color:#f87171;font-size:13.5px;">${i + 1}. ${step.text || ''}`;
+                    if (step.red) html += ` <span style="color:#f87171;">${step.red}</span>`;
                     if (step.links) step.links.forEach(l => {
-                        html += ` <a href="${l.url}" target="_blank">${l.label}</a>`;
+                        html += ` <a href="${l.url}" target="_blank" style="color:#60a5fa;">${l.label}</a>`;
                     });
                     html += `</span>`;
                 }
