@@ -715,12 +715,20 @@
             const data = await r.json();
             pageData = data; // ← cache it
 
-            document.getElementById('product-title').innerText = data.models[model].title;
-            document.getElementById('product-image').src       = data.models[model].image;
-            document.getElementById('product-diagram').src     = data.models[model].diagram;
+            // Guard: model may exist in the family map without a full entry
+            // (e.g. added only via Model-Specific Extras in an issue editor)
+            const modelEntry = data.models[model] || {};
+            document.getElementById('product-title').innerText = modelEntry.title || model;
+            document.getElementById('product-image').src       = modelEntry.image   || '';
+            document.getElementById('product-diagram').src     = modelEntry.diagram || '';
+
+            // If model has no own issues list, fall back to all common issues
+            const issues = (modelEntry.issues && modelEntry.issues.length > 0)
+                ? modelEntry.issues
+                : Object.keys(data.common.issues || {});
 
             const problemCategoryList = document.getElementById('problemCategoryList');
-            data.models[model].issues.forEach(issueKey => {
+            issues.forEach(issueKey => {
                 const li = document.createElement('li');
                 li.dataset.issue = issueKey;
                 li.innerHTML = `<a href="#" onclick="showSolution('${issueKey}')">${issueKey.charAt(0).toUpperCase() + issueKey.slice(1)}</a>`;
@@ -729,14 +737,13 @@
 
             // Auto-select: use ?issue= param if valid, otherwise first issue
             const issueParam = params.get('issue');
-            const issues = data.models[model].issues;
             const targetIssue = (issueParam && issues.includes(issueParam))
                 ? issueParam
                 : (issues.length > 0 ? issues[0] : null);
             if (targetIssue) showSolution(targetIssue);
 
             const modelDocumentsList = document.getElementById('modelDocumentsList');
-            (data.models[model].documents || []).forEach(doc => {
+            (modelEntry.documents || []).forEach(doc => {
                 const li = document.createElement('li');
                 li.innerHTML = `<a href="${doc.url}" target="_blank">${doc.title}</a>`;
                 modelDocumentsList.appendChild(li);
@@ -907,8 +914,8 @@
     function showSolution(category) {
         if (!pageData) return; // data not loaded yet
         (function(data) {
-                const ci = data.common.issues[category] || {};
-                const mi = data.models[model][category]  || {};
+                const ci = data.common.issues[category]                      || {};
+                const mi = ((data.models[model] || {})[category])            || {};
 
                 const allQ = [...(ci.overview   || []), ...(mi.overview   || [])];
                 const allT = [...(ci.technician || []), ...(mi.technician || [])];
