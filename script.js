@@ -975,13 +975,14 @@ document.addEventListener("DOMContentLoaded", async function () {
   } catch (e) {}
 
   try {
-    // Dynamically load full model list from modelmap so newly added
-    // models appear without needing to edit the hardcoded array
+    // Merge DB modelmap into static list — only append codes not already present
+    // (never replace, so hardcoded models are always preserved)
     const mr = await fetch('/api/modelmap');
     if (mr.ok) {
       const map = await mr.json();
-      const liveKeys = Object.keys(map);
-      if (liveKeys.length > 0) products = liveKeys;
+      const existing = new Set(products);
+      const newOnes = Object.keys(map).filter(k => !existing.has(k));
+      if (newOnes.length > 0) products = [...products, ...newOnes];
     }
   } catch (e) {}
 
