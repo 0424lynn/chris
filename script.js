@@ -464,10 +464,10 @@ function decodeProductionDate(code3) {
 
 // **📌 序列號 — 段落表格行**
 function _serialRow(label, value, ok, hint) {
-  const color = ok ? '#16a34a' : '#dc2626';
-  const bg    = ok ? 'rgba(220,252,231,0.4)' : 'rgba(254,226,226,0.4)';
+  const color = ok ? '#4ade80' : '#f87171';
+  const bg    = ok ? 'rgba(6,78,59,0.35)' : 'rgba(127,29,29,0.35)';
   return `<tr style="background:${bg};">
-    <td style="padding:5px 10px 5px 6px;color:#555;white-space:nowrap;font-size:12px;width:140px;">${label}</td>
+    <td style="padding:5px 10px 5px 6px;color:#94a3b8;white-space:nowrap;font-size:12px;width:140px;">${label}</td>
     <td style="padding:5px 8px;font-weight:700;font-family:monospace;font-size:14px;color:${color};">${value || '—'}</td>
     <td style="padding:5px 6px;font-size:12px;color:${color};">${hint}</td>
   </tr>`;
@@ -480,7 +480,7 @@ function checkSerialNumber() {
   feedback.innerHTML = '';
 
   if (!raw) {
-    feedback.innerHTML = `<span style='color:red'>❌ Please enter a serial number.</span>`;
+    feedback.innerHTML = `<span style='color:#f87171'>❌ Please enter a serial number.</span>`;
     return;
   }
 
@@ -559,18 +559,18 @@ function checkSerialNumber() {
 
   // 尾綴提示 + 一鍵修復
   if (strippedSuffix) {
-    html += `<div style="margin-bottom:10px;padding:8px 12px;background:#fff3cd;border:1px solid #ffc107;border-radius:6px;font-size:13px;">
+    html += `<div style="margin-bottom:10px;padding:8px 12px;background:rgba(120,53,15,0.40);border:1px solid rgba(245,158,11,0.50);border-radius:8px;font-size:13px;color:#fcd34d;">
       ⚠️ Model suffix "<strong>${strippedSuffix}</strong>" is not part of the serial number (product code only).
       <button onclick="document.getElementById('serialInput').value='${rawClean}';checkSerialNumber();"
-        style="margin-left:8px;padding:3px 10px;border:1px solid #856404;border-radius:4px;background:white;color:#856404;cursor:pointer;font-size:12px;">
+        style="margin-left:8px;padding:3px 10px;border:1px solid rgba(245,158,11,0.60);border-radius:6px;background:rgba(120,53,15,0.50);color:#fcd34d;cursor:pointer;font-size:12px;font-weight:600;">
         Remove "${strippedSuffix}" and re-check</button>
     </div>`;
   }
 
-  html += `<div style="margin-bottom:8px;font-size:13px;">
-    Length: <strong style="color:${lenOk ? '#16a34a' : '#dc2626'}">${rawClean.length} / ${TOTAL}</strong>
-    ${rawClean.length < TOTAL ? `<span style="color:#dc2626"> — ${TOTAL - rawClean.length} char(s) missing</span>` : ''}
-    ${rawClean.length > TOTAL ? `<span style="color:#dc2626"> — ${rawClean.length - TOTAL} extra char(s)</span>` : ''}
+  html += `<div style="margin-bottom:8px;font-size:13px;color:#cbd5e1;">
+    Length: <strong style="color:${lenOk ? '#4ade80' : '#f87171'}">${rawClean.length} / ${TOTAL}</strong>
+    ${rawClean.length < TOTAL ? `<span style="color:#f87171"> — ${TOTAL - rawClean.length} char(s) missing</span>` : ''}
+    ${rawClean.length > TOTAL ? `<span style="color:#f87171"> — ${rawClean.length - TOTAL} extra char(s)</span>` : ''}
   </div>`;
 
   // 缺字提示（17位時）
@@ -578,7 +578,7 @@ function checkSerialNumber() {
     const s = SEGS[missingSegIdx];
     const posStart = normalLens.slice(0, missingSegIdx).reduce((a,v) => a+v, 0) + 1;
     const posEnd   = posStart + s.len - 1;
-    html += `<div style="margin-bottom:10px;padding:8px 12px;background:#fff3cd;border:1px solid #ffc107;border-radius:6px;font-size:13px;">
+    html += `<div style="margin-bottom:10px;padding:8px 12px;background:rgba(120,53,15,0.40);border:1px solid rgba(245,158,11,0.50);border-radius:8px;font-size:13px;color:#fcd34d;">
       ⚠️ Likely missing 1 character in <strong>${s.label}</strong> (position ${posStart}${posEnd > posStart ? '–'+posEnd : ''})
     </div>`;
   }
@@ -663,34 +663,34 @@ function checkSerialNumber() {
   if (!locOk && loc && raw.length === TOTAL) {
     const tryC = raw.slice(0,11) + 'C' + raw.slice(12);
     const tryT = raw.slice(0,11) + 'T' + raw.slice(12);
-    html += `<div style="margin:6px 0;font-size:13px;">Location fix:
+    html += `<div style="margin:6px 0;font-size:13px;color:#94a3b8;">Location fix:
       <button onclick="document.getElementById('serialInput').value='${tryC}';checkSerialNumber();"
-        style="margin:2px 4px;padding:3px 10px;border:1px solid #007BFF;border-radius:4px;background:white;color:#007BFF;cursor:pointer;font-size:12px;">Try C (China)</button>
+        style="margin:2px 4px;padding:3px 10px;border:1px solid rgba(59,130,246,0.50);border-radius:6px;background:rgba(37,99,235,0.20);color:#60a5fa;cursor:pointer;font-size:12px;font-weight:600;">Try C (China)</button>
       <button onclick="document.getElementById('serialInput').value='${tryT}';checkSerialNumber();"
-        style="margin:2px 4px;padding:3px 10px;border:1px solid #28a745;border-radius:4px;background:white;color:#28a745;cursor:pointer;font-size:12px;">Try T (Taiwan)</button>
+        style="margin:2px 4px;padding:3px 10px;border:1px solid rgba(74,222,128,0.40);border-radius:6px;background:rgba(6,78,59,0.30);color:#4ade80;cursor:pointer;font-size:12px;font-weight:600;">Try T (Taiwan)</button>
     </div>`;
   }
   if (!custOk && raw.length === TOTAL) {
     const btns = KNOWN_CUSTOMERS.map(c => {
       const fixed = raw.slice(0,7) + c + raw.slice(10);
       return `<button onclick="document.getElementById('serialInput').value='${fixed}';checkSerialNumber();"
-        style="margin:2px 4px;padding:3px 10px;border:1px solid #6c757d;border-radius:4px;background:white;color:#333;cursor:pointer;font-size:12px;">Try ${c}</button>`;
+        style="margin:2px 4px;padding:3px 10px;border:1px solid rgba(148,163,184,0.30);border-radius:6px;background:rgba(30,41,59,0.60);color:#cbd5e1;cursor:pointer;font-size:12px;font-weight:600;">Try ${c}</button>`;
     }).join('');
-    html += `<div style="margin:6px 0;font-size:13px;">Try customer code: ${btns}</div>`;
+    html += `<div style="margin:6px 0;font-size:13px;color:#94a3b8;">Try customer code: ${btns}</div>`;
   }
 
   if (allOk) {
-    html += `<div style="margin-top:8px;font-size:15px;color:#16a34a;font-weight:700;">✅ Serial number is valid.</div>`;
+    html += `<div style="margin-top:8px;font-size:15px;color:#4ade80;font-weight:700;">✅ Serial number is valid.</div>`;
     const matchedProduct = products.find(p => p.toUpperCase().startsWith(model));
     if (matchedProduct) {
       const titleShort = (productTitleMap[matchedProduct] || '').replace(/^[^—–-]*[—–-]\s*/, '');
       html += `<a href="product.html?model=${matchedProduct}" target="_blank"
-        style="display:inline-block;margin-top:8px;padding:7px 16px;background:#007BFF;color:white;border-radius:6px;text-decoration:none;font-weight:600;font-size:13px;">
+        style="display:inline-block;margin-top:8px;padding:7px 16px;background:linear-gradient(135deg,#2563eb,#7c3aed);color:white;border-radius:8px;text-decoration:none;font-weight:600;font-size:13px;box-shadow:0 2px 10px rgba(37,99,235,0.35);">
         🔗 View ${matchedProduct}${titleShort ? ' — ' + titleShort : ''}</a>`;
       addToRecentHistory(matchedProduct);
     }
   } else {
-    html += `<div style="margin-top:8px;font-size:15px;color:#dc2626;font-weight:700;">❌ Serial number has errors — see details above.</div>`;
+    html += `<div style="margin-top:8px;font-size:15px;color:#f87171;font-weight:700;">❌ Serial number has errors — see details above.</div>`;
   }
 
   feedback.innerHTML = html;
