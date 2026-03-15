@@ -317,6 +317,25 @@ app.put('/api/admin/family/:key', superAdminOnly, async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// Delete entire family + clean up model map
+app.delete('/api/admin/family/:key', superAdminOnly, async (req, res) => {
+  const key = req.params.key;
+  try {
+    await ModelData.findByIdAndDelete(key);
+    invalidateCache(key);
+    _titlesCacheTs = 0;
+    // Remove all model-map entries that point to this family key
+    const mapDoc = await ModelMap.findById('modelmap');
+    if (mapDoc?.map) {
+      const newMap = Object.fromEntries(
+        Object.entries(mapDoc.map).filter(([, v]) => v !== key)
+      );
+      await ModelMap.findByIdAndUpdate('modelmap', { map: newMap }, { upsert: true });
+    }
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // ── API: Model Data (from MongoDB, cached) ────────────────────────────────────
 app.get('/api/modeldata/:fileKey', async (req, res) => {
   if (!req.session?.user) return res.status(401).json({ error: 'Unauthorized' });

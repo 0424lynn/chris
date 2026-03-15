@@ -225,6 +225,17 @@
       justify-content: center; transition: all .12s;
     }
     .nf-new-btn:hover { border-color: #3b82f6; color: #3b82f6; background: #eff6ff; }
+
+    /* ── Sidebar family action buttons ── */
+    .family-actions { display: flex; gap: 2px; opacity: 0; transition: opacity .15s; flex-shrink: 0; }
+    .family-item:hover .family-actions { opacity: 1; }
+    .fi-btn {
+      background: none; border: none; cursor: pointer;
+      font-size: 12px; padding: 2px 5px; border-radius: 4px;
+      color: #94a3b8; line-height: 1; transition: all .1s;
+    }
+    .fi-btn:hover { background: #e2e8f0; color: #475569; }
+    .fi-btn.del:hover { background: #fee2e2; color: #ef4444; }
   </style>
 </head>
 <body>
@@ -283,6 +294,40 @@
       <span id="nfStatus"></span>
       <button class="btn-cancel" onclick="closeNewFamily()">Cancel</button>
       <button class="btn-save" onclick="createFamily()">✅ Create Family</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Model Family modal -->
+<div class="modal-overlay" id="efOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:2000;align-items:flex-start;justify-content:center;padding:30px 20px;overflow-y:auto;">
+  <div class="nf-modal">
+    <div class="modal-hd">
+      <span class="modal-title" id="efTitle">✏️ Edit Model Family</span>
+      <button class="modal-close" onclick="closeEditFamily()">✕</button>
+    </div>
+
+    <!-- Family Key (read-only) -->
+    <div class="nf-row">
+      <div class="nf-field" style="flex:2">
+        <label>Family Key <span style="font-weight:400;color:#94a3b8">(cannot be changed)</span></label>
+        <input type="text" id="efFamilyKey" readonly style="background:#f8fafc;color:#94a3b8;cursor:not-allowed;"/>
+      </div>
+    </div>
+
+    <!-- Models -->
+    <div class="nf-section-title">📦 Models in this family</div>
+    <div id="efModelList"></div>
+    <button class="add-step-btn" onclick="addEfModel()" style="margin-bottom:16px;">+ Add Model</button>
+
+    <!-- Common Documents -->
+    <div class="nf-section-title">📄 Common Documents <span style="font-weight:400;color:#94a3b8">(optional)</span></div>
+    <div id="efDocList"></div>
+    <button class="add-step-btn" onclick="addEfDoc()">+ Add Document</button>
+
+    <div class="modal-footer">
+      <span id="efStatus"></span>
+      <button class="btn-cancel" onclick="closeEditFamily()">Cancel</button>
+      <button class="btn-save" onclick="saveEditFamily()">💾 Save Changes</button>
     </div>
   </div>
 </div>
@@ -373,7 +418,13 @@
     list.innerHTML = families.map(f => `
       <div class="family-item" id="fi-${esc(f.key)}" onclick="selectFamily('${esc(f.key)}')">
         <span>${f.key.replace('modelData','')}</span>
-        <span class="family-badge">${f.issueCount}</span>
+        <div style="display:flex;align-items:center;gap:4px">
+          <span class="family-badge">${f.issueCount}</span>
+          <div class="family-actions">
+            <button class="fi-btn" onclick="event.stopPropagation();openEditFamily('${esc(f.key)}')" title="Edit model info">✏️</button>
+            <button class="fi-btn del" onclick="event.stopPropagation();deleteFamily('${esc(f.key)}')" title="Delete family">🗑</button>
+          </div>
+        </div>
       </div>
     `).join('');
   }
@@ -972,6 +1023,210 @@
     el.textContent = msg;
     el.className = cls;
   }
+
+  // ── Edit Model Family ─────────────────────────────────────────────────────────
+  let _efKey  = null;
+  let _efData = null;
+  let _efModelCount = 0;
+
+  async function openEditFamily(key) {
+    _efKey = key;
+    _efModelCount = 0;
+    document.getElementById('efFamilyKey').value = key;
+    document.getElementById('efTitle').textContent = '✏️ Edit: ' + key.replace('modelData', '');
+    document.getElementById('efModelList').innerHTML = '<div style="padding:12px;color:#94a3b8;font-size:13px;">Loading...</div>';
+    document.getElementById('efDocList').innerHTML = '';
+    document.getElementById('efStatus').textContent = '';
+    document.getElementById('efStatus').className = '';
+
+    try {
+      const r = await fetch('/api/admin/family/' + encodeURIComponent(key));
+      if (!r.ok) throw new Error('Failed to load family data');
+      _efData = await r.json();
+
+      document.getElementById('efModelList').innerHTML = '';
+      // Render existing models
+      Object.entries(_efData.models || {}).forEach(([code, info]) => {
+        addEfModel(code, info.title || '', info.image || '', info.diagram || '');
+      });
+      // Render common documents
+      (_efData.common?.documents || []).forEach(doc => addEfDoc(doc.title, doc.url));
+
+      const ov = document.getElementById('efOverlay');
+      ov.style.display = 'flex';
+    } catch (e) {
+      alert('Failed to load family: ' + e.message);
+    }
+  }
+
+  function closeEditFamily() {
+    document.getElementById('efOverlay').style.display = 'none';
+  }
+
+  function addEfModel(code = '', title = '', imgUrl = '', diaUrl = '') {
+    const idx = _efModelCount++;
+    const div = document.createElement('div');
+    div.className = 'nf-model-card';
+    div.id = `efmc-${idx}`;
+    div.innerHTML = `
+      <button class="mc-remove" onclick="this.closest('.nf-model-card').remove()" title="Remove">✕</button>
+      <div class="nf-row">
+        <div class="nf-field">
+          <label>Model Code</label>
+          <input type="text" placeholder="e.g. NSM-24G" data-role="code" value="${esc(code)}"/>
+        </div>
+        <div class="nf-field" style="flex:2">
+          <label>Display Title</label>
+          <input type="text" placeholder="e.g. NSM 24G Series" data-role="title" value="${esc(title)}"/>
+        </div>
+      </div>
+      <div class="nf-row">
+        <div class="nf-field">
+          <label>Product Image</label>
+          <div class="nf-upload-row">
+            <button class="nf-upload-btn${imgUrl ? ' uploaded' : ''}" onclick="triggerEfImageUpload(this,'img')" data-url="${esc(imgUrl)}">${imgUrl ? '✅ Image Uploaded' : '📷 Upload Image'}</button>
+            <img class="nf-thumb" data-type="img" ${imgUrl ? `src="${esc(imgUrl)}" style="display:block"` : ''}/>
+          </div>
+        </div>
+        <div class="nf-field">
+          <label>Circuit Diagram</label>
+          <div class="nf-upload-row">
+            <button class="nf-upload-btn${diaUrl ? ' uploaded' : ''}" onclick="triggerEfImageUpload(this,'dia')" data-url="${esc(diaUrl)}">${diaUrl ? '✅ Diagram Uploaded' : '📐 Upload Diagram'}</button>
+            <img class="nf-thumb" data-type="dia" ${diaUrl ? `src="${esc(diaUrl)}" style="display:block"` : ''}/>
+          </div>
+        </div>
+      </div>
+      <input type="file" accept="image/*" style="display:none" data-hidden-input/>
+    `;
+    document.getElementById('efModelList').appendChild(div);
+  }
+
+  function addEfDoc(title = '', url = '') {
+    const row = document.createElement('div');
+    row.className = 'nf-doc-row';
+    row.innerHTML = `
+      <input type="text" placeholder="Document title (e.g. Installation Manual)" data-role="doc-title" value="${esc(title)}"/>
+      <input type="text" placeholder="URL (https://...)" data-role="doc-url" value="${esc(url)}"/>
+      <button class="nf-doc-remove" onclick="this.parentElement.remove()">✕</button>
+    `;
+    document.getElementById('efDocList').appendChild(row);
+  }
+
+  function triggerEfImageUpload(btn, type) {
+    if (btn.classList.contains('uploading')) return;
+    const card = btn.closest('.nf-model-card');
+    const fileInput = card.querySelector('[data-hidden-input]');
+    fileInput._targetBtn  = btn;
+    fileInput._targetType = type;
+    fileInput.value = '';
+    fileInput.onchange = () => handleImageFile(fileInput); // reuse existing handler
+    fileInput.click();
+  }
+
+  async function saveEditFamily() {
+    const key = _efKey;
+    const modelCards = document.querySelectorAll('#efModelList .nf-model-card');
+    if (!modelCards.length) { setEfStatus('Add at least one model', 'err'); return; }
+
+    const modelsData = {};
+    const modelMapUpdates = {};
+    let valid = true;
+
+    modelCards.forEach(card => {
+      const code  = card.querySelector('[data-role="code"]').value.trim();
+      const title = card.querySelector('[data-role="title"]').value.trim();
+      const btns  = card.querySelectorAll('.nf-upload-btn');
+      const imgUrl = btns[0]?.dataset.url || '';
+      const diaUrl = btns[1]?.dataset.url || '';
+      if (!code || !title) { valid = false; return; }
+      // Preserve any existing per-model issue overrides + issues array
+      const existing = _efData?.models?.[code] || {};
+      modelsData[code] = {
+        ...existing,
+        title,
+        image:   imgUrl,
+        diagram: diaUrl,
+      };
+      modelMapUpdates[code] = key;
+    });
+
+    if (!valid) { setEfStatus('All models need a code and title', 'err'); return; }
+
+    // Collect common documents
+    const commonDocs = [];
+    document.querySelectorAll('#efDocList .nf-doc-row').forEach(row => {
+      const t = row.querySelector('[data-role="doc-title"]').value.trim();
+      const u = row.querySelector('[data-role="doc-url"]').value.trim();
+      if (t && u) commonDocs.push({ title: t, url: u });
+    });
+
+    const updatedData = {
+      ..._efData,
+      models: modelsData,
+      common: { ...(_efData?.common || {}), documents: commonDocs }
+    };
+
+    setEfStatus('Saving...', '');
+    try {
+      // 1. Save family data
+      const r1 = await fetch('/api/admin/family/' + encodeURIComponent(key), {
+        method:  'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ data: updatedData })
+      });
+      if (!r1.ok) throw new Error((await r1.json()).error);
+
+      // 2. Update model map: remove old entries for this family, add new ones
+      const r2  = await fetch('/api/modelmap');
+      const cur = r2.ok ? await r2.json() : {};
+      const cleaned = Object.fromEntries(Object.entries(cur).filter(([, v]) => v !== key));
+      const newMap  = Object.assign({}, cleaned, modelMapUpdates);
+      const r3 = await fetch('/api/modelmap', {
+        method:  'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ map: newMap })
+      });
+      if (!r3.ok) throw new Error('Saved but model map update failed');
+
+      setEfStatus('✅ Saved!', 'ok');
+      setTimeout(() => {
+        closeEditFamily();
+        loadFamilies().then(() => {
+          if (currentKey === key) selectFamily(key);
+        });
+      }, 800);
+    } catch (e) {
+      setEfStatus('❌ ' + e.message, 'err');
+    }
+  }
+
+  function setEfStatus(msg, cls) {
+    const el = document.getElementById('efStatus');
+    el.textContent = msg;
+    el.className = cls;
+  }
+
+  // ── Delete entire family ──────────────────────────────────────────────────────
+  async function deleteFamily(key) {
+    if (!confirm(`Delete family "${key}"?\n\nThis removes ALL issues and model data for this family.\nThis CANNOT be undone.`)) return;
+    try {
+      const r = await fetch('/api/admin/family/' + encodeURIComponent(key), { method: 'DELETE' });
+      if (!r.ok) throw new Error((await r.json()).error || 'Delete failed');
+      if (currentKey === key) {
+        currentKey  = null;
+        currentData = null;
+        document.getElementById('mainPanel').innerHTML = '<div class="main-placeholder">← Select a model family to manage its issues</div>';
+      }
+      loadFamilies();
+    } catch (e) {
+      alert('Delete failed: ' + e.message);
+    }
+  }
+
+  // Close edit family modal on overlay click
+  document.getElementById('efOverlay').addEventListener('click', function(e) {
+    if (e.target === this) closeEditFamily();
+  });
 </script>
 </body>
 </html>
