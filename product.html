@@ -2,13 +2,201 @@
 <html lang="en">
 <head>
     <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
+        /* ── Dark Aurora Theme Overrides ──────────────── */
+        *, *::before, *::after { box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Arial, sans-serif !important;
+            background: #0d1b2e !important;
+            background-image: none !important;
+            color: #e2e8f0;
+            display: block !important;
+            align-items: unset !important;
+            justify-content: unset !important;
+            position: relative;
+        }
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 80% 55% at 10% 20%, rgba(37,99,235,0.38) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 50% at 90% 80%, rgba(109,40,217,0.28) 0%, transparent 55%),
+                radial-gradient(ellipse 45% 40% at 55% 5%,  rgba(14,165,233,0.20) 0%, transparent 50%);
+            animation: auroraP 14s ease-in-out infinite alternate;
+            pointer-events: none;
+            z-index: 0;
+        }
+        @keyframes auroraP {
+            0%   { opacity: 1;    filter: blur(38px); }
+            50%  { opacity: 0.72; filter: blur(56px); }
+            100% { opacity: 1;    filter: blur(38px); }
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            background: rgba(10,18,40,0.72) !important;
+            border: 1px solid rgba(255,255,255,0.08) !important;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.50) !important;
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border-radius: 18px !important;
+            margin: 20px auto !important;
+            padding: 24px 24px 28px !important;
+        }
+
+        .frame {
+            background: rgba(8,15,35,0.70) !important;
+            border: 1px solid rgba(255,255,255,0.10) !important;
+            border-radius: 12px !important;
+            box-shadow: none !important;
+        }
+
+        /* ── Header ── */
+        .header-container {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .header-container h1 {
+            font-size: 1.3rem !important;
+            font-weight: 800 !important;
+            color: #f1f5f9 !important;
+            letter-spacing: -0.3px;
+            flex: 1;
+        }
+        .back-home-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px !important;
+            border-radius: 10px !important;
+            border: 1px solid rgba(255,255,255,0.12) !important;
+            background: rgba(15,23,42,0.70) !important;
+            color: #cbd5e1 !important;
+            font-size: 13px !important;
+            font-weight: 600 !important;
+            text-decoration: none;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s, color 0.2s;
+            backdrop-filter: blur(8px);
+            white-space: nowrap;
+            font-family: inherit;
+        }
+        .back-home-button:hover {
+            background: rgba(37,99,235,0.25) !important;
+            border-color: rgba(59,130,246,0.45) !important;
+            color: #e2e8f0 !important;
+        }
+
+        /* ── Problem box (left panel) ── */
+        .problem-box ul li a {
+            color: #60a5fa !important;
+        }
+        .problem-box ul li a:hover {
+            color: #93c5fd !important;
+            text-decoration: underline;
+        }
+        #problemCategoryList li.active-issue a {
+            background: rgba(37,99,235,0.20) !important;
+            color: #93c5fd !important;
+        }
+
+        /* ── Search box ── */
+        .search-box label {
+            color: #94a3b8;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            display: block;
+            margin-bottom: 6px;
+        }
+        #problemCategorySearch {
+            background: rgba(5,12,28,0.85) !important;
+            border: 1.5px solid rgba(255,255,255,0.10) !important;
+            border-radius: 8px !important;
+            color: #e2e8f0 !important;
+            padding: 8px 12px !important;
+            font-size: 13.5px !important;
+            font-family: inherit;
+            outline: none;
+            width: 100%;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        #problemCategorySearch::placeholder { color: #334155; }
+        #problemCategorySearch:focus {
+            border-color: #3b82f6 !important;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+        }
+
+        /* ── Toolbar buttons ── */
+        .sol-toolbar-btn {
+            background: rgba(15,23,42,0.70) !important;
+            border: 1px solid rgba(255,255,255,0.12) !important;
+            color: #cbd5e1 !important;
+            border-radius: 8px !important;
+            transition: background 0.2s, border-color 0.2s;
+            backdrop-filter: blur(6px);
+        }
+        .sol-toolbar-btn:hover {
+            background: rgba(37,99,235,0.22) !important;
+            border-color: rgba(59,130,246,0.40) !important;
+            color: #e2e8f0 !important;
+        }
+        #bookmarkBtn.bookmarked {
+            background: rgba(120,53,15,0.35) !important;
+            border-color: rgba(245,158,11,0.45) !important;
+            color: #fcd34d !important;
+        }
+
+        /* ── Documents box ── */
+        .file-box h2 {
+            color: #e2e8f0;
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        #modelDocumentsList a, #commonDocumentsList a {
+            color: #60a5fa;
+            text-decoration: none;
+        }
+        #modelDocumentsList a:hover, #commonDocumentsList a:hover {
+            color: #93c5fd;
+            text-decoration: underline;
+        }
+
+        /* ── Fix worked button ── */
+        #fixWorkedBtn {
+            background: rgba(6,78,59,0.40) !important;
+            border: 1.5px solid rgba(74,222,128,0.40) !important;
+            color: #4ade80 !important;
+        }
+        #fixWorkedBtn:hover { background: rgba(6,78,59,0.60) !important; }
+        #fixWorkedBtn.fix-logged {
+            background: rgba(6,78,59,0.70) !important;
+            border-color: #4ade80 !important;
+            color: #4ade80 !important;
+        }
+        .fix-count-label { color: #94a3b8 !important; }
+        .fix-count-label strong { color: #4ade80 !important; }
+        .fix-worked-wrap { border-top-color: rgba(255,255,255,0.08) !important; }
+
+        .sol-issue-label { color: #64748b !important; }
+
         /* ── Accordion ──────────────────────────────── */
         .acc-wrap {
-            border-radius: 8px;
+            border-radius: 10px;
             margin-bottom: 10px;
             overflow: hidden;
-            border: 1px solid rgba(0,0,0,0.08);
+            border: 1px solid rgba(255,255,255,0.08);
         }
         .acc-hd {
             display: flex;
@@ -16,7 +204,7 @@
             gap: 8px;
             padding: 11px 16px;
             cursor: pointer;
-            font-size: 15px;
+            font-size: 14.5px;
             font-weight: 700;
             user-select: none;
             transition: opacity 0.15s;
@@ -35,27 +223,34 @@
             border-radius: 12px;
             font-size: 11px;
             font-weight: 700;
-            background: rgba(0,0,0,0.12);
+            background: rgba(255,255,255,0.10);
+            color: inherit;
         }
-        .acc-bd { padding: 10px 16px 14px; }
+        .acc-bd {
+            padding: 12px 16px 16px;
+            color: #e2e8f0;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+        .acc-bd li { margin-bottom: 8px; }
 
-        /* Level 1 — green */
+        /* Level 1 — green (dark theme) */
         #quickGuide .acc-hd {
-            background: #f0fdf4;
+            background: rgba(5,46,22,0.55);
             border-left: 4px solid #16a34a;
-            color: #15803d;
+            color: #4ade80;
         }
-        /* Level 2 — blue */
+        /* Level 2 — blue (dark theme) */
         #technicianSolution .acc-hd {
-            background: #eff6ff;
-            border-left: 4px solid #2563eb;
-            color: #1d4ed8;
+            background: rgba(30,58,138,0.45);
+            border-left: 4px solid #3b82f6;
+            color: #93c5fd;
         }
-        /* Non-warranty — orange */
+        /* Non-warranty — orange (dark theme) */
         #customerSolution .acc-hd {
-            background: #fff7ed;
-            border-left: 4px solid #ea580c;
-            color: #c2410c;
+            background: rgba(124,45,18,0.45);
+            border-left: 4px solid #f97316;
+            color: #fb923c;
         }
 
         /* ── Active issue highlight ── */
@@ -72,59 +267,71 @@
         .sol-toolbar {
             display: flex;
             gap: 8px;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             align-items: center;
+            flex-wrap: wrap;
         }
         .sol-toolbar-btn {
-            padding: 5px 13px;
-            border-radius: 6px;
-            border: 1px solid #ccc;
-            background: white;
+            padding: 6px 14px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(15,23,42,0.70);
+            color: #cbd5e1;
             cursor: pointer;
-            font-size: 13px;
+            font-size: 12.5px;
             font-weight: 600;
-            transition: background 0.15s;
+            font-family: inherit;
+            transition: background 0.2s, border-color 0.2s;
+            backdrop-filter: blur(6px);
         }
-        .sol-toolbar-btn:hover { background: #f0f4ff; }
-        #bookmarkBtn.bookmarked { background: #fff8e1; border-color: #f59e0b; color: #92400e; }
-        #bookmarkBtn.bookmarked:hover { background: #fef3c7; }
+        .sol-toolbar-btn:hover {
+            background: rgba(37,99,235,0.22);
+            border-color: rgba(59,130,246,0.40);
+            color: #e2e8f0;
+        }
+        #bookmarkBtn.bookmarked {
+            background: rgba(120,53,15,0.35);
+            border-color: rgba(245,158,11,0.45);
+            color: #fcd34d;
+        }
+        #bookmarkBtn.bookmarked:hover { background: rgba(120,53,15,0.55); }
 
         /* ── Fix Worked button ── */
         .fix-worked-wrap {
             margin-top: 14px;
             padding-top: 12px;
-            border-top: 1px dashed #c7d2fe;
+            border-top: 1px dashed rgba(255,255,255,0.10);
             display: flex;
             align-items: center;
             gap: 10px;
         }
         #fixWorkedBtn {
             padding: 6px 16px;
-            border-radius: 6px;
-            border: 1.5px solid #16a34a;
-            background: #f0fdf4;
-            color: #15803d;
+            border-radius: 8px;
+            border: 1.5px solid rgba(74,222,128,0.40);
+            background: rgba(6,78,59,0.40);
+            color: #4ade80;
             font-size: 13px;
             font-weight: 600;
+            font-family: inherit;
             cursor: pointer;
             transition: background 0.15s, transform 0.1s;
         }
-        #fixWorkedBtn:hover { background: #dcfce7; }
+        #fixWorkedBtn:hover { background: rgba(6,78,59,0.60); }
         #fixWorkedBtn:active { transform: scale(0.96); }
         #fixWorkedBtn.fix-logged {
-            background: #15803d;
-            color: white;
-            border-color: #15803d;
+            background: rgba(6,78,59,0.70);
+            border-color: #4ade80;
+            color: #4ade80;
         }
-        #fixWorkedBtn.fix-logged:hover { background: #166534; }
         .fix-count-label {
             font-size: 12px;
-            color: #6b7280;
+            color: #94a3b8;
         }
-        .fix-count-label strong { color: #15803d; }
+        .fix-count-label strong { color: #4ade80; }
         .sol-issue-label {
             font-size: 13px;
-            color: #555;
+            color: #64748b;
             margin-left: auto;
             font-style: italic;
             white-space: nowrap;
@@ -136,16 +343,16 @@
         /* ── Copy button inside accordion header ── */
         .acc-copy {
             margin-left: 6px;
-            padding: 1px 7px;
+            padding: 2px 8px;
             border-radius: 5px;
-            border: 1px solid rgba(0,0,0,0.15);
-            background: rgba(255,255,255,0.7);
+            border: 1px solid rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.10);
             cursor: pointer;
             font-size: 11px;
             line-height: 1.6;
             color: inherit;
         }
-        .acc-copy:hover { background: rgba(255,255,255,0.95); }
+        .acc-copy:hover { background: rgba(255,255,255,0.20); }
 
         /* ── Print styles ── */
         @media print {
@@ -200,7 +407,7 @@
                             <button class="acc-copy" onclick="event.stopPropagation();copySection('quickGuideList',this)" title="Copy text">📋</button>
                         </div>
                         <div class="acc-bd">
-                            <ul id="quickGuideList"><li><span style="color:grey;">Select an issue on the left.</span></li></ul>
+                            <ul id="quickGuideList"><li><span style="color:#475569;">Select an issue on the left.</span></li></ul>
                         </div>
                     </div>
 
@@ -213,7 +420,7 @@
                             <button class="acc-copy" onclick="event.stopPropagation();copySection('technicianSolutionList',this)" title="Copy text">📋</button>
                         </div>
                         <div class="acc-bd">
-                            <ul id="technicianSolutionList"><li><span style="color:grey;">Select an issue on the left.</span></li></ul>
+                            <ul id="technicianSolutionList"><li><span style="color:#475569;">Select an issue on the left.</span></li></ul>
                             <div class="fix-worked-wrap" id="fixWorkedWrap" style="display:none;">
                                 <button id="fixWorkedBtn" onclick="markFixWorked()">✅ This fix worked</button>
                                 <span class="fix-count-label" id="fixCountLabel"></span>
@@ -230,7 +437,7 @@
                             <button class="acc-copy" onclick="event.stopPropagation();copySection('customerSolutionList',this)" title="Copy text">📋</button>
                         </div>
                         <div class="acc-bd">
-                            <ul id="customerSolutionList"><li><span style="color:grey;">Select an issue on the left.</span></li></ul>
+                            <ul id="customerSolutionList"><li><span style="color:#475569;">Select an issue on the left.</span></li></ul>
                         </div>
                     </div>
 
@@ -651,21 +858,21 @@
                 const qgList = document.getElementById('quickGuideList');
                 qgList.innerHTML = allQ.length
                     ? allQ.map(s => `<li>${renderItem(s)}</li>`).join('')
-                    : '<li><span style="color:#aaa;font-size:13px;">No quick guide yet for this issue.</span></li>';
+                    : '<li><span style="color:#64748b;font-size:13px;">No quick guide yet for this issue.</span></li>';
                 document.getElementById('quickGuideCount').textContent = allQ.length || '';
 
                 // Technician Analysis
                 const techList = document.getElementById('technicianSolutionList');
                 techList.innerHTML = allT.length
                     ? allT.map(s => `<li>${renderItem(s)}</li>`).join('')
-                    : '<li><span style="color:#aaa;font-size:13px;">No data.</span></li>';
+                    : '<li><span style="color:#64748b;font-size:13px;">No data.</span></li>';
                 document.getElementById('technicianSolutionCount').textContent = allT.length || '';
 
                 // Non-warranty Issue
                 const custList = document.getElementById('customerSolutionList');
                 custList.innerHTML = allC.length
                     ? allC.map(s => `<li>${renderItem(s)}</li>`).join('')
-                    : '<li><span style="color:#aaa;font-size:13px;">No data.</span></li>';
+                    : '<li><span style="color:#64748b;font-size:13px;">No data.</span></li>';
                 document.getElementById('customerSolutionCount').textContent = allC.length || '';
 
                 // Always re-open Quick Guide when switching issues
