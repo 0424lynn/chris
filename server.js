@@ -1,9 +1,19 @@
-const express  = require('express');
-const path     = require('path');
-const session  = require('express-session');
-const bcrypt   = require('bcryptjs');
-const mongoose = require('mongoose');
+const express    = require('express');
+const path       = require('path');
+const session    = require('express-session');
+const bcrypt     = require('bcryptjs');
+const mongoose   = require('mongoose');
+const cloudinary = require('cloudinary').v2;
+const multer     = require('multer');
 require('dotenv').config();
+
+// ── Cloudinary + Multer ────────────────────────────────────────────────────────
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key:    process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
 // ── MongoDB ────────────────────────────────────────────────────────────────────
 const ModelData = mongoose.model(
@@ -24,6 +34,12 @@ const AnnouncementSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now }
 });
 const Announcement = mongoose.model('Announcement', AnnouncementSchema, 'announcement');
+
+const ModelMap = mongoose.model(
+  'ModelMap',
+  new mongoose.Schema({ _id: String, map: Object }, { strict: false }),
+  'modelmap'
+);
 
 if (process.env.MONGODB_URI) {
   mongoose.connect(process.env.MONGODB_URI)
@@ -214,6 +230,56 @@ function superAdminOnly(req, res, next) {
     return res.status(403).json({ error: 'Forbidden' });
   next();
 }
+
+// ── API: Upload image to Cloudinary ──────────────────────────────────────────
+app.post('/api/upload-image', superAdminOnly, upload.single('image'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+  if (!process.env.CLOUDINARY_CLOUD_NAME)
+    return res.status(500).json({ error: 'Cloudinary not configured — add CLOUDINARY_* env vars' });
+  try {
+    const result = await new Promise((resolve, reject) => {
+      cloudinary.uploader.upload_stream(
+        { folder: 'atosa-products', resource_type: 'image', quality: 'auto', fetch_format: 'auto' },
+        (err, r) => err ? reject(err) : resolve(r)
+      ).end(req.file.buffer);
+    });
+    res.json({ url: result.secure_url });
+  } catch (e) {
+    res.status(500).json({ error: 'Upload failed: ' + e.message });
+  }
+});
+
+// ── API: Model Map (model code → family key) ──────────────────────────────────
+app.get('/api/modelmap', async (req, res) => {
+  if (!req.session?.user) return res.status(401).json({ error: 'Unauthorized' });
+  try {
+    const doc = await ModelMap.findById('modelmap');
+    res.json(doc?.map || {});
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.put('/api/modelmap', superAdminOnly, async (req, res) => {
+  const { map } = req.body;
+  if (!map || typeof map !== 'object') return res.status(400).json({ error: 'Invalid map' });
+  try {
+    await ModelMap.findByIdAndUpdate('modelmap', { map }, { upsert: true, new: true });
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── API: Create new model family ──────────────────────────────────────────────
+app.post('/api/admin/family', superAdminOnly, async (req, res) => {
+  const { key, data } = req.body;
+  if (!key || !data) return res.status(400).json({ error: 'Missing key or data' });
+  try {
+    const existing = await ModelData.findById(key);
+    if (existing) return res.status(409).json({ error: 'Family key already exists' });
+    await ModelData.create({ _id: key, data });
+    invalidateAllCache();
+    _titlesCacheTs = 0;
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
 
 // List all families with counts
 app.get('/api/admin/families', superAdminOnly, async (req, res) => {

@@ -507,8 +507,9 @@
     </div>
 
     <script>
-    // ─── Single source of truth: model → JSON file ───────────────────────────
-    const MODEL_JSON_MAP = {
+    // ─── Static fallback map (model code → family key) ───────────────────────
+    // New models added via Admin → New Model Family will override this via /api/modelmap
+    const STATIC_MODEL_MAP = {
         // AGR series
         "AGR-10B":      "AGRmodelData.json",
         "AGR-24G":      "AGRmodelData.json",
@@ -682,60 +683,75 @@
     };
 
     // ─── Read model from URL: product.html?model=AGR-10B ─────────────────────
-    const params   = new URLSearchParams(location.search);
-    const model    = params.get('model');
-    const jsonFile = MODEL_JSON_MAP[model];
-    // API path derived from filename (e.g. "MSFmodelData.json" → "/api/modeldata/MSFmodelData")
-    const apiUrl   = jsonFile ? '/api/modeldata/' + jsonFile.replace('.json', '') : null;
+    const params = new URLSearchParams(location.search);
+    const model  = params.get('model');
 
     // Cache fetched data here so showSolution doesn't re-fetch on every click
     let pageData = null;
 
-    if (!model || !jsonFile) {
-        document.getElementById('product-title').innerText = 'Model not found: ' + (model || '(none)');
-    } else {
+    // ─── Async init: merge static map with dynamic map from server ────────────
+    (async function () {
+        // Merge: dynamic map (from MongoDB) overrides static map
+        // This lets new models added via Admin panel work without a code deploy
+        let modelMap = { ...STATIC_MODEL_MAP };
+        try {
+            const r = await fetch('/api/modelmap');
+            if (r.ok) Object.assign(modelMap, await r.json());
+        } catch {}
+
+        const jsonFile = modelMap[model];
+        // Strip .json if present (static map has .json; dynamic map stores key only)
+        const fileKey = jsonFile ? jsonFile.replace('.json', '') : null;
+        const apiUrl  = fileKey ? '/api/modeldata/' + fileKey : null;
+
+        if (!model || !fileKey) {
+            document.getElementById('product-title').innerText = 'Model not found: ' + (model || '(none)');
+            return;
+        }
+
         document.title = model;
+        try {
+            const r    = await fetch(apiUrl);
+            const data = await r.json();
+            pageData = data; // ← cache it
 
-        fetch(apiUrl)
-            .then(r => r.json())
-            .then(data => {
-                pageData = data; // ← cache it
-                document.getElementById('product-title').innerText = data.models[model].title;
-                document.getElementById('product-image').src       = data.models[model].image;
-                document.getElementById('product-diagram').src     = data.models[model].diagram;
+            document.getElementById('product-title').innerText = data.models[model].title;
+            document.getElementById('product-image').src       = data.models[model].image;
+            document.getElementById('product-diagram').src     = data.models[model].diagram;
 
-                const problemCategoryList = document.getElementById('problemCategoryList');
-                data.models[model].issues.forEach(issueKey => {
-                    const li = document.createElement('li');
-                    li.dataset.issue = issueKey;
-                    li.innerHTML = `<a href="#" onclick="showSolution('${issueKey}')">${issueKey.charAt(0).toUpperCase() + issueKey.slice(1)}</a>`;
-                    problemCategoryList.appendChild(li);
-                });
+            const problemCategoryList = document.getElementById('problemCategoryList');
+            data.models[model].issues.forEach(issueKey => {
+                const li = document.createElement('li');
+                li.dataset.issue = issueKey;
+                li.innerHTML = `<a href="#" onclick="showSolution('${issueKey}')">${issueKey.charAt(0).toUpperCase() + issueKey.slice(1)}</a>`;
+                problemCategoryList.appendChild(li);
+            });
 
-                // Auto-select: use ?issue= param if valid, otherwise first issue
-                const issueParam = params.get('issue');
-                const issues = data.models[model].issues;
-                const targetIssue = (issueParam && issues.includes(issueParam))
-                    ? issueParam
-                    : (issues.length > 0 ? issues[0] : null);
-                if (targetIssue) showSolution(targetIssue);
+            // Auto-select: use ?issue= param if valid, otherwise first issue
+            const issueParam = params.get('issue');
+            const issues = data.models[model].issues;
+            const targetIssue = (issueParam && issues.includes(issueParam))
+                ? issueParam
+                : (issues.length > 0 ? issues[0] : null);
+            if (targetIssue) showSolution(targetIssue);
 
-                const modelDocumentsList = document.getElementById('modelDocumentsList');
-                data.models[model].documents.forEach(doc => {
-                    const li = document.createElement('li');
-                    li.innerHTML = `<a href="${doc.url}" target="_blank">${doc.title}</a>`;
-                    modelDocumentsList.appendChild(li);
-                });
+            const modelDocumentsList = document.getElementById('modelDocumentsList');
+            (data.models[model].documents || []).forEach(doc => {
+                const li = document.createElement('li');
+                li.innerHTML = `<a href="${doc.url}" target="_blank">${doc.title}</a>`;
+                modelDocumentsList.appendChild(li);
+            });
 
-                const commonDocumentsList = document.getElementById('commonDocumentsList');
-                data.common.documents.forEach(doc => {
-                    const li = document.createElement('li');
-                    li.innerHTML = `<a href="${doc.url}" target="_blank">${doc.title}</a>`;
-                    commonDocumentsList.appendChild(li);
-                });
-            })
-            .catch(err => console.error('Error loading model data:', err));
-    }
+            const commonDocumentsList = document.getElementById('commonDocumentsList');
+            (data.common.documents || []).forEach(doc => {
+                const li = document.createElement('li');
+                li.innerHTML = `<a href="${doc.url}" target="_blank">${doc.title}</a>`;
+                commonDocumentsList.appendChild(li);
+            });
+        } catch (err) {
+            console.error('Error loading model data:', err);
+        }
+    })();
 
     // ── 渲染单条 solution 条目 ──────────────────────────────────────────────────
     // 支持旧格式（HTML 字符串）和新结构化格式（对象）

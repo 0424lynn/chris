@@ -174,6 +174,57 @@
     #saveStatus { font-size: 13px; align-self: center; font-weight: 600; }
     #saveStatus.ok  { color: #16a34a; }
     #saveStatus.err { color: #dc2626; }
+
+    /* ── New Family modal ── */
+    .nf-modal {
+      background: white; border-radius: 14px; width: 100%; max-width: 700px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.25); padding: 28px 30px;
+      animation: mdIn .18s ease; max-height: 90vh; overflow-y: auto;
+    }
+    .nf-section-title {
+      font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase;
+      letter-spacing: .5px; margin: 18px 0 10px;
+    }
+    .nf-model-card {
+      border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 14px 16px;
+      margin-bottom: 10px; background: #fafafa; position: relative;
+    }
+    .nf-model-card .mc-remove {
+      position: absolute; top: 10px; right: 12px;
+      background: none; border: none; color: #d1d5db; cursor: pointer; font-size: 16px;
+    }
+    .nf-model-card .mc-remove:hover { color: #ef4444; }
+    .nf-row { display: flex; gap: 12px; margin-bottom: 10px; }
+    .nf-field { flex: 1; }
+    .nf-field label { display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 4px; }
+    .nf-field input { width: 100%; padding: 7px 10px; border: 1.5px solid #e2e8f0; border-radius: 7px; font-size: 13px; outline: none; }
+    .nf-field input:focus { border-color: #3b82f6; }
+    .nf-upload-row { display: flex; gap: 10px; align-items: center; }
+    .nf-upload-btn {
+      display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px;
+      border: 1.5px dashed #cbd5e1; border-radius: 7px; background: none;
+      color: #64748b; font-size: 12px; cursor: pointer; transition: all .12s; white-space: nowrap;
+    }
+    .nf-upload-btn:hover { border-color: #3b82f6; color: #3b82f6; background: #eff6ff; }
+    .nf-upload-btn.uploaded { border-color: #16a34a; color: #16a34a; background: #f0fdf4; border-style: solid; }
+    .nf-upload-btn.uploading { opacity: .6; cursor: not-allowed; }
+    .nf-thumb { width: 44px; height: 44px; border-radius: 6px; object-fit: cover; border: 1px solid #e2e8f0; display: none; }
+    .nf-doc-row { display: flex; gap: 8px; margin-bottom: 6px; align-items: center; }
+    .nf-doc-row input { flex: 1; padding: 6px 10px; border: 1.5px solid #e2e8f0; border-radius: 7px; font-size: 13px; outline: none; }
+    .nf-doc-row input:focus { border-color: #3b82f6; }
+    .nf-doc-remove { background: none; border: none; color: #d1d5db; cursor: pointer; font-size: 16px; padding: 2px 6px; }
+    .nf-doc-remove:hover { color: #ef4444; }
+    #nfStatus { font-size: 13px; font-weight: 600; align-self: center; }
+    #nfStatus.ok  { color: #16a34a; }
+    #nfStatus.err { color: #dc2626; }
+    .nf-new-btn {
+      display: flex; align-items: center; gap: 6px;
+      margin: 8px 12px 4px; padding: 7px 12px;
+      border: 1.5px dashed #cbd5e1; border-radius: 8px;
+      background: none; color: #64748b; font-size: 12px; cursor: pointer; width: calc(100% - 24px);
+      justify-content: center; transition: all .12s;
+    }
+    .nf-new-btn:hover { border-color: #3b82f6; color: #3b82f6; background: #eff6ff; }
   </style>
 </head>
 <body>
@@ -192,12 +243,47 @@
   <!-- Sidebar -->
   <div class="sidebar">
     <div class="sidebar-title">Model Families</div>
+    <button class="nf-new-btn" onclick="openNewFamily()">＋ New Model Family</button>
     <div id="familyList"><div style="padding:16px;color:#94a3b8;font-size:13px;">Loading...</div></div>
   </div>
 
   <!-- Main panel -->
   <div class="main" id="mainPanel">
     <div class="main-placeholder">← Select a model family to manage its issues</div>
+  </div>
+</div>
+
+<!-- New Model Family modal -->
+<div class="modal-overlay" id="nfOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:2000;align-items:flex-start;justify-content:center;padding:30px 20px;overflow-y:auto;">
+  <div class="nf-modal">
+    <div class="modal-hd">
+      <span class="modal-title">➕ New Model Family</span>
+      <button class="modal-close" onclick="closeNewFamily()">✕</button>
+    </div>
+
+    <!-- Family Key -->
+    <div class="nf-row">
+      <div class="nf-field" style="flex:2">
+        <label>Family Key (MongoDB ID) <span style="font-weight:400;color:#94a3b8">— e.g. ATSBmodelData</span></label>
+        <input type="text" id="nfFamilyKey" placeholder="e.g. NewSeriesmodelData" oninput="this.value=this.value.replace(/\s/g,'')"/>
+      </div>
+    </div>
+
+    <!-- Models -->
+    <div class="nf-section-title">📦 Models in this family</div>
+    <div id="nfModelList"></div>
+    <button class="add-step-btn" onclick="addNfModel()" style="margin-bottom:16px;">+ Add Model</button>
+
+    <!-- Common Documents -->
+    <div class="nf-section-title">📄 Common Documents <span style="font-weight:400;color:#94a3b8">(optional)</span></div>
+    <div id="nfDocList"></div>
+    <button class="add-step-btn" onclick="addNfDoc()">+ Add Document</button>
+
+    <div class="modal-footer">
+      <span id="nfStatus"></span>
+      <button class="btn-cancel" onclick="closeNewFamily()">Cancel</button>
+      <button class="btn-save" onclick="createFamily()">✅ Create Family</button>
+    </div>
   </div>
 </div>
 
@@ -686,6 +772,206 @@
   document.getElementById('modalOverlay').addEventListener('click', function(e) {
     if (e.target === this) closeModal();
   });
+  document.getElementById('nfOverlay').addEventListener('click', function(e) {
+    if (e.target === this) closeNewFamily();
+  });
+
+  // ── New Model Family ─────────────────────────────────────────────────────────
+  let _nfModelCount = 0;
+
+  function openNewFamily() {
+    _nfModelCount = 0;
+    document.getElementById('nfFamilyKey').value = '';
+    document.getElementById('nfModelList').innerHTML = '';
+    document.getElementById('nfDocList').innerHTML = '';
+    document.getElementById('nfStatus').textContent = '';
+    document.getElementById('nfStatus').className = '';
+    addNfModel(); // start with one model row
+    const ov = document.getElementById('nfOverlay');
+    ov.style.display = 'flex';
+  }
+
+  function closeNewFamily() {
+    document.getElementById('nfOverlay').style.display = 'none';
+  }
+
+  function addNfModel() {
+    const idx = _nfModelCount++;
+    const div = document.createElement('div');
+    div.className = 'nf-model-card';
+    div.id = `nfmc-${idx}`;
+    div.innerHTML = `
+      <button class="mc-remove" onclick="this.closest('.nf-model-card').remove()" title="Remove">✕</button>
+      <div class="nf-row">
+        <div class="nf-field">
+          <label>Model Code</label>
+          <input type="text" placeholder="e.g. NSM-24G" data-role="code"/>
+        </div>
+        <div class="nf-field" style="flex:2">
+          <label>Display Title</label>
+          <input type="text" placeholder="e.g. NSM 24G Series" data-role="title"/>
+        </div>
+      </div>
+      <div class="nf-row">
+        <div class="nf-field">
+          <label>Product Image</label>
+          <div class="nf-upload-row">
+            <button class="nf-upload-btn" onclick="triggerImageUpload(this,'img')" data-url="">📷 Upload Image</button>
+            <img class="nf-thumb" data-type="img"/>
+          </div>
+        </div>
+        <div class="nf-field">
+          <label>Circuit Diagram</label>
+          <div class="nf-upload-row">
+            <button class="nf-upload-btn" onclick="triggerImageUpload(this,'dia')" data-url="">📐 Upload Diagram</button>
+            <img class="nf-thumb" data-type="dia"/>
+          </div>
+        </div>
+      </div>
+      <input type="file" accept="image/*" style="display:none" data-hidden-input/>
+    `;
+    document.getElementById('nfModelList').appendChild(div);
+  }
+
+  function addNfDoc() {
+    const row = document.createElement('div');
+    row.className = 'nf-doc-row';
+    row.innerHTML = `
+      <input type="text" placeholder="Document title (e.g. Installation Manual)" data-role="doc-title"/>
+      <input type="text" placeholder="URL (https://...)" data-role="doc-url"/>
+      <button class="nf-doc-remove" onclick="this.parentElement.remove()">✕</button>
+    `;
+    document.getElementById('nfDocList').appendChild(row);
+  }
+
+  // Trigger hidden file input for upload
+  function triggerImageUpload(btn, type) {
+    if (btn.classList.contains('uploading')) return;
+    const card = btn.closest('.nf-model-card');
+    const fileInput = card.querySelector('[data-hidden-input]');
+    // Store which button triggered this
+    fileInput._targetBtn  = btn;
+    fileInput._targetType = type;
+    fileInput.value = '';
+    fileInput.onchange = () => handleImageFile(fileInput);
+    fileInput.click();
+  }
+
+  async function handleImageFile(fileInput) {
+    const btn  = fileInput._targetBtn;
+    const type = fileInput._targetType;
+    const card = btn.closest('.nf-model-card');
+    const file = fileInput.files[0];
+    if (!file) return;
+
+    btn.classList.add('uploading');
+    btn.textContent = '⏳ Uploading...';
+
+    const fd = new FormData();
+    fd.append('image', file);
+
+    try {
+      const r   = await fetch('/api/upload-image', { method: 'POST', body: fd });
+      const res = await r.json();
+      if (!r.ok) throw new Error(res.error || 'Upload failed');
+
+      btn.dataset.url = res.url;
+      btn.classList.remove('uploading');
+      btn.classList.add('uploaded');
+      btn.textContent = type === 'img' ? '✅ Image Uploaded' : '✅ Diagram Uploaded';
+
+      // Show thumbnail
+      const thumb = card.querySelector(`[data-type="${type}"]`);
+      thumb.src   = res.url;
+      thumb.style.display = 'block';
+    } catch (e) {
+      btn.classList.remove('uploading');
+      btn.textContent = type === 'img' ? '📷 Upload Image' : '📐 Upload Diagram';
+      alert('Upload failed: ' + e.message);
+    }
+  }
+
+  async function createFamily() {
+    const key = document.getElementById('nfFamilyKey').value.trim();
+    const st  = document.getElementById('nfStatus');
+
+    if (!key) { setNfStatus('Family Key is required', 'err'); return; }
+    if (!/^[a-zA-Z0-9\-_]+$/.test(key)) { setNfStatus('Key can only contain letters, numbers, - and _', 'err'); return; }
+
+    // Collect models
+    const modelCards = document.querySelectorAll('#nfModelList .nf-model-card');
+    if (!modelCards.length) { setNfStatus('Add at least one model', 'err'); return; }
+
+    const modelsData = {};
+    const modelMapUpdates = {};
+    let valid = true;
+
+    modelCards.forEach(card => {
+      const code  = card.querySelector('[data-role="code"]').value.trim();
+      const title = card.querySelector('[data-role="title"]').value.trim();
+      const imgUrl = card.querySelector('[data-type="img"]').src || '';
+      const diaUrl = card.querySelector('[data-type="dia"]').src || '';
+      if (!code || !title) { valid = false; return; }
+      modelsData[code] = {
+        title,
+        image:   imgUrl  || '',
+        diagram: diaUrl  || '',
+        issues:  [],
+        documents: []
+      };
+      modelMapUpdates[code] = key;
+    });
+
+    if (!valid) { setNfStatus('All models need a code and title', 'err'); return; }
+
+    // Collect common documents
+    const docRows = document.querySelectorAll('#nfDocList .nf-doc-row');
+    const commonDocs = [];
+    docRows.forEach(row => {
+      const t = row.querySelector('[data-role="doc-title"]').value.trim();
+      const u = row.querySelector('[data-role="doc-url"]').value.trim();
+      if (t && u) commonDocs.push({ title: t, url: u });
+    });
+
+    const familyData = {
+      models: modelsData,
+      common: { issues: {}, documents: commonDocs }
+    };
+
+    setNfStatus('Creating...', '');
+    try {
+      // 1. Create family document in MongoDB
+      const r1 = await fetch('/api/admin/family', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ key, data: familyData })
+      });
+      if (!r1.ok) throw new Error((await r1.json()).error);
+
+      // 2. Fetch current model map and merge in new entries
+      const r2  = await fetch('/api/modelmap');
+      const cur = r2.ok ? await r2.json() : {};
+      const newMap = Object.assign({}, cur, modelMapUpdates);
+      const r3 = await fetch('/api/modelmap', {
+        method:  'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ map: newMap })
+      });
+      if (!r3.ok) throw new Error('Family created but model map update failed');
+
+      setNfStatus('✅ Created! Models are now live.', 'ok');
+      // Refresh sidebar
+      setTimeout(() => { closeNewFamily(); loadFamilies(); }, 1200);
+    } catch (e) {
+      setNfStatus('❌ ' + e.message, 'err');
+    }
+  }
+
+  function setNfStatus(msg, cls) {
+    const el = document.getElementById('nfStatus');
+    el.textContent = msg;
+    el.className = cls;
+  }
 </script>
 </body>
 </html>
