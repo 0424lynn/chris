@@ -749,52 +749,36 @@
     function renderItem(item) {
         if (typeof item === 'string') return item; // 旧 HTML 字符串，直接渲染
 
-        const titleHtml = item.text
-            ? `<span style="font-size:18px;font-weight:700;color:#f1f5f9;">${item.text}</span>`
-            : '';
+        let html = '';
 
-        const hasSubContent = item.red || item.link || (item.steps && item.steps.length) || item.video;
-
-        // No sub-content: just show the title inline, no accordion needed
-        if (!hasSubContent) {
-            return `<div style="padding:10px 14px;font-size:18px;font-weight:700;color:#f1f5f9;">${item.text || ''}</div>`;
+        if (item.text) {
+            html += `<div style="font-size:18px;font-weight:700;color:#f1f5f9;margin-bottom:6px;">${item.text}</div>`;
         }
-
-        // Build body HTML
-        let bodyHtml = '';
-
         if (item.red) {
             const clr = (item.color && item.color !== 'red') ? item.color : '#f87171';
-            bodyHtml += `<div style="color:${clr};font-size:16px;margin-bottom:8px;line-height:1.7;">${item.red}</div>`;
+            html += `<div style="color:${clr};font-size:16px;margin-bottom:6px;line-height:1.7;">${item.red}</div>`;
         }
         if (item.link) {
-            bodyHtml += `<div style="margin-bottom:6px;"><a href="${item.link.url}" target="_blank" style="color:#60a5fa;font-size:16px;">${item.link.label}</a></div>`;
+            html += `<div style="margin-bottom:6px;"><a href="${item.link.url}" target="_blank" style="color:#60a5fa;font-size:16px;">${item.link.label}</a></div>`;
         }
         if (item.steps && item.steps.length) {
             item.steps.forEach((step, i) => {
                 if (typeof step === 'string') {
-                    bodyHtml += `<div style="color:#f87171;font-size:16px;margin-bottom:6px;"><span style="font-weight:600;">${i + 1}.</span> ${step}</div>`;
+                    html += `<div style="color:#f87171;font-size:16px;margin-bottom:6px;"><span style="font-weight:600;">${i + 1}.</span> ${step}</div>`;
                 } else {
-                    bodyHtml += `<div style="color:#f87171;font-size:16px;margin-bottom:6px;"><span style="font-weight:600;">${i + 1}.</span> ${step.text || ''}`;
-                    if (step.red) bodyHtml += ` <span style="color:#f87171;">${step.red}</span>`;
+                    html += `<div style="color:#f87171;font-size:16px;margin-bottom:6px;"><span style="font-weight:600;">${i + 1}.</span> ${step.text || ''}`;
+                    if (step.red) html += ` <span style="color:#f87171;">${step.red}</span>`;
                     if (step.links) step.links.forEach(l => {
-                        bodyHtml += ` <a href="${l.url}" target="_blank" style="color:#60a5fa;">${l.label}</a>`;
+                        html += ` <a href="${l.url}" target="_blank" style="color:#60a5fa;">${l.label}</a>`;
                     });
-                    bodyHtml += `</div>`;
+                    html += `</div>`;
                 }
             });
         }
         if (item.video) {
-            bodyHtml += `<video controls preload="metadata" playsinline style="width:100%;max-width:900px;margin-top:8px;border-radius:8px;"><source src="${item.video}" type="video/mp4"></video>`;
+            html += `<video controls preload="metadata" playsinline style="width:100%;max-width:900px;margin-top:8px;border-radius:8px;"><source src="${item.video}" type="video/mp4"></video>`;
         }
-
-        return `<div class="item-acc">
-            <div class="item-acc-hd" onclick="this.parentElement.classList.toggle('open')">
-                <span class="item-acc-arrow">▶</span>
-                ${titleHtml}
-            </div>
-            <div class="item-acc-bd">${bodyHtml}</div>
-        </div>`;
+        return html;
     }
 
     function toggleAcc(id) {
