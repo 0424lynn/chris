@@ -929,8 +929,11 @@
                     : '<li><span style="color:#64748b;font-size:13px;">No data.</span></li>';
                 document.getElementById('customerSolutionCount').textContent = allC.length || '';
 
-                // Always re-open Quick Guide when switching issues
+                // Reset accordion states on every issue switch:
+                // Quick Guide always open; Technician & Non-warranty always collapsed
                 document.getElementById('quickGuide').classList.remove('collapsed');
+                document.getElementById('technicianSolution').classList.add('collapsed');
+                document.getElementById('customerSolution').classList.add('collapsed');
 
                 // Update URL with current issue (for shareable link)
                 const url = new URL(location.href);
