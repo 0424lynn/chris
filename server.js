@@ -101,7 +101,7 @@ app.post('/api/login', async (req, res) => {
       }
     }
 
-    if (username === 'user' && process.env.USER_HASH) {
+    if (username === 'tech' && process.env.USER_HASH) {
       const isUser = await bcrypt.compare(password, process.env.USER_HASH);
       if (isUser) {
         req.session.user = { username, role: 'user' };
