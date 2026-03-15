@@ -742,7 +742,7 @@ document.addEventListener("DOMContentLoaded", function () {
 // **📌 分類 Tab 前缀映射**
 const categoryPrefixes = {
   all: [],
-  refrigeration: ["MSF", "MPF", "MBF", "MCF", "MGF", "MBB", "MBC", "MKC", "SBB"],
+  refrigeration: ["MSF", "MPF", "MBF", "MCF", "MGF", "MBB", "MBC", "MKC", "SBB", "MMF"],
   cooking: ["AGR", "ATTG", "ATMG", "ATFS", "ATCB", "ATRC", "ATCM", "ACHP", "ATSP", "ATHC", "ATSB"],
   ice: ["YR", "HD350"],
   walkin: ["AWC"],
