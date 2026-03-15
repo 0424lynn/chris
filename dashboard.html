@@ -2,609 +2,414 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>ATOSA Technical Documentation Center</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ATOSA — Technical Documentation Center</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ── 全頁背景 Aurora ── */
     body {
-      font-family: Arial, sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      height: 100vh;
-      margin: 0;
-      position: relative; /* 确保伪元素定位正确 */
+      font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+      min-height: 100vh;
+      background: #050d1f;
+      color: #e2e8f0;
+      position: relative;
     }
-
-    /* 使用 ::before 伪元素为背景添加透明度 */
     body::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-image: url('https://img.tukuppt.com/ad_preview/00/09/24/5c9913d81f356.jpg!/fw/980');
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-      opacity: 0.5; /* 设置背景透明度 */
-      z-index: -1; /* 确保背景图层不会遮挡其他内容 */
-      image-rendering: auto; /* 确保图像清晰且不会失真 */
+      content: "";
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 55% at 10% 20%, rgba(30,86,200,0.30) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 90% 80%, rgba(109,40,217,0.22) 0%, transparent 55%),
+        radial-gradient(ellipse 45% 40% at 55% 5%,  rgba(14,165,233,0.15) 0%, transparent 50%);
+      animation: aurora 14s ease-in-out infinite alternate;
+      pointer-events: none;
+      z-index: 0;
+    }
+    @keyframes aurora {
+      0%   { opacity: 1;    filter: blur(38px); }
+      50%  { opacity: 0.72; filter: blur(56px); }
+      100% { opacity: 1;    filter: blur(38px); }
     }
 
+    /* ── 主容器 ── */
     .container {
-      text-align: center;
-      padding: 20px;
-      width: 90%;
+      position: relative;
+      z-index: 1;
+      width: 92%;
       max-width: 1200px;
-      position: relative;
-      z-index: 1; /* 确保内容显示在背景上方 */
+      margin: 0 auto;
+      padding: 24px 0 40px;
     }
 
-    /* Position Logout Button at the top-right */
-    #logout {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      padding: 10px 15px;
-      background-color: #007BFF;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 16px;
-    }
-
-    #logout:hover {
-      background-color: #0056b3;
-    }
-
-    .announcement-bar {
-      background-color: rgba(255, 243, 205, 0.8);
-      border: 1px solid #ffeeba;
-      color: #856404;
-      padding: 20px;
-      border-radius: 8px;
-      margin-bottom: 20px;
-      position: relative;
-    }
-
-    .announcement-bar h2 {
-      font-size: 1.5rem;
-      margin: 0 0 10px;
-    }
-
-    .announcement-content {
-      font-size: 1rem;
-      line-height: 1.5;
-      text-align: left;
-      margin: 0;
-      color: red;
-    }
-
-    .close-btn {
-      background: none;
-      border: none;
-      font-size: 1.2rem;
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      cursor: pointer;
-      color: #856404;
-    }
-
-    .close-btn:hover {
-      color: #000;
-    }
-
-    #searchInput {
-      padding: 10px;
-      width: 60%;
-      margin-bottom: 20px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-    }
-
-    #productList {
+    /* ── 頂部操作列 ── */
+    .topbar {
       display: flex;
-      flex-wrap: wrap;
+      justify-content: flex-end;
+      align-items: center;
       gap: 10px;
-      padding: 0;
-      margin: 0;
-      justify-content: center;
+      margin-bottom: 24px;
     }
-
-    #productList li {
-      list-style-type: none;
-      margin: 5px;
-      width: 200px;
-      text-align: left;
-    }
-
-    #productList a {
-      text-decoration: none;
-      color: #007BFF;
-      font-size: 16px;
+    .topbar-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(15,23,42,0.70);
+      color: #cbd5e1;
+      font-size: 13.5px;
+      font-weight: 600;
+      font-family: inherit;
       cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s, border-color 0.2s, color 0.2s;
+      backdrop-filter: blur(8px);
+    }
+    .topbar-btn:hover {
+      background: rgba(37,99,235,0.25);
+      border-color: rgba(59,130,246,0.45);
+      color: #e2e8f0;
+    }
+    .topbar-btn.primary {
+      background: linear-gradient(135deg,#2563eb,#7c3aed);
+      border-color: transparent;
+      color: #fff;
+      box-shadow: 0 3px 14px rgba(37,99,235,0.35);
+    }
+    .topbar-btn.primary:hover { opacity: 0.88; }
+    #logout { color: #fca5a5; }
+    #logout:hover { background: rgba(239,68,68,0.18); border-color: rgba(239,68,68,0.35); color: #fca5a5; }
+
+    /* ── 標題區 ── */
+    .header-container {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .header-container h1 {
+      font-size: clamp(18px, 2.5vw, 26px);
+      font-weight: 800;
+      color: #f1f5f9;
+      letter-spacing: -0.3px;
+    }
+    .header-container .sub {
+      font-size: 13px;
+      color: #475569;
+      margin-top: 4px;
     }
 
-    #productList a:hover {
-      text-decoration: underline;
+    /* ── 公告欄 ── */
+    .announcement-bar {
+      background: rgba(10,18,40,0.75);
+      border: 1px solid rgba(251,191,36,0.25);
+      border-left: 3px solid #f59e0b;
+      border-radius: 14px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      position: relative;
+      backdrop-filter: blur(12px);
     }
+    .announcement-bar h2 {
+      font-size: 14px;
+      font-weight: 700;
+      color: #fbbf24;
+      margin-bottom: 6px;
+    }
+    .announcement-content {
+      font-size: 13.5px;
+      line-height: 1.6;
+      color: #fca5a5;
+    }
+    .close-btn {
+      background: none; border: none;
+      font-size: 18px; color: #64748b;
+      position: absolute; top: 10px; right: 14px;
+      cursor: pointer; transition: color 0.2s;
+    }
+    .close-btn:hover { color: #e2e8f0; }
+    #annEditBtn {
+      font-size: 12px; font-weight: 500;
+      margin-left: 10px; cursor: pointer;
+      color: #f59e0b; text-decoration: underline;
+      background: none; border: none; font-family: inherit;
+    }
+    #announcementEdit {
+      width: 100%; min-height: 80px;
+      margin-top: 10px; padding: 10px 12px;
+      background: rgba(5,12,28,0.85);
+      border: 1.5px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      color: #e2e8f0; font-size: 13.5px; font-family: inherit;
+      resize: vertical;
+    }
+    .ann-edit-btn {
+      margin-top: 8px; padding: 6px 16px;
+      border: none; border-radius: 8px;
+      cursor: pointer; font-size: 13px;
+      font-weight: 600; font-family: inherit;
+    }
+    .ann-save   { background: linear-gradient(135deg,#059669,#10b981); color:#fff; }
+    .ann-cancel { background: rgba(100,116,139,0.35); color:#94a3b8; margin-left:6px; border: 1px solid rgba(255,255,255,0.10); }
 
-    /* Search + Serial Row */
+    /* ── 搜索+序號列 ── */
     .search-serial-row {
       display: flex;
       align-items: flex-start;
       gap: 0;
-      margin-bottom: 20px;
-      background: rgba(255,255,255,0.6);
-      border: 1px solid #ddd;
-      border-radius: 10px;
-      padding: 14px 18px;
+      margin-bottom: 18px;
+      background: rgba(10,18,40,0.72);
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 16px;
+      padding: 18px 22px;
+      backdrop-filter: blur(12px);
     }
-
     .search-col, .serial-col {
       flex: 1;
       display: flex;
       flex-direction: column;
       align-items: center;
-      text-align: center;
     }
-
-    .col-label {
-      font-size: 13px;
-      font-weight: 700;
-      color: #444;
-      margin-bottom: 8px;
-      letter-spacing: .3px;
-    }
-
     .col-divider {
       width: 1px;
-      background: #ddd;
+      background: rgba(255,255,255,0.08);
       align-self: stretch;
-      margin: 0 18px;
+      margin: 0 22px;
     }
-
-    #searchInput {
-      padding: 10px;
-      width: 90%;
-      border-radius: 5px;
-      border: 1px solid #ccc;
+    .col-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #64748b;
+      margin-bottom: 10px;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
     }
-
+    #searchInput, #serialInput {
+      padding: 10px 14px;
+      background: rgba(5,12,28,0.85);
+      border: 1.5px solid rgba(255,255,255,0.10);
+      border-radius: 10px;
+      color: #e2e8f0;
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    #searchInput { width: 90%; }
+    #serialInput { flex: 1; max-width: 300px; }
+    #searchInput::placeholder, #serialInput::placeholder { color: #334155; }
+    #searchInput:focus, #serialInput:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+    }
     .serial-input-row {
-      display: flex;
-      gap: 8px;
-      width: 100%;
-      justify-content: center;
+      display: flex; gap: 8px; width: 100%; justify-content: center;
     }
-
-    #serialInput {
-      padding: 10px;
-      flex: 1;
-      max-width: 320px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-    }
-
     #checkSerialBtn {
-      padding: 10px 15px;
-      border: none;
-      background-color: #007BFF;
-      color: white;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 15px;
+      padding: 10px 16px;
+      background: linear-gradient(135deg,#2563eb,#7c3aed);
+      color: #fff; border: none;
+      border-radius: 10px; cursor: pointer;
+      font-size: 13.5px; font-weight: 600; font-family: inherit;
       white-space: nowrap;
+      box-shadow: 0 2px 10px rgba(37,99,235,0.30);
+      transition: opacity 0.2s;
     }
-
-    #checkSerialBtn:hover {
-      background-color: #0056b3;
-    }
-
+    #checkSerialBtn:hover { opacity: 0.88; }
     #clearSerialBtn {
       padding: 10px 12px;
-      border: 1px solid #ccc;
-      background: white;
-      color: #888;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 15px;
-      line-height: 1;
+      background: rgba(30,41,59,0.60);
+      border: 1px solid rgba(255,255,255,0.10);
+      color: #64748b; border-radius: 10px;
+      cursor: pointer; font-size: 14px;
     }
+    #clearSerialBtn:hover { color: #fca5a5; border-color: rgba(239,68,68,0.35); }
+    .serial-hint { margin: 6px 0 0; font-size: 11.5px; color: #475569; }
+    .serial-hint strong { color: #60a5fa; }
+    #serialFeedback { margin-top: 8px; font-size: 13.5px; font-weight: 600; }
 
-    #clearSerialBtn:hover {
-      background: #f5f5f5;
-      color: #e00;
-      border-color: #e00;
-    }
-
-    #serialFeedback {
-      margin-top: 10px;
-      font-size: 14px;
-      font-weight: bold;
-      text-align: left;
-    }
-    
-    /* 地图链接样式 */
-    .map-container {
-      margin-top: 20px;
-      padding: 15px;
-      background-color: rgba(255, 255, 255, 0.8);
-      border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    
-    .map-link {
-      display: inline-block;
-      padding: 10px 15px;
-      background-color: #28a745;
-      color: white;
-      text-decoration: none;
-      border-radius: 5px;
-      font-weight: bold;
-    }
-    
-    .map-link:hover {
-      background-color: #218838;
-    }
-    
-    /* 添加地图按钮样式 */
-    .header-container {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 20px;
-    }
-    
-    .map-button {
-      margin-right: 20px;
-      padding: 10px 15px;
-      background-color: #28a745;
-      color: white;
-      text-decoration: none;
-      border-radius: 5px;
-      font-weight: bold;
-    }
-    
-    .map-button:hover {
-      background-color: #218838;
-    }
-    a.map-button[href="feedback.html"]:hover {
-      background: #4f46e5 !important;
-    }
-    
-    h1 {
-      margin: 0;
-    }
-
-    /* Recent History */
-    .recent-history {
-      margin-bottom: 14px;
-      font-size: 13px;
-      color: #555;
-    }
-
-    .recent-history span {
-      font-weight: 600;
-      margin-right: 6px;
-    }
-
-    .recent-tag {
-      display: inline-block;
-      margin: 2px 4px;
-      padding: 3px 10px;
-      background: rgba(255,255,255,0.85);
-      border: 1px solid #aaa;
-      border-radius: 12px;
-      color: #333;
-      text-decoration: none;
-      font-size: 12px;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-
-    .recent-tag:hover {
-      background: #e0e0e0;
-    }
-
-    .recent-clear {
-      background: none;
-      border: none;
-      color: #999;
-      font-size: 12px;
-      cursor: pointer;
-      margin-left: 4px;
-    }
-
-    .recent-clear:hover { color: #e00; }
-
-    /* Announcement Edit */
-    #announcementEdit {
-      width: 100%;
-      min-height: 80px;
-      font-size: 14px;
-      padding: 8px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      margin-top: 8px;
-      box-sizing: border-box;
-      resize: vertical;
-    }
-
-    .ann-edit-btn {
-      margin-top: 8px;
-      padding: 5px 14px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 13px;
-      font-weight: 600;
-    }
-
-    .ann-save { background: #28a745; color: white; }
-    .ann-save:hover { background: #218838; }
-    .ann-cancel { background: #6c757d; color: white; margin-left: 6px; }
-    .ann-cancel:hover { background: #545b62; }
-
-    /* Category Tabs */
-    .category-tabs {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      justify-content: center;
-      margin-bottom: 16px;
-    }
-
-    .cat-tab {
-      padding: 6px 16px;
-      border: 2px solid #007BFF;
-      border-radius: 20px;
-      background: rgba(255,255,255,0.85);
-      color: #007BFF;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.2s, color 0.2s;
-    }
-
-    .cat-tab:hover {
-      background: #e8f0ff;
-    }
-
-    .cat-tab.active {
-      background: #007BFF;
-      color: white;
-    }
-
-    /* ── Bookmarks Bar ── */
-    .bookmarks-bar {
+    /* ── 最近記錄 + 書籤 ── */
+    .recent-history, .bookmarks-bar {
       margin-bottom: 10px;
       font-size: 13px;
-      color: #555;
+      color: #64748b;
     }
-    .bookmarks-bar > span:first-child {
-      font-weight: 600;
-      margin-right: 6px;
-    }
-    .bookmark-tag {
-      display: inline-block;
-      margin: 2px 2px;
+    .recent-history > span:first-child,
+    .bookmarks-bar > span:first-child { font-weight: 600; margin-right: 6px; }
+    .recent-tag {
+      display: inline-block; margin: 2px 3px;
       padding: 3px 10px;
-      background: rgba(255,248,225,0.95);
-      border: 1px solid #f59e0b;
-      border-radius: 12px;
-      color: #92400e;
-      text-decoration: none;
-      font-size: 12px;
-      cursor: pointer;
+      background: rgba(30,41,59,0.80);
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 12px; color: #94a3b8;
+      text-decoration: none; font-size: 12px; cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+    .recent-tag:hover { background: rgba(37,99,235,0.25); color: #e2e8f0; }
+    .bookmark-tag {
+      display: inline-block; margin: 2px 3px;
+      padding: 3px 10px;
+      background: rgba(30,27,10,0.80);
+      border: 1px solid rgba(245,158,11,0.30);
+      border-radius: 12px; color: #fcd34d;
+      text-decoration: none; font-size: 12px; cursor: pointer;
       transition: background 0.2s;
     }
-    .bookmark-tag:hover { background: #fef3c7; }
-    .bookmark-remove {
-      background: none;
-      border: none;
-      color: #bbb;
-      font-size: 11px;
-      cursor: pointer;
-      padding: 0 2px;
-      vertical-align: middle;
-      margin-left: -2px;
+    .bookmark-tag:hover { background: rgba(245,158,11,0.18); }
+    .bookmark-remove, .recent-clear {
+      background: none; border: none;
+      color: #334155; font-size: 11px;
+      cursor: pointer; padding: 0 2px;
     }
-    .bookmark-remove:hover { color: #e00; }
-    body.dark-mode .bookmarks-bar { color: #94a3b8; }
-    body.dark-mode .bookmark-tag {
-      background: rgba(30,41,59,0.85);
-      border-color: #b45309;
-      color: #fcd34d;
+    .bookmark-remove:hover, .recent-clear:hover { color: #fca5a5; }
+
+    /* ── 分類 Tabs ── */
+    .category-tabs {
+      display: flex; flex-wrap: wrap;
+      gap: 8px; justify-content: center;
+      margin-bottom: 18px;
     }
-    body.dark-mode .bookmark-tag:hover { background: #3b2800; }
-
-    /* ── Dark Mode Toggle Button ── */
-    #darkModeToggle {
-      position: absolute;
-      top: 20px;
-      right: 130px;
-      padding: 8px 12px;
-      background: rgba(255,255,255,0.85);
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 18px;
-      line-height: 1;
-      z-index: 2;
-    }
-
-    /* ── Dark Mode ── */
-    body.dark-mode::before { opacity: 0.15; }
-
-    body.dark-mode { background-color: #0f172a; color: #e5e7eb; }
-
-    body.dark-mode .announcement-bar {
-      background-color: rgba(30, 41, 59, 0.92);
-      border-color: #374151;
-      color: #fbbf24;
-    }
-    body.dark-mode .announcement-bar h2 { color: #fbbf24; }
-    body.dark-mode .announcement-content { color: #f87171; }
-    body.dark-mode .close-btn { color: #fbbf24; }
-    body.dark-mode #annEditBtn { color: #fbbf24; }
-
-    body.dark-mode #searchInput,
-    body.dark-mode #serialInput,
-    body.dark-mode #announcementEdit {
-      background-color: #1e293b;
-      border-color: #475569;
-      color: #e5e7eb;
-    }
-
-    body.dark-mode #productList a { color: #60a5fa; }
-    body.dark-mode #productList a span { color: #94a3b8 !important; }
-
-    body.dark-mode .cat-tab {
-      border-color: #60a5fa;
-      background: rgba(30, 41, 59, 0.85);
+    .cat-tab {
+      padding: 7px 18px;
+      border: 1.5px solid rgba(59,130,246,0.35);
+      border-radius: 20px;
+      background: rgba(10,18,40,0.65);
       color: #60a5fa;
+      font-size: 13.5px; font-weight: 600;
+      font-family: inherit; cursor: pointer;
+      transition: all 0.2s;
+      backdrop-filter: blur(6px);
     }
-    body.dark-mode .cat-tab:hover { background: #1e3a5f; }
-    body.dark-mode .cat-tab.active { background: #1d4ed8; color: white; border-color: #1d4ed8; }
-
-    body.dark-mode .recent-history { color: #94a3b8; }
-    body.dark-mode .recent-tag {
-      background: rgba(30, 41, 59, 0.85);
-      border-color: #475569;
-      color: #cbd5e1;
-    }
-    body.dark-mode .recent-tag:hover { background: #1e3a5f; }
-
-    body.dark-mode h1, body.dark-mode h2 { color: #e5e7eb; }
-
-    body.dark-mode #darkModeToggle {
-      background: rgba(30, 41, 59, 0.85);
-      border-color: #475569;
+    .cat-tab:hover { background: rgba(37,99,235,0.20); border-color: #3b82f6; }
+    .cat-tab.active {
+      background: linear-gradient(135deg,#2563eb,#7c3aed);
+      border-color: transparent; color: #fff;
+      box-shadow: 0 2px 12px rgba(37,99,235,0.35);
     }
 
-    body.dark-mode .search-serial-row {
-      background: rgba(30, 41, 59, 0.7);
-      border-color: #374151;
+    /* ── 產品列表 ── */
+    #productList {
+      display: flex; flex-wrap: wrap;
+      gap: 8px; padding: 0;
+      margin: 0; justify-content: center;
     }
-    body.dark-mode .col-divider { background: #374151; }
-    body.dark-mode .col-label { color: #94a3b8; }
+    #productList li {
+      list-style: none;
+      width: 200px; text-align: left;
+    }
+    #productList a {
+      text-decoration: none;
+      color: #60a5fa;
+      font-size: 15px; cursor: pointer;
+      transition: color 0.2s;
+    }
+    #productList a:hover { color: #93c5fd; text-decoration: underline; }
 
-    /* ── Mobile Responsive ── */
+    /* ── 公告編輯區 ── */
+    #announcementEditArea { display: none; }
+
+    /* ── Mobile ── */
     @media (max-width: 640px) {
-      .container { width: 100%; padding: 10px; }
-
-      #logout { top: 10px; right: 10px; padding: 7px 10px; font-size: 13px; }
-
-      #darkModeToggle { top: 10px; right: 80px; padding: 6px 9px; font-size: 16px; }
-
-      .header-container { flex-direction: column; gap: 8px; margin-top: 50px; }
-
-      h1 { font-size: 1.15rem; }
-
-      .search-serial-row { flex-direction: column; gap: 14px; padding: 12px; }
+      .container { width: 100%; padding: 16px 12px 32px; }
+      .topbar { flex-wrap: wrap; }
+      .topbar-btn { padding: 7px 11px; font-size: 12.5px; }
+      .header-container h1 { font-size: 16px; }
+      .search-serial-row { flex-direction: column; gap: 16px; padding: 14px; }
       .col-divider { width: 100%; height: 1px; margin: 0; }
-      #searchInput { width: 100%; font-size: 14px; }
-      #serialInput { font-size: 14px; }
-
-      .cat-tab { padding: 5px 10px; font-size: 12px; }
-
-      #productList li { width: 160px; }
-
-      .announcement-bar { padding: 12px; }
-
-      .recent-history { font-size: 12px; }
+      #searchInput { width: 100%; }
+      .serial-input-row { flex-wrap: wrap; }
+      .cat-tab { padding: 5px 12px; font-size: 12.5px; }
+      #productList li { width: 150px; }
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <!-- ✅ Logout Button -->
-    <button id="logout" class="logout-btn">Logout</button>
-    <!-- ✅ Dark Mode Toggle -->
-    <button id="darkModeToggle" title="Toggle dark mode">🌙</button>
 
-    <!-- ✅ Announcement Bar -->
+    <!-- 頂部操作列 -->
+    <div class="topbar">
+      <a id="mapButton" href="https://salty-river-39081-77ca2b964755.herokuapp.com/" target="_blank" class="topbar-btn" style="display:none;">🗺 Tech Map</a>
+      <a href="feedback.html" class="topbar-btn primary">💬 Suggestions</a>
+      <a id="adminBtn" href="admin.html" class="topbar-btn" style="display:none;">⚙️ Admin</a>
+      <button id="logout" class="topbar-btn">🚪 Logout</button>
+    </div>
+
+    <!-- 標題 -->
+    <div class="header-container">
+      <h1>ATOSA — Technical Documentation Center</h1>
+      <p class="sub">After-Sales Portal · Service Resources</p>
+    </div>
+
+    <!-- 公告欄 -->
     <div class="announcement-bar" id="announcementBar">
       <button class="close-btn" onclick="closeAnnouncement()">×</button>
-      <h2>Announcement <span id="annEditBtn" style="display:none;font-size:13px;font-weight:400;margin-left:8px;cursor:pointer;color:#856404;text-decoration:underline;" onclick="toggleAnnouncementEdit()">✏️ Edit</span></h2>
+      <h2>
+        Announcement
+        <button id="annEditBtn" style="display:none;" onclick="toggleAnnouncementEdit()">✏️ Edit</button>
+      </h2>
       <p class="announcement-content" id="announcementContent">Loading...</p>
-      <div id="announcementEditArea" style="display:none;">
+      <div id="announcementEditArea">
         <textarea id="announcementEdit" placeholder="One line per item..."></textarea>
         <br>
-        <button class="ann-edit-btn ann-save" onclick="saveAnnouncement()">Save</button>
+        <button class="ann-edit-btn ann-save"   onclick="saveAnnouncement()">Save</button>
         <button class="ann-edit-btn ann-cancel" onclick="toggleAnnouncementEdit()">Cancel</button>
       </div>
     </div>
 
-    <!-- ✅ 修改后的标题区域，包含地图按钮 -->
-    <div class="header-container">
-      <a id="mapButton" href="https://salty-river-39081-77ca2b964755.herokuapp.com/" target="_blank" class="map-button" style="display: none;">Tech Map</a>
-      <h1>ATOSA——Technical Documentation Center</h1>
-      <a href="feedback.html" class="map-button" style="background:#6366f1;margin-left:20px;">💬 Suggestions</a>
-      <a id="adminBtn" href="admin.html" class="map-button" style="background:#0f172a;margin-left:8px;display:none;">⚙️ Admin</a>
-    </div>
-
-
-    <!-- ✅ Search + Serial Number Row -->
+    <!-- 搜索 + 序號列 -->
     <div class="search-serial-row">
-
-      <!-- 產品搜索 -->
       <div class="search-col">
         <label class="col-label">🔍 Product Search</label>
         <input type="text" id="searchInput" placeholder="Search model or product name..." onkeyup="searchProduct()">
       </div>
-
-      <!-- 分隔線 -->
       <div class="col-divider"></div>
-
-      <!-- 序列號查詢 -->
       <div class="serial-col">
         <label class="col-label">🔢 Serial Number Check</label>
         <div class="serial-input-row">
-          <input type="text" id="serialInput" placeholder="e.g. MCF8725AUS1CN4U021" />
+          <input type="text" id="serialInput" placeholder="e.g. MCF8725AUS1CN4U021">
           <button id="checkSerialBtn">Check</button>
           <button id="clearSerialBtn" onclick="document.getElementById('serialInput').value='';document.getElementById('serialFeedback').innerHTML='';" title="Clear">✕</button>
         </div>
-        <p style="margin:4px 0 0;font-size:12px;color:#888;">Format: <strong style="color:#0056b3;">MCF8725 AUS 1 C N4U 021</strong></p>
+        <p class="serial-hint">Format: <strong>MCF8725 AUS 1 C N4U 021</strong></p>
         <p id="serialFeedback"></p>
       </div>
-
     </div>
 
-    <!-- ✅ Recent History -->
+    <!-- 最近記錄 -->
     <div class="recent-history" id="recentHistory" style="display:none;">
       <span>Recently viewed:</span>
       <span id="recentTags"></span>
       <button class="recent-clear" onclick="clearRecentHistory()" title="Clear history">✕ clear</button>
     </div>
 
-    <!-- ✅ Bookmarks Bar -->
+    <!-- 書籤列 -->
     <div class="bookmarks-bar" id="bookmarksBar" style="display:none;">
       <span>⭐ Bookmarks:</span>
       <span id="bookmarkTags"></span>
       <button class="recent-clear" onclick="clearAllBookmarks()" title="Clear all bookmarks">✕ clear all</button>
     </div>
 
-    <!-- ✅ Category Tabs -->
+    <!-- 分類 Tabs -->
     <div class="category-tabs" id="categoryTabs">
-      <button class="cat-tab active" data-cat="all" onclick="filterByCategory('all', this)">All</button>
-      <button class="cat-tab" data-cat="refrigeration" onclick="filterByCategory('refrigeration', this)">❄️ Refrigeration</button>
-      <button class="cat-tab" data-cat="cooking" onclick="filterByCategory('cooking', this)">🔥 Cooking</button>
-      <button class="cat-tab" data-cat="ice" onclick="filterByCategory('ice', this)">🧊 Ice</button>
-      <button class="cat-tab" data-cat="walkin" onclick="filterByCategory('walkin', this)">🚪 Walk-in</button>
-      <button class="cat-tab" data-cat="display" onclick="filterByCategory('display', this)">🪟 Display Case</button>
+      <button class="cat-tab active" data-cat="all"           onclick="filterByCategory('all', this)">All</button>
+      <button class="cat-tab" data-cat="refrigeration"        onclick="filterByCategory('refrigeration', this)">❄️ Refrigeration</button>
+      <button class="cat-tab" data-cat="cooking"              onclick="filterByCategory('cooking', this)">🔥 Cooking</button>
+      <button class="cat-tab" data-cat="ice"                  onclick="filterByCategory('ice', this)">🧊 Ice</button>
+      <button class="cat-tab" data-cat="walkin"               onclick="filterByCategory('walkin', this)">🚪 Walk-in</button>
+      <button class="cat-tab" data-cat="display"              onclick="filterByCategory('display', this)">🪟 Display Case</button>
     </div>
 
+    <!-- 產品列表 -->
     <div class="directory">
       <ul id="productList"></ul>
     </div>
 
   </div>
 
-  <!-- ✅ Bookmarks JS -->
+  <!-- 書籤 JS -->
   <script>
   function loadBookmarks() {
     const bar  = document.getElementById('bookmarksBar');
@@ -632,8 +437,6 @@
   document.addEventListener('DOMContentLoaded', loadBookmarks);
   </script>
 
-  <!-- ✅ Add script.js reference -->
   <script src="script.js"></script>
 </body>
 </html>
-
