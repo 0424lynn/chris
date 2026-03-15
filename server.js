@@ -364,6 +364,19 @@ app.post('/api/admin/model-registry/seed', superAdminOnly, async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// ── API: All model codes (every key in every family's models object) ──────────
+app.get('/api/all-model-codes', async (req, res) => {
+  if (!req.session?.user) return res.status(401).json({ error: 'Unauthorized' });
+  try {
+    const docs = await ModelData.find({}, { 'data.models': 1 });
+    const codes = new Set();
+    docs.forEach(doc => {
+      Object.keys(doc.data?.models || {}).forEach(code => codes.add(code));
+    });
+    res.json([...codes]);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // ── API: Model Data (from MongoDB, cached) ────────────────────────────────────
 app.get('/api/modeldata/:fileKey', async (req, res) => {
   if (!req.session?.user) return res.status(401).json({ error: 'Unauthorized' });

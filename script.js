@@ -975,15 +975,19 @@ document.addEventListener("DOMContentLoaded", async function () {
   } catch (e) {}
 
   try {
-    // Merge DB modelmap into static list — only append codes not already present
-    // (never replace, so hardcoded models are always preserved)
-    const mr = await fetch('/api/modelmap');
-    if (mr.ok) {
-      const map = await mr.json();
-      const existing = new Set(products);
-      const newOnes = Object.keys(map).filter(k => !existing.has(k));
-      if (newOnes.length > 0) products = [...products, ...newOnes];
-    }
+    // Merge all DB model codes into static list — append any code not already present.
+    // Uses /api/all-model-codes (scans every family's models object) so newly added
+    // models appear even if they were never added to the modelmap explicitly.
+    const [mmRes, amcRes] = await Promise.all([
+      fetch('/api/modelmap'),
+      fetch('/api/all-model-codes')
+    ]);
+    const extra = new Set();
+    if (mmRes.ok)  Object.keys(await mmRes.json()).forEach(k => extra.add(k));
+    if (amcRes.ok) (await amcRes.json()).forEach(k => extra.add(k));
+    const existing = new Set(products);
+    const newOnes  = [...extra].filter(k => !existing.has(k));
+    if (newOnes.length > 0) products = [...products, ...newOnes];
   } catch (e) {}
 
   renderProductList();
