@@ -19,6 +19,12 @@ const FeedbackSchema = new mongoose.Schema({
 });
 const Feedback = mongoose.model('Feedback', FeedbackSchema, 'feedback');
 
+const AnnouncementSchema = new mongoose.Schema({
+  lines: { type: [String], default: [] },
+  updatedAt: { type: Date, default: Date.now }
+});
+const Announcement = mongoose.model('Announcement', AnnouncementSchema, 'announcement');
+
 if (process.env.MONGODB_URI) {
   mongoose.connect(process.env.MONGODB_URI)
     .then(() => console.log('MongoDB connected'))
@@ -125,29 +131,34 @@ app.get('/api/me', (req, res) => {
   res.status(401).json({ error: 'Not logged in' });
 });
 
-// ── API: Announcement ─────────────────────────────────────────────────────────
-const ANNOUNCEMENT_FILE = path.join(__dirname, 'announcement.json');
-
-app.get('/api/announcement', (req, res) => {
-  const fs = require('fs');
+// ── API: Announcement (MongoDB 永久存儲) ──────────────────────────────────────
+app.get('/api/announcement', async (req, res) => {
   try {
-    const data = JSON.parse(fs.readFileSync(ANNOUNCEMENT_FILE, 'utf8'));
-    res.json(data);
+    const doc = await Announcement.findOne().sort({ updatedAt: -1 }).lean();
+    res.json({ lines: doc?.lines || [] });
   } catch (e) {
     res.json({ lines: [] });
   }
 });
 
-app.post('/api/announcement', (req, res) => {
-  const fs = require('fs');
+app.post('/api/announcement', async (req, res) => {
   const role = req.session?.user?.role;
   if (role !== 'superAdmin') {
     return res.status(403).json({ error: 'Forbidden' });
   }
   const { lines } = req.body;
   if (!Array.isArray(lines)) return res.status(400).json({ error: 'Invalid data' });
-  fs.writeFileSync(ANNOUNCEMENT_FILE, JSON.stringify({ lines }, null, 2), 'utf8');
-  res.json({ ok: true });
+  try {
+    // 用 upsert：有就更新，沒有就新建
+    await Announcement.findOneAndUpdate(
+      {},
+      { lines, updatedAt: new Date() },
+      { upsert: true, new: true }
+    );
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // ── API: Feedback / Suggestions (MongoDB) ────────────────────────────────────
