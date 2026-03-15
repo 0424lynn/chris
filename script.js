@@ -199,8 +199,8 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 
- // 产品列表
-    const products = [
+ // 产品列表（fallback — overwritten at runtime by /api/modelmap）
+    let products = [
     "MSF8302GR", "MSF8308GR", "MSF17GR-NTCV", "MSF3610GR", "MSF3615GR",
       "MSF8301GR",  
       "MSF8303GR", "MSF8304GR", 
@@ -969,9 +969,22 @@ function renderRecentHistory() {
 // **📌 初始化**
 document.addEventListener("DOMContentLoaded", async function () {
   try {
+    // Load product titles (code → display name)
     const res = await fetch('/api/product-titles');
     if (res.ok) productTitleMap = await res.json();
   } catch (e) {}
+
+  try {
+    // Dynamically load full model list from modelmap so newly added
+    // models appear without needing to edit the hardcoded array
+    const mr = await fetch('/api/modelmap');
+    if (mr.ok) {
+      const map = await mr.json();
+      const liveKeys = Object.keys(map);
+      if (liveKeys.length > 0) products = liveKeys;
+    }
+  } catch (e) {}
+
   renderProductList();
   applyFilters("");
   renderRecentHistory();
