@@ -41,6 +41,12 @@ const ModelMap = mongoose.model(
   'modelmap'
 );
 
+const ModelRegistry = mongoose.model(
+  'ModelRegistry',
+  new mongoose.Schema({ _id: String, entries: Array }, { strict: false }),
+  'modelregistry'
+);
+
 if (process.env.MONGODB_URI) {
   mongoose.connect(process.env.MONGODB_URI)
     .then(() => console.log('MongoDB connected'))
@@ -333,6 +339,28 @@ app.delete('/api/admin/family/:key', superAdminOnly, async (req, res) => {
       await ModelMap.findByIdAndUpdate('modelmap', { map: newMap }, { upsert: true });
     }
     res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── API: Model Registry ───────────────────────────────────────────────────────
+// GET — returns all registered model entries
+app.get('/api/admin/model-registry', superAdminOnly, async (req, res) => {
+  try {
+    const doc = await ModelRegistry.findById('registry');
+    res.json(doc?.entries || []);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// POST /seed — merges hardcoded master list into DB, skipping codes already present
+app.post('/api/admin/model-registry/seed', superAdminOnly, async (req, res) => {
+  try {
+    const master = require('./modelRegistrySeed.json');
+    const doc = await ModelRegistry.findById('registry');
+    const existing = new Set((doc?.entries || []).map(e => e.code));
+    const toAdd = master.filter(e => !existing.has(e.code));
+    const merged = [...(doc?.entries || []), ...toAdd];
+    await ModelRegistry.findByIdAndUpdate('registry', { entries: merged }, { upsert: true });
+    res.json({ ok: true, added: toAdd.length, total: merged.length });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 

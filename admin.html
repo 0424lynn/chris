@@ -245,6 +245,10 @@
   <a href="dashboard.html">← Dashboard</a>
   <span style="color:#475569">|</span>
   <h1>⚙️ Content Manager</h1>
+  <button onclick="syncRegistry()" title="Seed / update the Model Registry from the master list"
+          style="background:#1e3a5f;color:#93c5fd;border:1px solid #2563eb;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap;">
+    🔄 Sync Registry
+  </button>
   <div class="topbar-right" id="topbarInfo">Loading...</div>
 </div>
 
@@ -317,7 +321,26 @@
     <!-- Models -->
     <div class="nf-section-title">📦 Models in this family</div>
     <div id="efModelList"></div>
-    <button class="add-step-btn" onclick="addEfModel()" style="margin-bottom:16px;">+ Add Model</button>
+
+    <!-- Registry picker panel -->
+    <div id="efRegistryPicker" style="display:none;margin-bottom:12px;border:1px solid #334155;border-radius:8px;padding:12px;background:#1e293b;">
+      <div style="font-size:12px;color:#94a3b8;margin-bottom:8px;">🔍 Search registry — type model code or name, click to add:</div>
+      <div style="position:relative;">
+        <input type="text" id="efRegistrySearch" placeholder="e.g. MBF8503 or Reach-in…"
+               style="width:100%;box-sizing:border-box;padding:7px 10px;background:#0f172a;border:1px solid #334155;border-radius:6px;color:#e2e8f0;font-size:13px;"
+               oninput="filterRegistryList()" onfocus="filterRegistryList()" autocomplete="off"/>
+        <div id="efRegistryDropdown"
+             style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:#0f172a;border:1px solid #334155;border-radius:6px;max-height:220px;overflow-y:auto;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.5);">
+        </div>
+      </div>
+      <button class="btn-cancel" onclick="document.getElementById('efRegistryPicker').style.display='none';document.getElementById('efRegistryDropdown').style.display='none';"
+              style="margin-top:8px;font-size:12px;padding:4px 10px;">Close</button>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+      <button class="add-step-btn" onclick="openEfRegistryPicker()">📋 Pick from Registry</button>
+      <button class="add-step-btn" onclick="addEfModel()">✏️ Add Manually</button>
+    </div>
 
     <!-- Common Documents -->
     <div class="nf-section-title">📄 Common Documents <span style="font-weight:400;color:#94a3b8">(optional)</span></div>
@@ -409,6 +432,21 @@
     }
     loadFamilies();
   })();
+
+  // ── Sync Model Registry ───────────────────────────────────────────────────────
+  async function syncRegistry() {
+    if (!confirm('Sync the Model Registry?\n\nThis will add any ATOSA / CookRite model codes from the master list that are not yet in the registry. Existing entries will not be changed.')) return;
+    try {
+      const r = await fetch('/api/admin/model-registry/seed', { method: 'POST' });
+      const j = await r.json();
+      if (j.ok) {
+        _registryCache = null; // clear local cache so next picker load is fresh
+        alert(`✅ Registry synced!\n\nAdded: ${j.added} new codes\nTotal in registry: ${j.total}`);
+      } else {
+        alert('Error: ' + (j.error || 'Unknown error'));
+      }
+    } catch (e) { alert('Network error: ' + e.message); }
+  }
 
   // ── Load sidebar ─────────────────────────────────────────────────────────────
   async function loadFamilies() {
@@ -1061,7 +1099,85 @@
 
   function closeEditFamily() {
     document.getElementById('efOverlay').style.display = 'none';
+    document.getElementById('efRegistryPicker').style.display = 'none';
+    document.getElementById('efRegistryDropdown').style.display = 'none';
   }
+
+  // ── Model Registry picker ──────────────────────────────────────────────────
+  let _registryCache = null;
+
+  async function loadRegistry() {
+    if (_registryCache) return _registryCache;
+    try {
+      const r = await fetch('/api/admin/model-registry');
+      _registryCache = r.ok ? await r.json() : [];
+    } catch { _registryCache = []; }
+    return _registryCache;
+  }
+
+  async function openEfRegistryPicker() {
+    const picker = document.getElementById('efRegistryPicker');
+    if (picker.style.display !== 'none') { picker.style.display = 'none'; return; }
+    picker.style.display = 'block';
+    document.getElementById('efRegistrySearch').value = '';
+    document.getElementById('efRegistryDropdown').style.display = 'none';
+    await loadRegistry();
+    if (!_registryCache.length) {
+      // Registry is empty — offer to seed it
+      setEfStatus('Registry is empty. Click "Sync Registry" in the admin header to populate it.', 'err');
+    }
+    document.getElementById('efRegistrySearch').focus();
+  }
+
+  function filterRegistryList() {
+    const q = document.getElementById('efRegistrySearch').value.toLowerCase().trim();
+    const dropdown = document.getElementById('efRegistryDropdown');
+    if (!_registryCache || !_registryCache.length) { dropdown.style.display = 'none'; return; }
+
+    // Codes already present in this family's model list
+    const existingCodes = new Set(
+      [...document.querySelectorAll('#efModelList [data-role="code"]')]
+        .map(i => i.value.trim().toUpperCase())
+    );
+
+    const matches = _registryCache.filter(e => {
+      if (existingCodes.has(e.code.toUpperCase())) return false;
+      if (!q) return true;
+      return e.code.toLowerCase().includes(q) || e.name.toLowerCase().includes(q) ||
+             (e.category || '').toLowerCase().includes(q);
+    }).slice(0, 60);
+
+    if (!matches.length) {
+      dropdown.innerHTML = '<div style="padding:10px 12px;color:#64748b;font-size:13px;">No matches</div>';
+      dropdown.style.display = 'block';
+      return;
+    }
+
+    dropdown.innerHTML = '';
+    matches.forEach(e => {
+      const item = document.createElement('div');
+      item.style.cssText = 'padding:8px 12px;cursor:pointer;border-bottom:1px solid #1e293b;display:flex;align-items:baseline;gap:8px;';
+      item.innerHTML = `<span style="font-weight:600;color:#38bdf8;font-size:13px;white-space:nowrap;">${e.code}</span><span style="color:#94a3b8;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${e.name}</span><span style="color:#475569;font-size:11px;margin-left:auto;white-space:nowrap;">${e.category || ''}</span>`;
+      item.addEventListener('mouseover', () => item.style.background = '#1e293b');
+      item.addEventListener('mouseout',  () => item.style.background = '');
+      item.addEventListener('click', () => {
+        addEfModel(e.code, e.name);
+        document.getElementById('efRegistrySearch').value = '';
+        dropdown.style.display = 'none';
+        // keep picker open so user can keep adding
+      });
+      dropdown.appendChild(item);
+    });
+    dropdown.style.display = 'block';
+  }
+
+  // Close dropdown when clicking outside picker
+  document.addEventListener('click', e => {
+    const picker = document.getElementById('efRegistryPicker');
+    if (picker && picker.style.display !== 'none' && !picker.contains(e.target)) {
+      document.getElementById('efRegistryDropdown').style.display = 'none';
+    }
+  });
 
   function addEfModel(code = '', title = '', imgUrl = '', diaUrl = '') {
     const idx = _efModelCount++;
