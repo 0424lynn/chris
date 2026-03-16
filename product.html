@@ -799,11 +799,14 @@
             html += `<div style="margin-bottom:6px;"><a href="${item.link.url}" target="_blank" style="color:#60a5fa;font-size:16px;">${item.link.label}</a></div>`;
         }
         if (item.steps && item.steps.length) {
+            const multi = item.steps.length > 1;
             item.steps.forEach((step, i) => {
+                const prefix = multi ? `<span style="font-weight:600;">${i + 1}.</span> ` : '';
+                const mb = multi ? '14px' : '6px';
                 if (typeof step === 'string') {
-                    html += `<div style="color:#f87171;font-size:16px;margin-bottom:6px;"><span style="font-weight:600;">${i + 1}.</span> ${nl2br(step)}</div>`;
+                    html += `<div style="color:#f87171;font-size:16px;margin-bottom:${mb};">${prefix}${nl2br(step)}</div>`;
                 } else {
-                    html += `<div style="color:#f87171;font-size:16px;margin-bottom:6px;"><span style="font-weight:600;">${i + 1}.</span> ${nl2br(step.text || '')}`;
+                    html += `<div style="color:#f87171;font-size:16px;margin-bottom:${mb};">${prefix}${nl2br(step.text || '')}`;
                     if (step.red) html += ` <span style="color:#f87171;">${nl2br(step.red)}</span>`;
                     if (step.links) step.links.forEach(l => {
                         html += ` <a href="${l.url}" target="_blank" style="color:#60a5fa;">${l.label}</a>`;
