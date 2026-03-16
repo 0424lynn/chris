@@ -722,17 +722,17 @@
             document.getElementById('product-image').src       = modelEntry.image   || '';
             document.getElementById('product-diagram').src     = modelEntry.diagram || '';
 
-            // If model has no own issues list, fall back to all common issues (respecting issueOrder)
-            const issues = (modelEntry.issues && modelEntry.issues.length > 0)
-                ? modelEntry.issues
-                : (() => {
-                    const allKeys = Object.keys(data.common.issues || {});
-                    const order = data.common.issueOrder;
-                    if (Array.isArray(order) && order.length) {
-                        return [...order.filter(k => allKeys.includes(k)), ...allKeys.filter(k => !order.includes(k))];
-                    }
-                    return allKeys;
-                  })();
+            // Build issues list, always sorted by issueOrder if available
+            const _order = data.common?.issueOrder;
+            const _sortByOrder = (arr) => {
+                if (!Array.isArray(_order) || !_order.length) return arr;
+                return [..._order.filter(k => arr.includes(k)), ...arr.filter(k => !_order.includes(k))];
+            };
+            const issues = _sortByOrder(
+                (modelEntry.issues && modelEntry.issues.length > 0)
+                    ? modelEntry.issues
+                    : Object.keys(data.common.issues || {})
+            );
 
             const problemCategoryList = document.getElementById('problemCategoryList');
             issues.forEach(issueKey => {
@@ -798,12 +798,13 @@
             html += `<div style="margin-bottom:6px;"><a href="${item.link.url}" target="_blank" style="color:#60a5fa;font-size:16px;">${item.link.label}</a></div>`;
         }
         if (item.steps && item.steps.length) {
+            const nl2br = s => (s || '').replace(/\n/g, '<br>');
             item.steps.forEach((step, i) => {
                 if (typeof step === 'string') {
-                    html += `<div style="color:#f87171;font-size:16px;margin-bottom:6px;"><span style="font-weight:600;">${i + 1}.</span> ${step}</div>`;
+                    html += `<div style="color:#f87171;font-size:16px;margin-bottom:6px;"><span style="font-weight:600;">${i + 1}.</span> ${nl2br(step)}</div>`;
                 } else {
-                    html += `<div style="color:#f87171;font-size:16px;margin-bottom:6px;"><span style="font-weight:600;">${i + 1}.</span> ${step.text || ''}`;
-                    if (step.red) html += ` <span style="color:#f87171;">${step.red}</span>`;
+                    html += `<div style="color:#f87171;font-size:16px;margin-bottom:6px;"><span style="font-weight:600;">${i + 1}.</span> ${nl2br(step.text || '')}`;
+                    if (step.red) html += ` <span style="color:#f87171;">${nl2br(step.red)}</span>`;
                     if (step.links) step.links.forEach(l => {
                         html += ` <a href="${l.url}" target="_blank" style="color:#60a5fa;">${l.label}</a>`;
                     });
