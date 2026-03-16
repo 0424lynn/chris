@@ -786,9 +786,10 @@
         if (typeof item === 'string') return item; // 旧 HTML 字符串，直接渲染
 
         let html = '';
+        const nl2br = s => (s || '').replace(/\n/g, '<br>');
 
         if (item.text) {
-            html += `<div style="font-size:18px;font-weight:700;color:#f1f5f9;margin-bottom:6px;">${item.text}</div>`;
+            html += `<div style="font-size:18px;font-weight:700;color:#f1f5f9;margin-bottom:6px;">${nl2br(item.text)}</div>`;
         }
         if (item.red) {
             const clr = (item.color && item.color !== 'red') ? item.color : '#f87171';
@@ -798,7 +799,6 @@
             html += `<div style="margin-bottom:6px;"><a href="${item.link.url}" target="_blank" style="color:#60a5fa;font-size:16px;">${item.link.label}</a></div>`;
         }
         if (item.steps && item.steps.length) {
-            const nl2br = s => (s || '').replace(/\n/g, '<br>');
             item.steps.forEach((step, i) => {
                 if (typeof step === 'string') {
                     html += `<div style="color:#f87171;font-size:16px;margin-bottom:6px;"><span style="font-weight:600;">${i + 1}.</span> ${nl2br(step)}</div>`;

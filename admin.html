@@ -140,7 +140,7 @@
     .step-extras input.red-input { border-left: 3px solid #ef4444; }
     .step-substeps {
       width: 100%; margin-top: 6px; border: 1px solid #e2e8f0; border-radius: 6px;
-      padding: 6px 9px; font-size: 13px; resize: vertical; min-height: 52px;
+      padding: 6px 9px; font-size: 13px; resize: vertical; min-height: 156px;
       font-family: monospace; outline: none; background: white;
     }
     .step-substeps:focus { border-color: #3b82f6; }
@@ -650,6 +650,7 @@
           <textarea placeholder="Step text..." oninput="updateCount('${tier}')">${esc(text)}</textarea>
           <button class="step-remove" onclick="removeStep(this)">✕</button>
         </div>
+        <span class="step-substeps-label">按 Enter = 换行</span>
         <div class="step-extras">
           <input class="red-input" type="text" placeholder="⚠ Red note (optional)" value="${esc(red)}"/>
         </div>
