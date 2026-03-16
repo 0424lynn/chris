@@ -137,14 +137,25 @@
       font-size: 13px; outline: none; background: white;
     }
     .step-extras input:focus { border-color: #3b82f6; }
-    .step-extras input.red-input { border-left: 3px solid #ef4444; }
+    .step-extras input.red-input { border-left: 3px solid #16a34a; font-size: 15px; font-weight: 700; color: #16a34a; }
     .step-substeps {
-      width: 100%; margin-top: 6px; border: 1px solid #e2e8f0; border-radius: 6px;
+      width: 100%; margin-top: 14px; border: 1px solid #e2e8f0; border-radius: 6px;
       padding: 6px 9px; font-size: 13px; resize: vertical; min-height: 156px;
       font-family: monospace; outline: none; background: white;
     }
     .step-substeps:focus { border-color: #3b82f6; }
     .step-substeps-label { font-size: 10px; color: #94a3b8; margin-top: 3px; display: block; }
+    .substeps-toolbar { display: flex; align-items: center; gap: 6px; margin-top: 14px; margin-bottom: 4px; }
+    .substeps-toolbar button { font-size: 12px; padding: 2px 8px; border: 1px solid #cbd5e1; border-radius: 4px; background: #f8fafc; cursor: pointer; color: #475569; }
+    .substeps-toolbar button:hover { background: #e2e8f0; }
+    .link-popup { display: none; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px 10px; margin-bottom: 6px; gap: 6px; flex-wrap: wrap; align-items: center; }
+    .link-popup.open { display: flex; }
+    .link-popup input { border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 7px; font-size: 12px; outline: none; }
+    .link-popup input:focus { border-color: #3b82f6; }
+    .link-popup .url-input { flex: 2; min-width: 180px; }
+    .link-popup .text-input { flex: 1; min-width: 100px; }
+    .link-popup .insert-btn { background: #3b82f6; color: white; border: none; border-radius: 4px; padding: 4px 10px; font-size: 12px; cursor: pointer; }
+    .link-popup .cancel-btn { background: none; border: none; color: #94a3b8; font-size: 12px; cursor: pointer; }
 
     .add-step-btn {
       display: block; width: 100%; padding: 7px; border: 1.5px dashed #cbd5e1;
@@ -643,7 +654,8 @@
   function stepCardHTML(tier, idx, s) {
     const text     = typeof s === 'string' ? s : (s.text  || '');
     const red      = typeof s === 'string' ? '' : (s.red   || '');
-    const subSteps = typeof s === 'string' ? '' : (s.steps ? s.steps.join('\n\n') : '');
+    const video    = typeof s === 'string' ? '' : (s.video || '');
+    const subSteps = typeof s === 'string' ? '' : (s.steps ? s.steps.map(st => typeof st === 'string' ? st : (st.text || '')).join('\n\n') : '');
     return `
       <div class="step-card" data-tier="${tier}" data-idx="${idx}">
         <div class="row1">
@@ -653,12 +665,49 @@
         <span class="step-substeps-label">按 Enter = 换行</span>
         <div class="step-extras">
           <input class="red-input" type="text" placeholder="⚠ Red note (optional)" value="${esc(red)}"/>
+          <input class="video-input" type="text" placeholder="🎬 Video path (optional, e.g. /MGFMSF-Drawer-web.mp4)" value="${esc(video)}"/>
         </div>
         ${subSteps !== '' || true ? `
+          <div class="substeps-toolbar">
+            <button type="button" onclick="openLinkPopup(this)">🔗 插入链接</button>
+          </div>
+          <div class="link-popup">
+            <input class="text-input" placeholder="显示文字" />
+            <input class="url-input" placeholder="https://..." />
+            <button class="insert-btn" type="button" onclick="insertLink(this)">插入</button>
+            <button class="cancel-btn" type="button" onclick="closeLinkPopup(this)">取消</button>
+          </div>
           <textarea class="step-substeps" placeholder="Sub-steps (blank line = new bullet, Enter = line break within same bullet)">${esc(subSteps)}</textarea>
           <span class="step-substeps-label">按两下 Enter = 新一条 &nbsp;·&nbsp; 按一下 Enter = 同一条内换行</span>
         ` : ''}
       </div>`;
+  }
+
+  function openLinkPopup(btn) {
+    const card = btn.closest('.step-card');
+    const popup = card.querySelector('.link-popup');
+    popup.classList.add('open');
+    popup.querySelector('.text-input').focus();
+  }
+  function closeLinkPopup(btn) {
+    const popup = btn.closest('.link-popup');
+    popup.classList.remove('open');
+    popup.querySelector('.text-input').value = '';
+    popup.querySelector('.url-input').value = '';
+  }
+  function insertLink(btn) {
+    const popup = btn.closest('.link-popup');
+    const text = popup.querySelector('.text-input').value.trim();
+    const url  = popup.querySelector('.url-input').value.trim();
+    if (!url) return;
+    const label = text || url;
+    const html = `<a href="${url}" target="_blank">${label}</a>`;
+    const ta = popup.closest('.step-card').querySelector('.step-substeps');
+    const start = ta.selectionStart, end = ta.selectionEnd;
+    ta.value = ta.value.slice(0, start) + html + ta.value.slice(end);
+    ta.selectionStart = ta.selectionEnd = start + html.length;
+    ta.focus();
+    closeLinkPopup(btn);
   }
 
   function addStep(tier) {
@@ -691,10 +740,12 @@
     return Array.from(cards).map(card => {
       const text  = card.querySelector('.row1 textarea').value.trim();
       const red   = card.querySelector('.red-input').value.trim();
+      const video = card.querySelector('.video-input') ? card.querySelector('.video-input').value.trim() : '';
       const subEl = card.querySelector('.step-substeps');
       const subs  = subEl ? subEl.value.split('\n\n').map(l=>l.trim()).filter(Boolean) : [];
       const obj   = { text };
-      if (red)        obj.red   = red;
+      if (red)         obj.red   = red;
+      if (video)       obj.video = video;
       if (subs.length) obj.steps = subs;
       return obj;
     }).filter(o => o.text);
@@ -927,10 +978,7 @@
     }).filter(o => o.text);
   }
 
-  // Close modal on overlay click
-  document.getElementById('modalOverlay').addEventListener('click', function(e) {
-    if (e.target === this) closeModal();
-  });
+  // Edit Issue modal: only close via ✕ or Cancel button (not overlay click)
   document.getElementById('nfOverlay').addEventListener('click', function(e) {
     if (e.target === this) closeNewFamily();
   });

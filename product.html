@@ -792,8 +792,7 @@
             html += `<div style="font-size:18px;font-weight:700;color:#f1f5f9;margin-bottom:6px;">${nl2br(item.text)}</div>`;
         }
         if (item.red) {
-            const clr = (item.color && item.color !== 'red') ? item.color : '#f87171';
-            html += `<div style="color:${clr};font-size:16px;margin-bottom:6px;line-height:1.7;">${item.red}</div>`;
+            html += `<div style="color:#16a34a;font-size:17px;font-weight:700;margin-bottom:6px;line-height:1.7;">${item.red}</div>`;
         }
         if (item.link) {
             html += `<div style="margin-bottom:6px;"><a href="${item.link.url}" target="_blank" style="color:#60a5fa;font-size:16px;">${item.link.label}</a></div>`;
@@ -965,6 +964,9 @@
                 updateBookmarkBtn();
                 updateFixBtn();
 
+                // Highlight search term in rendered content
+                highlightSearchInContent();
+
                 // Show current issue label in toolbar
                 const label = document.getElementById('currentIssueLabel');
                 if (label) label.textContent = category.charAt(0).toUpperCase() + category.slice(1);
@@ -999,11 +1001,69 @@
     })();
 
     function searchProblemCategory() {
-        const val   = document.getElementById('problemCategorySearch').value.toLowerCase();
+        const val   = document.getElementById('problemCategorySearch').value.toLowerCase().trim();
         const items = document.getElementById('problemCategoryList').getElementsByTagName('li');
-        for (const item of items) {
-            item.style.display = (item.textContent || item.innerText).toLowerCase().includes(val) ? '' : 'none';
+        clearSearchHighlights();
+        if (!val) {
+            for (const item of items) {
+                item.style.display = '';
+                const a = item.querySelector('a');
+                if (a) { a.style.color = ''; a.style.fontStyle = ''; }
+            }
+            return;
         }
+        for (const item of items) {
+            const issueKey  = item.dataset.issue;
+            const labelMatch = (item.textContent || item.innerText).toLowerCase().includes(val);
+            let contentMatch = false;
+            if (!labelMatch && pageData && issueKey) {
+                const issueData = pageData.common?.issues?.[issueKey];
+                if (issueData) contentMatch = JSON.stringify(issueData).toLowerCase().includes(val);
+            }
+            item.style.display = (labelMatch || contentMatch) ? '' : 'none';
+            const a = item.querySelector('a');
+            if (a) {
+                a.style.color     = (contentMatch && !labelMatch) ? '#60a5fa' : '';
+                a.style.fontStyle = (contentMatch && !labelMatch) ? 'italic'  : '';
+            }
+        }
+    }
+
+    function clearSearchHighlights() {
+        document.querySelectorAll('.search-highlight').forEach(el => {
+            el.parentNode.replaceChild(document.createTextNode(el.textContent), el);
+        });
+    }
+
+    function highlightSearchInContent() {
+        const val = document.getElementById('problemCategorySearch').value.trim();
+        if (!val || val.length < 2) return;
+        const panels = ['quickGuideList','technicianSolutionList','customerSolutionList'];
+        const lower  = val.toLowerCase();
+        panels.forEach(id => {
+            const container = document.getElementById(id);
+            if (!container) return;
+            const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+            const nodes = [];
+            while (walker.nextNode()) nodes.push(walker.currentNode);
+            nodes.forEach(node => {
+                const text = node.textContent;
+                const idx  = text.toLowerCase().indexOf(lower);
+                if (idx === -1) return;
+                const mark = document.createElement('mark');
+                mark.className  = 'search-highlight';
+                mark.style.cssText = 'background:#fbbf24;color:#1e293b;border-radius:2px;padding:0 2px;';
+                mark.textContent = text.slice(idx, idx + val.length);
+                const before = document.createTextNode(text.slice(0, idx));
+                const after  = document.createTextNode(text.slice(idx + val.length));
+                const parent = node.parentNode;
+                parent.replaceChild(after, node);
+                parent.insertBefore(mark, after);
+                parent.insertBefore(before, mark);
+            });
+        });
+        const first = document.querySelector('.search-highlight');
+        if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
     </script>
 

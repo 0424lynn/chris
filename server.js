@@ -81,6 +81,10 @@ app.use((req, res, next) => {
   if (req.path.startsWith('/api/'))  return next();  // API 路由自己处理
   if (req.session?.user)             return next();  // 已登录
 
+  // 静态资源（视频、图片、CSS、JS 等）不需要登录即可访问
+  const staticExts = /\.(mp4|webm|mov|mp3|jpg|jpeg|png|gif|svg|webp|ico|css|js|pdf|woff|woff2|ttf)$/i;
+  if (staticExts.test(req.path))     return next();
+
   // 未登录：HTML 跳转，其他资源返回 401
   if (req.accepts('html')) return res.redirect('/');
   return res.status(401).json({ error: 'Unauthorized' });
