@@ -9,8 +9,8 @@
   function clearAll(links) {
     links.forEach(x => {
       x.style.background = '';
-      x.style.color = '';
-      x.style.fontWeight = '';
+      x.style.color = x.dataset.color || '';
+      x.style.fontWeight = x.dataset.color ? '600' : '';
       x.style.boxShadow = '';
       x.style.borderRadius = '';
     });
@@ -22,7 +22,7 @@
     if (!links.length || !a) return;
     clearAll(links);
     a.style.background = '#e0e0e0';
-    a.style.color = '#000';
+    a.style.color = a.dataset.color || '#000';
     a.style.fontWeight = '600';
     a.style.boxShadow = 'inset 3px 0 0 #0ea5e9'; // 左侧色条（可删）
     a.style.borderRadius = '8px';

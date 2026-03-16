@@ -145,6 +145,13 @@
     }
     .step-substeps:focus { border-color: #3b82f6; }
     .step-substeps-label { font-size: 10px; color: #94a3b8; margin-top: 3px; display: block; }
+    /* ── Issue color swatches ── */
+    .color-swatches { display: flex; gap: 4px; align-items: center; }
+    .color-dot { width: 18px; height: 18px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: transform .15s; }
+    .color-dot:hover { transform: scale(1.25); }
+    .color-dot.active { border-color: #1e40af; box-shadow: 0 0 0 2px #bfdbfe; }
+    .color-dot.clear { background: #e2e8f0; position: relative; }
+    .color-dot.clear::after { content: '✕'; font-size: 10px; color: #94a3b8; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); }
     .substeps-toolbar { display: flex; align-items: center; gap: 6px; margin-top: 14px; margin-bottom: 4px; }
     .substeps-toolbar button { font-size: 12px; padding: 2px 8px; border: 1px solid #cbd5e1; border-radius: 4px; background: #f8fafc; cursor: pointer; color: #475569; }
     .substeps-toolbar button:hover { background: #e2e8f0; }
@@ -528,6 +535,7 @@
             <th style="width:36px"></th>
             <th style="width:200px">Issue Key</th>
             <th>Label</th>
+            <th style="width:120px">Color</th>
             <th style="width:90px;text-align:center">🟢 Guide</th>
             <th style="width:90px;text-align:center">🔵 Tech</th>
             <th style="width:90px;text-align:center">🟠 Non-W</th>
@@ -541,10 +549,16 @@
             const nTe  = (iss.technician || []).length;
             const nCu  = (iss.customer   || []).length;
             const lbl  = iss.label ? iss.label.replace(/<[^>]+>/g,'') : k;
+            const issColor = iss.color || '';
+            const colors = ['#ef4444','#f97316','#eab308','#22c55e','#3b82f6','#a855f7'];
+            const colorSwatches = colors.map(c =>
+              `<span class="color-dot${issColor===c?' active':''}" style="background:${c}" onclick="setIssueColor('${esc(k)}','${c}')" title="${c}"></span>`
+            ).join('') + `<span class="color-dot clear${!issColor?' active':''}" onclick="setIssueColor('${esc(k)}','')" title="清除颜色"></span>`;
             return `<tr draggable="true" data-key="${esc(k)}">
               <td><span class="drag-handle" title="拖动排序">⠿</span></td>
               <td><code style="font-size:13px;color:#475569">${esc(k)}</code></td>
               <td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(lbl)}</td>
+              <td><div class="color-swatches">${colorSwatches}</div></td>
               <td style="text-align:center"><span class="pill ${nOv?'pill-g':'pill-0'}">${nOv}</span></td>
               <td style="text-align:center"><span class="pill ${nTe?'pill-b':'pill-0'}">${nTe}</span></td>
               <td style="text-align:center"><span class="pill ${nCu?'pill-o':'pill-0'}">${nCu}</span></td>
@@ -642,6 +656,29 @@
 
   function closeModal() {
     document.getElementById('modalOverlay').classList.remove('open');
+  }
+
+  // ── Issue color tag ──────────────────────────────────────────────────────────
+  async function setIssueColor(key, color) {
+    if (!currentData.common?.issues?.[key]) return;
+    if (color) currentData.common.issues[key].color = color;
+    else       delete currentData.common.issues[key].color;
+    // Update swatch UI immediately
+    const row = document.querySelector(`#issueTableBody tr[data-key="${key}"]`);
+    if (row) {
+      row.querySelectorAll('.color-dot').forEach(dot => dot.classList.remove('active'));
+      const match = color
+        ? row.querySelector(`.color-dot[style="background:${color}"]`)
+        : row.querySelector('.color-dot.clear');
+      if (match) match.classList.add('active');
+    }
+    try {
+      await fetch('/api/admin/family/' + encodeURIComponent(currentKey), {
+        method:  'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ data: currentData })
+      });
+    } catch { alert('Color save failed'); }
   }
 
   // ── Render step cards ────────────────────────────────────────────────────────
@@ -923,20 +960,32 @@
   }
 
   function modelStepCardHTML(mc, tier, idx, s) {
-    const text = typeof s === 'string' ? s : (s.text || '');
-    const red  = typeof s === 'string' ? '' : (s.red || '');
-    const subs = typeof s === 'string' ? '' : (s.steps ? s.steps.join('\n\n') : '');
+    const text  = typeof s === 'string' ? s : (s.text  || '');
+    const red   = typeof s === 'string' ? '' : (s.red   || '');
+    const video = typeof s === 'string' ? '' : (s.video || '');
+    const subs  = typeof s === 'string' ? '' : (s.steps ? s.steps.map(st => typeof st === 'string' ? st : (st.text || '')).join('\n\n') : '');
     return `
       <div class="step-card" data-model="${mc}" data-tier="${tier}" data-idx="${idx}">
         <div class="row1">
           <textarea placeholder="Step text..." oninput="updateModelCount('${mc}','${tier}')">${esc(text)}</textarea>
           <button class="step-remove" onclick="removeModelStep(this)">✕</button>
         </div>
+        <span class="step-substeps-label">按 Enter = 换行</span>
         <div class="step-extras">
           <input class="red-input" type="text" placeholder="⚠ Red note (optional)" value="${esc(red)}"/>
+          <input class="video-input" type="text" placeholder="🎬 Video path (optional, e.g. /MGFMSF-Drawer-web.mp4)" value="${esc(video)}" style="flex:1;border:1px solid #e2e8f0;border-radius:6px;padding:6px 9px;font-size:13px;outline:none;"/>
         </div>
-        <textarea class="step-substeps" placeholder="Sub-steps (one per line, optional)">${esc(subs)}</textarea>
-        <span class="step-substeps-label">Sub-steps: one line = one bullet</span>
+        <div class="substeps-toolbar">
+          <button type="button" onclick="openLinkPopup(this)">🔗 插入链接</button>
+        </div>
+        <div class="link-popup">
+          <input class="text-input" placeholder="显示文字" />
+          <input class="url-input" placeholder="https://..." />
+          <button class="insert-btn" type="button" onclick="insertLink(this)">插入</button>
+          <button class="cancel-btn" type="button" onclick="closeLinkPopup(this)">取消</button>
+        </div>
+        <textarea class="step-substeps" placeholder="Sub-steps (blank line = new bullet, Enter = line break within same bullet)">${esc(subs)}</textarea>
+        <span class="step-substeps-label">按两下 Enter = 新一条 &nbsp;·&nbsp; 按一下 Enter = 同一条内换行</span>
       </div>`;
   }
 
@@ -967,12 +1016,14 @@
     const el = document.getElementById(`msteps-${tier}-${mc}`);
     if (!el) return [];
     return Array.from(el.querySelectorAll('.step-card')).map(card => {
-      const text = card.querySelector('.row1 textarea').value.trim();
-      const red  = card.querySelector('.red-input').value.trim();
+      const text  = card.querySelector('.row1 textarea').value.trim();
+      const red   = card.querySelector('.red-input').value.trim();
+      const video = card.querySelector('.video-input') ? card.querySelector('.video-input').value.trim() : '';
       const subEl = card.querySelector('.step-substeps');
       const subs  = subEl ? subEl.value.split('\n\n').map(l=>l.trim()).filter(Boolean) : [];
       const obj = { text };
-      if (red) obj.red = red;
+      if (red)         obj.red   = red;
+      if (video)       obj.video = video;
       if (subs.length) obj.steps = subs;
       return obj;
     }).filter(o => o.text);
