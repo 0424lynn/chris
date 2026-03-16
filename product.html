@@ -722,10 +722,17 @@
             document.getElementById('product-image').src       = modelEntry.image   || '';
             document.getElementById('product-diagram').src     = modelEntry.diagram || '';
 
-            // If model has no own issues list, fall back to all common issues
+            // If model has no own issues list, fall back to all common issues (respecting issueOrder)
             const issues = (modelEntry.issues && modelEntry.issues.length > 0)
                 ? modelEntry.issues
-                : Object.keys(data.common.issues || {});
+                : (() => {
+                    const allKeys = Object.keys(data.common.issues || {});
+                    const order = data.common.issueOrder;
+                    if (Array.isArray(order) && order.length) {
+                        return [...order.filter(k => allKeys.includes(k)), ...allKeys.filter(k => !order.includes(k))];
+                    }
+                    return allKeys;
+                  })();
 
             const problemCategoryList = document.getElementById('problemCategoryList');
             issues.forEach(issueKey => {
