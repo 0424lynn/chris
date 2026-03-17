@@ -271,6 +271,10 @@
           style="background:#1e3a5f;color:#93c5fd;border:1px solid #2563eb;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap;">
     🔄 Sync Registry
   </button>
+  <button onclick="openTickerModal()"
+          style="background:#7f1d1d;color:#fca5a5;border:1px solid #dc2626;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap;">
+    📢 Ticker
+  </button>
   <div class="topbar-right" id="topbarInfo">Loading...</div>
 </div>
 
@@ -378,6 +382,48 @@
 </div>
 
 <!-- Edit modal -->
+<!-- Ticker Modal -->
+<div id="tickerOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:3000;align-items:center;justify-content:center;">
+  <div style="background:#1e293b;border-radius:12px;padding:28px 28px 20px;width:500px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,.5);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+      <span style="font-size:16px;font-weight:700;color:#f1f5f9;">📢 滚动公告条</span>
+      <button onclick="closeTickerModal()" style="background:none;border:none;color:#94a3b8;font-size:20px;cursor:pointer;">✕</button>
+    </div>
+    <textarea id="tickerInput" rows="3" placeholder="输入滚动公告内容..." style="width:100%;border:1px solid #334155;border-radius:8px;padding:10px;font-size:14px;background:#0f172a;color:#f1f5f9;resize:vertical;outline:none;margin-bottom:14px;font-family:inherit;"></textarea>
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:14px;flex-wrap:wrap;">
+      <label style="color:#94a3b8;font-size:13px;display:flex;align-items:center;gap:6px;">
+        颜色
+        <input type="color" id="tickerColor" value="#ef4444" style="width:36px;height:28px;border:none;border-radius:4px;cursor:pointer;background:none;">
+      </label>
+      <label style="color:#94a3b8;font-size:13px;display:flex;align-items:center;gap:6px;">
+        字号
+        <select id="tickerFontSize" style="background:#0f172a;color:#f1f5f9;border:1px solid #334155;border-radius:6px;padding:4px 8px;font-size:13px;">
+          <option value="14">14px</option>
+          <option value="16">16px</option>
+          <option value="18" selected>18px</option>
+          <option value="20">20px</option>
+          <option value="24">24px</option>
+          <option value="28">28px</option>
+        </select>
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;color:#94a3b8;font-size:13px;cursor:pointer;">
+        <input type="checkbox" id="tickerBold" checked style="width:15px;height:15px;cursor:pointer;">
+        加粗
+      </label>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
+      <label style="display:flex;align-items:center;gap:8px;color:#cbd5e1;font-size:14px;cursor:pointer;">
+        <input type="checkbox" id="tickerEnabled" style="width:16px;height:16px;cursor:pointer;">
+        发布（勾选=显示，取消=隐藏）
+      </label>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:10px;">
+      <button onclick="closeTickerModal()" style="padding:8px 18px;border:1px solid #334155;border-radius:8px;background:none;color:#94a3b8;cursor:pointer;">取消</button>
+      <button onclick="saveTicker()" style="padding:8px 18px;border:none;border-radius:8px;background:#dc2626;color:#fff;font-weight:600;cursor:pointer;">保存</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
     <div class="modal-hd">
@@ -456,6 +502,37 @@
   })();
 
   // ── Sync Model Registry ───────────────────────────────────────────────────────
+  async function openTickerModal() {
+    try {
+      const r = await fetch('/api/ticker');
+      const d = await r.json();
+      document.getElementById('tickerInput').value = d.text || '';
+      document.getElementById('tickerEnabled').checked = d.enabled || false;
+      document.getElementById('tickerColor').value = d.color || '#ef4444';
+      document.getElementById('tickerFontSize').value = d.fontSize || 18;
+      document.getElementById('tickerBold').checked = d.bold !== false;
+    } catch(e) {}
+    document.getElementById('tickerOverlay').style.display = 'flex';
+  }
+  function closeTickerModal() {
+    document.getElementById('tickerOverlay').style.display = 'none';
+  }
+  async function saveTicker() {
+    const text     = document.getElementById('tickerInput').value.trim();
+    const enabled  = document.getElementById('tickerEnabled').checked;
+    const color    = document.getElementById('tickerColor').value;
+    const fontSize = parseInt(document.getElementById('tickerFontSize').value);
+    const bold     = document.getElementById('tickerBold').checked;
+    const r = await fetch('/api/ticker', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, enabled, color, fontSize, bold })
+    });
+    const d = await r.json();
+    if (d.ok) { alert(enabled ? '✅ 已发布！' : '✅ 已隐藏。'); closeTickerModal(); }
+    else alert('保存失败：' + (d.error || '未知错误'));
+  }
+
   async function syncRegistry() {
     if (!confirm('Sync the Model Registry?\n\nThis will add any ATOSA / CookRite model codes from the master list that are not yet in the registry. Existing entries will not be changed.')) return;
     try {

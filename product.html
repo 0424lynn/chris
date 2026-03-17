@@ -406,12 +406,17 @@
             #customerSolution { display: none !important; }
             .acc-hd { font-size: 13px !important; padding: 7px 10px !important; }
         }
+    .ticker-bar { display:none; width:100%; background:transparent; overflow:hidden; position:relative; z-index:999; padding:10px 0; }
+    .ticker-bar.show { display:block; }
+    .ticker-track { display:inline-block; white-space:nowrap; animation:ticker-scroll 30s linear infinite; padding-left:100%; }
+    @keyframes ticker-scroll { 0% { transform:translateX(0); } 100% { transform:translateX(-100%); } }
     </style>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Product</title>
 </head>
 <body>
+    <div class="ticker-bar" id="tickerBar"><span class="ticker-track" id="tickerText"></span></div>
     <div class="container">
         <div class="header-container">
             <a href="dashboard.html" class="back-home-button">Back</a>
@@ -816,7 +821,13 @@
             });
         }
         if (item.video) {
-            html += `<video controls preload="metadata" playsinline style="width:100%;max-width:900px;margin-top:8px;border-radius:8px;"><source src="${item.video}" type="video/mp4"></video>`;
+            const gdMatch = item.video.match(/drive\.google\.com\/file\/d\/([^/]+)/);
+            if (gdMatch) {
+                const embedUrl = `https://drive.google.com/file/d/${gdMatch[1]}/preview`;
+                html += `<iframe src="${embedUrl}" width="100%" height="480" style="max-width:900px;margin-top:8px;border-radius:8px;border:none;display:block;" allowfullscreen></iframe>`;
+            } else {
+                html += `<video controls preload="metadata" playsinline style="width:100%;max-width:900px;margin-top:8px;border-radius:8px;"><source src="${item.video}" type="video/mp4"></video>`;
+            }
         }
         return html;
     }
@@ -1072,5 +1083,21 @@
     </script>
 
     <script src="script.js"></script>
+    <script>
+    (async () => {
+      try {
+        const r = await fetch('/api/ticker');
+        const d = await r.json();
+        if (d.enabled && d.text.trim()) {
+          const el = document.getElementById('tickerText');
+          el.textContent = d.text;
+          el.style.color      = d.color    || '#ef4444';
+          el.style.fontSize   = (d.fontSize || 18) + 'px';
+          el.style.fontWeight = d.bold !== false ? '700' : '400';
+          document.getElementById('tickerBar').classList.add('show');
+        }
+      } catch(e) {}
+    })();
+    </script>
 </body>
 </html>

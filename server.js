@@ -35,6 +35,16 @@ const AnnouncementSchema = new mongoose.Schema({
 });
 const Announcement = mongoose.model('Announcement', AnnouncementSchema, 'announcement');
 
+const TickerSchema = new mongoose.Schema({
+  text:      { type: String, default: '' },
+  enabled:   { type: Boolean, default: false },
+  color:     { type: String, default: '#ef4444' },
+  fontSize:  { type: Number, default: 18 },
+  bold:      { type: Boolean, default: true },
+  updatedAt: { type: Date, default: Date.now }
+});
+const Ticker = mongoose.model('Ticker', TickerSchema, 'ticker');
+
 const ModelMap = mongoose.model(
   'ModelMap',
   new mongoose.Schema({ _id: String, map: Object }, { strict: false }),
@@ -181,6 +191,27 @@ app.post('/api/announcement', async (req, res) => {
       { lines, updatedAt: new Date() },
       { upsert: true, new: true }
     );
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ── API: Ticker ───────────────────────────────────────────────────────────────
+app.get('/api/ticker', async (req, res) => {
+  try {
+    const doc = await Ticker.findOne().sort({ updatedAt: -1 }).lean();
+    res.json({ text: doc?.text || '', enabled: doc?.enabled || false, color: doc?.color || '#ef4444', fontSize: doc?.fontSize || 18, bold: doc?.bold !== false });
+  } catch (e) {
+    res.json({ text: '', enabled: false, color: '#ef4444', fontSize: 18, bold: true });
+  }
+});
+
+app.post('/api/ticker', async (req, res) => {
+  if (req.session?.user?.role !== 'superAdmin') return res.status(403).json({ error: 'Forbidden' });
+  const { text, enabled, color, fontSize, bold } = req.body;
+  try {
+    await Ticker.findOneAndUpdate({}, { text, enabled, color, fontSize, bold, updatedAt: new Date() }, { upsert: true, new: true });
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -478,6 +509,39 @@ setInterval(() => {
 
 // ── Static Files ──────────────────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname)));
+
+// ── Gemini AI Chat ─────────────────────────────────────────────────────────────
+const { GoogleGenerativeAI } = require('@google/generative-ai');
+const genAI = process.env.GEMINI_API_KEY ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY) : null;
+
+const AI_SYSTEM_PROMPT = `You are an expert HVAC and commercial refrigeration technician assistant for ATOSA equipment.
+Help service technicians diagnose and repair issues with ATOSA commercial kitchen equipment including refrigerators,
+freezers, prep tables, and other units. Provide clear, practical troubleshooting steps.
+If asked about a specific error code or symptom, give step-by-step diagnostic procedures.
+Keep answers concise and actionable. Respond in the same language the technician uses.`;
+
+app.post('/api/ai-chat', async (req, res) => {
+  if (!genAI) return res.status(503).json({ error: 'AI not configured' });
+  const { messages } = req.body;
+  if (!messages || !Array.isArray(messages)) return res.status(400).json({ error: 'Invalid messages' });
+  try {
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-1.5-flash',
+      systemInstruction: AI_SYSTEM_PROMPT
+    });
+    const history = messages.slice(0, -1).map(m => ({
+      role: m.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: m.content }]
+    }));
+    const chat = model.startChat({ history });
+    const last = messages[messages.length - 1];
+    const result = await chat.sendMessage(last.content);
+    res.json({ reply: result.response.text() });
+  } catch (e) {
+    console.error('Gemini error:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
 
 // ── Start ─────────────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 5500;
