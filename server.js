@@ -511,8 +511,8 @@ setInterval(() => {
 app.use(express.static(path.join(__dirname)));
 
 // ── Gemini AI Chat ─────────────────────────────────────────────────────────────
-const { GoogleGenerativeAI } = require('@google/generative-ai');
-const genAI = process.env.GEMINI_API_KEY ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY) : null;
+const Groq = require('groq-sdk');
+const groqClient = process.env.GROQ_API_KEY ? new Groq({ apiKey: process.env.GROQ_API_KEY }) : null;
 
 const AI_SYSTEM_PROMPT = `You are an expert HVAC and commercial refrigeration technician assistant for ATOSA equipment.
 Help service technicians diagnose and repair issues with ATOSA commercial kitchen equipment including refrigerators,
@@ -521,24 +521,21 @@ If asked about a specific error code or symptom, give step-by-step diagnostic pr
 Keep answers concise and actionable. Respond in the same language the technician uses.`;
 
 app.post('/api/ai-chat', async (req, res) => {
-  if (!genAI) return res.status(503).json({ error: 'AI not configured' });
+  if (!groqClient) return res.status(503).json({ error: 'AI not configured' });
   const { messages } = req.body;
   if (!messages || !Array.isArray(messages)) return res.status(400).json({ error: 'Invalid messages' });
   try {
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-2.0-flash',
-      systemInstruction: AI_SYSTEM_PROMPT
+    const completion = await groqClient.chat.completions.create({
+      model: 'llama-3.3-70b-versatile',
+      messages: [
+        { role: 'system', content: AI_SYSTEM_PROMPT },
+        ...messages.map(m => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content }))
+      ],
+      max_tokens: 1024
     });
-    const history = messages.slice(0, -1).map(m => ({
-      role: m.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: m.content }]
-    }));
-    const chat = model.startChat({ history });
-    const last = messages[messages.length - 1];
-    const result = await chat.sendMessage(last.content);
-    res.json({ reply: result.response.text() });
+    res.json({ reply: completion.choices[0].message.content });
   } catch (e) {
-    console.error('Gemini error:', e.message);
+    console.error('Groq error:', e.message);
     res.status(500).json({ error: e.message });
   }
 });
