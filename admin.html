@@ -276,6 +276,10 @@
           style="background:#7f1d1d;color:#fca5a5;border:1px solid #dc2626;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap;">
     📢 Ticker
   </button>
+  <button onclick="exportAllData()" title="Download all model data as JSON backup"
+          style="background:#14532d;color:#86efac;border:1px solid #16a34a;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap;">
+    💾 Export Backup
+  </button>
   <div class="topbar-right" id="topbarInfo">Loading...</div>
 </div>
 
@@ -532,6 +536,28 @@
     const d = await r.json();
     if (d.ok) { alert(enabled ? '✅ 已发布！' : '✅ 已隐藏。'); closeTickerModal(); }
     else alert('保存失败：' + (d.error || '未知错误'));
+  }
+
+  async function exportAllData() {
+    try {
+      const r = await fetch('/api/admin/families');
+      const families = await r.json();
+      const backup = {};
+      for (const f of families) {
+        const r2 = await fetch('/api/admin/family/' + encodeURIComponent(f.key));
+        const d = await r2.json();
+        backup[f.key] = d.data;
+      }
+      const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'atosa-backup-' + new Date().toISOString().slice(0,10) + '.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch(e) {
+      alert('Export failed: ' + e.message);
+    }
   }
 
   async function syncRegistry() {
