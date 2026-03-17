@@ -540,6 +540,348 @@ app.post('/api/ai-chat', async (req, res) => {
   }
 });
 
+// ── Excel Import / Export ──────────────────────────────────────────────────────
+const XLSX = require('xlsx');
+
+// helper: cell style shortcuts
+function hdrStyle() {
+  return { font: { name: 'Arial', bold: true, color: { rgb: 'FFFFFF' } }, fill: { fgColor: { rgb: '1F3864' } }, alignment: { horizontal: 'center', vertical: 'center', wrapText: true } };
+}
+function reqStyle() {
+  return { font: { name: 'Arial' }, fill: { fgColor: { rgb: 'FFFF00' } }, alignment: { wrapText: true, vertical: 'top' } };
+}
+function normStyle(shade) {
+  return { font: { name: 'Arial' }, fill: { fgColor: { rgb: shade ? 'F5F5F5' : 'FFFFFF' } }, alignment: { wrapText: true, vertical: 'top' } };
+}
+function groupStyle() {
+  return { font: { name: 'Arial', bold: true }, fill: { fgColor: { rgb: 'DAEEF3' } }, alignment: { wrapText: true, vertical: 'top' } };
+}
+function modelGroupStyle() {
+  return { font: { name: 'Arial', bold: true }, fill: { fgColor: { rgb: 'FCE4D6' } }, alignment: { wrapText: true, vertical: 'top' } };
+}
+
+function applyStyle(ws, cellAddr, style) {
+  if (!ws[cellAddr]) ws[cellAddr] = { t: 's', v: '' };
+  ws[cellAddr].s = style;
+}
+
+// ── Download Template (dynamic, generated from DB) ────────────────────────────
+app.get('/api/admin/download-template', superAdminOnly, async (req, res) => {
+  try {
+    const familyKey = req.query.family || null;
+    const query = familyKey ? { _id: familyKey } : {};
+    const docs = await ModelData.find(query).lean();
+    if (!docs.length) return res.status(404).json({ error: 'No data found' });
+
+    const wb = XLSX.utils.book_new();
+
+    // ── Sheet 1: Instructions ─────────────────────────────────────────────────
+    const instrData = [
+      ['ATOSA Model Data Template — 使用说明'],
+      [''],
+      ['【说明 / Instructions】'],
+      ['本模板用于导入/导出产品数据到 ATOSA 售后系统。', 'This template is used to import/export product data into the ATOSA after-sales system.'],
+      [''],
+      ['【Sheet 说明】'],
+      ['Sheet', '用途 / Purpose'],
+      ['Models 型号列表', '填写产品系列Key和所有型号ID / Family key and all model IDs'],
+      ['Issues 问题列表', '所有型号共用的问题和解决方案 / Common issues shared by all models'],
+      ['型号专属问题 Model-Specific', '某个型号特有的额外内容 / Extra content for individual models only'],
+      ['文档资料 Documents', '每个型号对应的PDF/规格书链接 / PDF and spec sheet links per model'],
+      [''],
+      ['【Section 取值说明】'],
+      ['Section 值', '对应系统位置'],
+      ['overview', 'Quick Guide (Overview) — 快速概览'],
+      ['customer', 'Customer Guidance — 客户指引'],
+      ['technician', 'Technician Analysis — 技术分析'],
+      ['quick', 'Quick Guide Steps — 快速步骤'],
+      ['tech', 'Technician Steps — 技术步骤'],
+      ['nonW', 'Non-Warranty Steps — 非保修步骤'],
+      [''],
+      ['【Sub-steps 格式说明】'],
+      ['空行分隔（两次回车）= 新的一条bullet', 'Blank line (double Enter) = new bullet point'],
+      ['单次回车 = 同一条内换行', 'Single Enter = new line within same bullet'],
+      [''],
+      ['【颜色说明 / Color Guide】'],
+      ['黄色底 = 必填项', 'Yellow fill = required field'],
+      ['无色 = 选填项', 'No fill = optional field'],
+    ];
+    const wsInstr = XLSX.utils.aoa_to_sheet(instrData);
+    wsInstr['!cols'] = [{ wch: 45 }, { wch: 55 }];
+    XLSX.utils.book_append_sheet(wb, wsInstr, '说明 Instructions');
+
+    // ── Sheet 2: Models ───────────────────────────────────────────────────────
+    const modelsAoa = [['Family Key', 'Model ID', 'Model Title', 'Notes']];
+    for (const doc of docs) {
+      const fk = doc._id;
+      const models = doc.data?.models || {};
+      const modelIds = Object.keys(models);
+      if (modelIds.length === 0) {
+        modelsAoa.push([fk, '', '', '']);
+      } else {
+        for (const mid of modelIds) {
+          modelsAoa.push([fk, mid, models[mid]?.title || mid, '']);
+        }
+      }
+    }
+    const wsModels = XLSX.utils.aoa_to_sheet(modelsAoa);
+    wsModels['!cols'] = [{ wch: 25 }, { wch: 20 }, { wch: 35 }, { wch: 25 }];
+    wsModels['!freeze'] = { xSplit: 0, ySplit: 1 };
+    XLSX.utils.book_append_sheet(wb, wsModels, 'Models 型号列表');
+
+    // ── Sheet 3: Common Issues ────────────────────────────────────────────────
+    const issuesHdr = ['Issue Key', 'Issue Label', 'Section', 'Item #', 'Item Text', 'Red Note / Code', 'Sub-steps', 'Video Path', 'Link Label', 'Link URL'];
+    const issuesAoa = [issuesHdr];
+
+    for (const doc of docs) {
+      const issues = doc.data?.common?.issues || {};
+      for (const [issueKey, issueVal] of Object.entries(issues)) {
+        const label = issueVal.label || issueKey;
+        const sections = [
+          ['overview',    issueVal.overview   || []],
+          ['customer',    issueVal.customer   || []],
+          ['technician',  issueVal.technician || []],
+          ['quick',       issueVal.quick?.steps   || []],
+          ['tech',        issueVal.tech?.steps    || []],
+          ['nonW',        issueVal.nonW?.steps    || []],
+        ];
+        for (const [secName, items] of sections) {
+          items.forEach((item, idx) => {
+            const text = typeof item === 'string' ? item : (item.text || '');
+            const red  = item.red  || '';
+            const steps = Array.isArray(item.steps)
+              ? item.steps.map(s => typeof s === 'string' ? s : (s.text || '')).join('\n\n')
+              : '';
+            const video    = item.video || '';
+            const linkLbl  = item.link?.label || (Array.isArray(item.links) && item.links[0]?.label) || '';
+            const linkUrl  = item.link?.url   || (Array.isArray(item.links) && item.links[0]?.url)   || '';
+            issuesAoa.push([issueKey, label, secName, idx + 1, text, red, steps, video, linkLbl, linkUrl]);
+          });
+        }
+      }
+    }
+    const wsIssues = XLSX.utils.aoa_to_sheet(issuesAoa);
+    wsIssues['!cols'] = [{ wch: 22 }, { wch: 25 }, { wch: 14 }, { wch: 7 }, { wch: 50 }, { wch: 38 }, { wch: 55 }, { wch: 25 }, { wch: 20 }, { wch: 38 }];
+    wsIssues['!freeze'] = { xSplit: 0, ySplit: 1 };
+    XLSX.utils.book_append_sheet(wb, wsIssues, 'Issues 问题列表');
+
+    // ── Sheet 4: Model-Specific ───────────────────────────────────────────────
+    const specHdr = ['Model ID', 'Issue Key', 'Section', 'Item #', 'Item Text', 'Red Note / Code', 'Sub-steps', 'Video Path', 'Link Label', 'Link URL'];
+    const specAoa = [specHdr];
+
+    for (const doc of docs) {
+      const models = doc.data?.models || {};
+      const commonIssueKeys = Object.keys(doc.data?.common?.issues || {});
+      for (const [mid, mVal] of Object.entries(models)) {
+        for (const issueKey of commonIssueKeys) {
+          const extra = mVal[issueKey];
+          if (!extra || typeof extra !== 'object') continue;
+          const sections = [
+            ['overview',   extra.overview   || []],
+            ['customer',   extra.customer   || []],
+            ['technician', extra.technician || []],
+            ['quick',      extra.quick?.steps  || []],
+            ['tech',       extra.tech?.steps   || []],
+            ['nonW',       extra.nonW?.steps   || []],
+          ];
+          for (const [secName, items] of sections) {
+            items.forEach((item, idx) => {
+              const text  = typeof item === 'string' ? item : (item.text || '');
+              const red   = item.red  || '';
+              const steps = Array.isArray(item.steps)
+                ? item.steps.map(s => typeof s === 'string' ? s : (s.text || '')).join('\n\n')
+                : '';
+              const video   = item.video || '';
+              const linkLbl = item.link?.label || '';
+              const linkUrl = item.link?.url   || '';
+              specAoa.push([mid, issueKey, secName, idx + 1, text, red, steps, video, linkLbl, linkUrl]);
+            });
+          }
+        }
+      }
+    }
+    const wsSpec = XLSX.utils.aoa_to_sheet(specAoa);
+    wsSpec['!cols'] = [{ wch: 18 }, { wch: 25 }, { wch: 14 }, { wch: 7 }, { wch: 50 }, { wch: 38 }, { wch: 55 }, { wch: 25 }, { wch: 20 }, { wch: 38 }];
+    wsSpec['!freeze'] = { xSplit: 0, ySplit: 1 };
+    XLSX.utils.book_append_sheet(wb, wsSpec, '型号专属问题 Model-Specific');
+
+    // ── Sheet 5: Documents ────────────────────────────────────────────────────
+    const docsHdr = ['Model ID', 'Document Title', 'Document URL', 'Notes'];
+    const docsAoa = [docsHdr];
+    for (const doc of docs) {
+      const models = doc.data?.models || {};
+      for (const [mid, mVal] of Object.entries(models)) {
+        const documents = mVal.documents || [];
+        for (const d of documents) {
+          docsAoa.push([mid, d.title || '', d.url || '', '']);
+        }
+      }
+    }
+    const wsDocs = XLSX.utils.aoa_to_sheet(docsAoa);
+    wsDocs['!cols'] = [{ wch: 18 }, { wch: 30 }, { wch: 65 }, { wch: 25 }];
+    wsDocs['!freeze'] = { xSplit: 0, ySplit: 1 };
+    XLSX.utils.book_append_sheet(wb, wsDocs, '文档资料 Documents');
+
+    // ── Output ────────────────────────────────────────────────────────────────
+    const buf = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+    const filename = familyKey
+      ? `ATOSA-${familyKey}-${new Date().toISOString().slice(0,10)}.xlsx`
+      : `ATOSA-AllData-${new Date().toISOString().slice(0,10)}.xlsx`;
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.send(buf);
+  } catch (e) {
+    console.error('Template gen error:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/admin/import-excel', superAdminOnly, upload.single('file'), async (req, res) => {
+  try {
+    const wb = XLSX.read(req.file.buffer, { type: 'buffer' });
+
+    // ── Read Models sheet ──────────────────────────────────────────────────────
+    const modelsSheet = wb.Sheets['Models 型号列表'];
+    if (!modelsSheet) return res.status(400).json({ error: 'Missing sheet: Models 型号列表' });
+    const modelsRows = XLSX.utils.sheet_to_json(modelsSheet, { defval: '' });
+
+    // Group model IDs by family key
+    const familyModels = {}; // { familyKey: [modelId, ...] }
+    for (const row of modelsRows) {
+      const fk = String(row['Family Key'] || '').trim();
+      const mid = String(row['Model ID'] || '').trim();
+      if (!fk || !mid) continue;
+      if (!familyModels[fk]) familyModels[fk] = [];
+      familyModels[fk].push(mid);
+    }
+
+    // ── Read Common Issues sheet ───────────────────────────────────────────────
+    const issuesSheet = wb.Sheets['Issues 问题列表'];
+    if (!issuesSheet) return res.status(400).json({ error: 'Missing sheet: Issues 问题列表' });
+    const issuesRows = XLSX.utils.sheet_to_json(issuesSheet, { defval: '' });
+
+    // Build common issues: { issueKey: { label, section: [ { text, red, steps, video, link } ] } }
+    const commonIssues = {};
+    for (const row of issuesRows) {
+      const key     = String(row['Issue Key']       || '').trim();
+      const label   = String(row['Issue Label']     || '').trim();
+      const section = String(row['Section']         || '').trim();
+      const text    = String(row['Item Text']       || '').trim();
+      const red     = String(row['Red Note / Code'] || '').trim();
+      const stepsRaw= String(row['Sub-steps']       || '').trim();
+      const video   = String(row['Video Path']      || '').trim();
+      const linkLbl = String(row['Link Label']      || '').trim();
+      const linkUrl = String(row['Link URL']        || '').trim();
+      if (!key || !section || !text) continue;
+
+      if (!commonIssues[key]) commonIssues[key] = { label: label || key };
+      else if (label) commonIssues[key].label = label;
+
+      // Build item
+      const item = { text };
+      if (red)   item.red = red;
+      if (video) item.video = video;
+      if (linkLbl && linkUrl) item.link = { label: linkLbl, url: linkUrl };
+      if (stepsRaw) {
+        item.steps = stepsRaw.split(/\n\s*\n/).map(s => s.trim()).filter(Boolean);
+      }
+
+      // Map section name to data key
+      const sectionKey = section === 'quick' ? 'quick'
+                       : section === 'tech'  ? 'tech'
+                       : section === 'nonW'  ? 'nonW'
+                       : section; // overview / customer / technician
+
+      if (['quick','tech','nonW'].includes(sectionKey)) {
+        if (!commonIssues[key][sectionKey]) commonIssues[key][sectionKey] = { steps: [] };
+        commonIssues[key][sectionKey].steps.push(item);
+      } else {
+        if (!commonIssues[key][sectionKey]) commonIssues[key][sectionKey] = [];
+        commonIssues[key][sectionKey].push(item);
+      }
+    }
+
+    // ── Read Model-Specific sheet ──────────────────────────────────────────────
+    const specificSheet = wb.Sheets['型号专属问题 Model-Specific'];
+    const modelExtras = {}; // { modelId: { issueKey: { section: [...] } } }
+    if (specificSheet) {
+      const specRows = XLSX.utils.sheet_to_json(specificSheet, { defval: '' });
+      for (const row of specRows) {
+        const modelId  = String(row['Model ID']         || '').trim();
+        const issueKey = String(row['Issue Key']        || '').trim();
+        const section  = String(row['Section']          || '').trim();
+        const text     = String(row['Item Text']        || '').trim();
+        const red      = String(row['Red Note / Code']  || '').trim();
+        const stepsRaw = String(row['Sub-steps']        || '').trim();
+        const video    = String(row['Video Path']       || '').trim();
+        const linkLbl  = String(row['Link Label']       || '').trim();
+        const linkUrl  = String(row['Link URL']         || '').trim();
+        if (!modelId || !issueKey || !section || !text) continue;
+
+        if (!modelExtras[modelId]) modelExtras[modelId] = {};
+        if (!modelExtras[modelId][issueKey]) modelExtras[modelId][issueKey] = {};
+
+        const item = { text };
+        if (red)   item.red = red;
+        if (video) item.video = video;
+        if (linkLbl && linkUrl) item.link = { label: linkLbl, url: linkUrl };
+        if (stepsRaw) {
+          item.steps = stepsRaw.split(/\n\s*\n/).map(s => s.trim()).filter(Boolean);
+        }
+
+        const sk = ['quick','tech','nonW'].includes(section) ? section : section;
+        if (['quick','tech','nonW'].includes(sk)) {
+          if (!modelExtras[modelId][issueKey][sk]) modelExtras[modelId][issueKey][sk] = { steps: [] };
+          modelExtras[modelId][issueKey][sk].steps.push(item);
+        } else {
+          if (!modelExtras[modelId][issueKey][sk]) modelExtras[modelId][issueKey][sk] = [];
+          modelExtras[modelId][issueKey][sk].push(item);
+        }
+      }
+    }
+
+    // ── Read Documents sheet ───────────────────────────────────────────────────
+    const docsSheet = wb.Sheets['文档资料 Documents'];
+    const modelDocs = {}; // { modelId: [ { title, url } ] }
+    if (docsSheet) {
+      const docRows = XLSX.utils.sheet_to_json(docsSheet, { defval: '' });
+      for (const row of docRows) {
+        const modelId = String(row['Model ID']        || '').trim();
+        const title   = String(row['Document Title'] || '').trim();
+        const url     = String(row['Document URL']   || '').trim();
+        if (!modelId || !title || !url) continue;
+        if (!modelDocs[modelId]) modelDocs[modelId] = [];
+        modelDocs[modelId].push({ title, url });
+      }
+    }
+
+    // ── Build & upsert each family ─────────────────────────────────────────────
+    const results = [];
+    for (const [familyKey, modelIds] of Object.entries(familyModels)) {
+      // Build models object
+      const models = {};
+      for (const mid of modelIds) {
+        models[mid] = {
+          title: mid,
+          issues: Object.keys(commonIssues),
+          ...(modelExtras[mid] || {}),
+          ...(modelDocs[mid] ? { documents: modelDocs[mid] } : {})
+        };
+      }
+
+      const data = { common: { issues: commonIssues }, models };
+      await ModelData.findByIdAndUpdate(familyKey, { _id: familyKey, data }, { upsert: true, new: true });
+      invalidateCache(familyKey);
+      results.push(familyKey);
+    }
+
+    res.json({ success: true, imported: results });
+  } catch (e) {
+    console.error('Import error:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ── Start ─────────────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 5500;
 app.listen(PORT, () => console.log(`Server: http://localhost:${PORT}`));

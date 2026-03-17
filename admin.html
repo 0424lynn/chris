@@ -280,6 +280,14 @@
           style="background:#14532d;color:#86efac;border:1px solid #16a34a;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap;">
     💾 Export Backup
   </button>
+  <button onclick="downloadTemplate()" title="Download Excel import template"
+          style="background:#1e3a5f;color:#93c5fd;border:1px solid #3b82f6;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap;">
+    📥 下载模板
+  </button>
+  <label title="Import data from Excel file" style="background:#312e81;color:#a5b4fc;border:1px solid #6366f1;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap;">
+    📤 导入Excel
+    <input type="file" accept=".xlsx" onchange="importExcel(event)" style="display:none;">
+  </label>
   <div class="topbar-right" id="topbarInfo">Loading...</div>
 </div>
 
@@ -546,7 +554,7 @@
       for (const f of families) {
         const r2 = await fetch('/api/admin/family/' + encodeURIComponent(f.key));
         const d = await r2.json();
-        backup[f.key] = d.data;
+        backup[f.key] = d;
       }
       const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
@@ -558,6 +566,59 @@
     } catch(e) {
       alert('Export failed: ' + e.message);
     }
+  }
+
+  // ── 下载Excel模板（动态从数据库生成）────────────────────────
+  async function downloadTemplate() {
+    // 获取所有系列列表
+    const r = await fetch('/api/admin/families');
+    const families = await r.json();
+
+    // 构建选择对话框
+    const options = ['【全部系列 All Families】', ...families.map(f => f.key)];
+    const choice = prompt(
+      '请选择要导出的产品系列（输入序号）：\n\n' +
+      options.map((o, i) => `${i}. ${o}`).join('\n')
+    );
+    if (choice === null) return; // 取消
+    const idx = parseInt(choice);
+    if (isNaN(idx) || idx < 0 || idx >= options.length) {
+      alert('输入无效，请输入列表中的序号');
+      return;
+    }
+
+    const familyKey = idx === 0 ? null : families[idx - 1].key;
+    const url = '/api/admin/download-template' + (familyKey ? `?family=${encodeURIComponent(familyKey)}` : '');
+    const a = document.createElement('a');
+    a.href = url;
+    a.click();
+  }
+
+  // ── 导入Excel ────────────────────────────────────────────────
+  async function importExcel(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    if (!confirm(`确认导入「${file.name}」？\n导入会覆盖已有的同名Family数据，请确保已备份。`)) {
+      event.target.value = '';
+      return;
+    }
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      const btn = event.target.closest('label');
+      btn.textContent = '⏳ 导入中...';
+      const r = await fetch('/api/admin/import-excel', { method: 'POST', body: formData });
+      const d = await r.json();
+      if (d.success) {
+        alert('✅ 导入成功！\n已更新：' + d.imported.join(', ') + '\n\n请刷新页面查看最新数据。');
+        location.reload();
+      } else {
+        alert('❌ 导入失败：' + (d.error || '未知错误'));
+      }
+    } catch(e) {
+      alert('❌ 导入出错：' + e.message);
+    }
+    event.target.value = '';
   }
 
   async function syncRegistry() {
@@ -1616,6 +1677,79 @@
   document.getElementById('efOverlay').addEventListener('click', function(e) {
     if (e.target === this) closeEditFamily();
   });
+
+  // ── 下载模板选择弹窗 ─────────────────────────────────────────
+  function closeTemplateModal() {
+    document.getElementById('templateModal').style.display = 'none';
+  }
+  async function openTemplateModal() {
+    const r = await fetch('/api/admin/families');
+    const families = await r.json();
+    const list = document.getElementById('templateFamilyList');
+    list.innerHTML = '';
+
+    // 全部选项
+    const allItem = document.createElement('div');
+    allItem.className = 'tmpl-item';
+    allItem.textContent = '📦 全部系列 All Families';
+    allItem.onclick = () => { doDownloadTemplate(null); closeTemplateModal(); };
+    list.appendChild(allItem);
+
+    // 各系列
+    families.forEach(f => {
+      const item = document.createElement('div');
+      item.className = 'tmpl-item';
+      item.textContent = f.key.replace('modelData','') + '  (' + f.modelCount + ' models, ' + f.issueCount + ' issues)';
+      item.onclick = () => { doDownloadTemplate(f.key); closeTemplateModal(); };
+      list.appendChild(item);
+    });
+
+    document.getElementById('templateModal').style.display = 'flex';
+  }
+  function doDownloadTemplate(familyKey) {
+    const url = '/api/admin/download-template' + (familyKey ? '?family=' + encodeURIComponent(familyKey) : '');
+    const a = document.createElement('a');
+    a.href = url;
+    a.click();
+  }
+  // 替换旧函数
+  async function downloadTemplate() { openTemplateModal(); }
 </script>
+
+<!-- 下载模板选择弹窗 -->
+<div id="templateModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:#1e293b;border:1px solid #334155;border-radius:12px;width:420px;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+    <div style="padding:16px 20px;border-bottom:1px solid #334155;display:flex;justify-content:space-between;align-items:center;">
+      <span style="color:#f1f5f9;font-weight:600;font-size:15px;">📥 选择要导出的产品系列</span>
+      <span onclick="closeTemplateModal()" style="color:#94a3b8;cursor:pointer;font-size:18px;line-height:1;">✕</span>
+    </div>
+    <div id="templateFamilyList" style="overflow-y:auto;padding:10px 12px;flex:1;display:flex;flex-direction:column;gap:4px;"></div>
+    <div style="padding:12px 20px;border-top:1px solid #334155;color:#64748b;font-size:11px;">点击系列名称直接下载 · 数据实时从数据库生成</div>
+  </div>
+</div>
+
+<style>
+.tmpl-item {
+  padding: 9px 14px;
+  border-radius: 7px;
+  cursor: pointer;
+  color: #cbd5e1;
+  font-size: 13px;
+  border: 1px solid transparent;
+  transition: all 0.15s;
+}
+.tmpl-item:hover {
+  background: #0f172a;
+  border-color: #3b82f6;
+  color: #93c5fd;
+}
+.tmpl-item:first-child {
+  color: #86efac;
+  font-weight: 600;
+  border-color: #166534;
+  background: #052e16;
+  margin-bottom: 4px;
+}
+</style>
 </body>
 </html>
