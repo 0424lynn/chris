@@ -540,6 +540,63 @@ app.post('/api/ai-chat', async (req, res) => {
   }
 });
 
+// ── GitHub Auto Backup ─────────────────────────────────────────────────────────
+const GITHUB_TOKEN = process.env.GITHUB_BACKUP_TOKEN;
+const GITHUB_REPO  = process.env.GITHUB_BACKUP_REPO || '0424lynn/atosa-backups';
+
+async function backupToGitHub(silent = false) {
+  if (!GITHUB_TOKEN) return { ok: false, error: 'GITHUB_BACKUP_TOKEN not set' };
+  try {
+    const docs = await ModelData.find({}).lean();
+    const backup = {};
+    for (const doc of docs) backup[doc._id] = doc.data;
+    const json    = JSON.stringify(backup, null, 2);
+    const content = Buffer.from(json).toString('base64');
+    const today   = new Date().toISOString().slice(0, 10);
+    const headers = {
+      'Authorization': `Bearer ${GITHUB_TOKEN}`,
+      'Accept':        'application/vnd.github.v3+json',
+      'Content-Type':  'application/json',
+      'User-Agent':    'atosa-backup-bot'
+    };
+
+    // Write two files: latest.json (always overwrite) + backups/YYYY-MM-DD.json
+    const files = [
+      'latest.json',
+      `backups/backup-${today}.json`
+    ];
+
+    for (const filepath of files) {
+      const apiUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/${filepath}`;
+      // Get existing SHA if file exists
+      let sha = null;
+      const check = await fetch(apiUrl, { headers });
+      if (check.ok) { const d = await check.json(); sha = d.sha; }
+
+      const body = { message: `Auto backup ${new Date().toISOString()}`, content, ...(sha ? { sha } : {}) };
+      const res  = await fetch(apiUrl, { method: 'PUT', headers, body: JSON.stringify(body) });
+      if (!res.ok) { const e = await res.json(); throw new Error(e.message); }
+    }
+
+    if (!silent) console.log(`[Backup] GitHub backup OK — ${today}`);
+    return { ok: true, date: today };
+  } catch (e) {
+    console.error('[Backup] GitHub backup failed:', e.message);
+    return { ok: false, error: e.message };
+  }
+}
+
+// Manual backup endpoint
+app.post('/api/admin/backup-github', superAdminOnly, async (req, res) => {
+  const result = await backupToGitHub();
+  res.json(result);
+});
+
+// Auto backup every 24 hours
+setInterval(() => backupToGitHub(true), 24 * 60 * 60 * 1000);
+// Also run once on startup (after 10s delay to let DB connect)
+setTimeout(() => backupToGitHub(true), 10000);
+
 // ── Excel Import / Export ──────────────────────────────────────────────────────
 const XLSX = require('xlsx');
 

@@ -280,6 +280,10 @@
           style="background:#14532d;color:#86efac;border:1px solid #16a34a;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap;">
     💾 Export Backup
   </button>
+  <button onclick="backupToGitHub(this)" title="Backup all data to GitHub now"
+          style="background:#1c1c2e;color:#c084fc;border:1px solid #7c3aed;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap;">
+    ☁️ Backup to GitHub
+  </button>
   <button onclick="downloadTemplate()" title="Download Excel import template"
           style="background:#1e3a5f;color:#93c5fd;border:1px solid #3b82f6;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap;">
     📥 Download Template
@@ -565,6 +569,29 @@
       URL.revokeObjectURL(url);
     } catch(e) {
       alert('Export failed: ' + e.message);
+    }
+  }
+
+  // ── GitHub 备份 ───────────────────────────────────────────────
+  async function backupToGitHub(btn) {
+    const orig = btn.textContent;
+    btn.textContent = '⏳ Backing up...';
+    btn.disabled = true;
+    try {
+      const r = await fetch('/api/admin/backup-github', { method: 'POST' });
+      const d = await r.json();
+      if (d.ok) {
+        btn.textContent = '✅ Backed up!';
+        setTimeout(() => { btn.textContent = orig; btn.disabled = false; }, 3000);
+      } else {
+        alert('❌ Backup failed: ' + d.error);
+        btn.textContent = orig;
+        btn.disabled = false;
+      }
+    } catch(e) {
+      alert('❌ Error: ' + e.message);
+      btn.textContent = orig;
+      btn.disabled = false;
     }
   }
 
