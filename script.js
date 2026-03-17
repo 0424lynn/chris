@@ -718,6 +718,7 @@ const categoryPrefixes = {
   ice: ["YR", "HD350"],
   walkin: ["AWC"],
   display: ["RDCS"],
+  combi: ["AEC"],
 };
 
 let activeCategory = "all";
