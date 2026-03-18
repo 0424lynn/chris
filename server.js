@@ -35,14 +35,11 @@ const AnnouncementSchema = new mongoose.Schema({
 });
 const Announcement = mongoose.model('Announcement', AnnouncementSchema, 'announcement');
 
+// Ticker: stores array of announcements in a single doc
 const TickerSchema = new mongoose.Schema({
-  text:      { type: String, default: '' },
-  enabled:   { type: Boolean, default: false },
-  color:     { type: String, default: '#ef4444' },
-  fontSize:  { type: Number, default: 18 },
-  bold:      { type: Boolean, default: true },
+  items: { type: Array, default: [] },
   updatedAt: { type: Date, default: Date.now }
-});
+}, { strict: false });
 const Ticker = mongoose.model('Ticker', TickerSchema, 'ticker');
 
 const ModelMap = mongoose.model(
@@ -198,20 +195,41 @@ app.post('/api/announcement', async (req, res) => {
 });
 
 // ── API: Ticker ───────────────────────────────────────────────────────────────
+// GET /api/ticker?family=MSFmodelData  → returns items matching family (or global)
 app.get('/api/ticker', async (req, res) => {
   try {
-    const doc = await Ticker.findOne().sort({ updatedAt: -1 }).lean();
-    res.json({ text: doc?.text || '', enabled: doc?.enabled || false, color: doc?.color || '#ef4444', fontSize: doc?.fontSize || 18, bold: doc?.bold !== false });
+    const doc = await Ticker.findOne().lean();
+    const items = doc?.items || [];
+    const family = req.query.family || '';
+    // Filter: item.targets empty = global; otherwise must include requested family
+    const filtered = items.filter(it => {
+      if (!it.enabled) return false;
+      if (!it.targets || it.targets.length === 0) return true;
+      return family && it.targets.includes(family);
+    });
+    res.json({ items: filtered });
   } catch (e) {
-    res.json({ text: '', enabled: false, color: '#ef4444', fontSize: 18, bold: true });
+    res.json({ items: [] });
   }
 });
 
+// GET /api/ticker/all  → returns all items (for admin)
+app.get('/api/ticker/all', async (req, res) => {
+  if (req.session?.user?.role !== 'superAdmin') return res.status(403).json({ error: 'Forbidden' });
+  try {
+    const doc = await Ticker.findOne().lean();
+    res.json({ items: doc?.items || [] });
+  } catch (e) {
+    res.json({ items: [] });
+  }
+});
+
+// POST /api/ticker  → save all items
 app.post('/api/ticker', async (req, res) => {
   if (req.session?.user?.role !== 'superAdmin') return res.status(403).json({ error: 'Forbidden' });
-  const { text, enabled, color, fontSize, bold } = req.body;
+  const { items } = req.body;
   try {
-    await Ticker.findOneAndUpdate({}, { text, enabled, color, fontSize, bold, updatedAt: new Date() }, { upsert: true, new: true });
+    await Ticker.findOneAndUpdate({}, { items: items || [], updatedAt: new Date() }, { upsert: true, new: true });
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ error: e.message });

@@ -405,42 +405,16 @@
 <!-- Edit modal -->
 <!-- Ticker Modal -->
 <div id="tickerOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:3000;align-items:center;justify-content:center;">
-  <div style="background:#1e293b;border-radius:12px;padding:28px 28px 20px;width:500px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,.5);">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
-      <span style="font-size:16px;font-weight:700;color:#f1f5f9;">📢 滚动公告条</span>
+  <div style="background:#1e293b;border-radius:12px;padding:24px;width:660px;max-width:96vw;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.5);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <span style="font-size:16px;font-weight:700;color:#f1f5f9;">📢 Announcements</span>
       <button onclick="closeTickerModal()" style="background:none;border:none;color:#94a3b8;font-size:20px;cursor:pointer;">✕</button>
     </div>
-    <textarea id="tickerInput" rows="3" placeholder="输入滚动公告内容..." style="width:100%;border:1px solid #334155;border-radius:8px;padding:10px;font-size:14px;background:#0f172a;color:#f1f5f9;resize:vertical;outline:none;margin-bottom:14px;font-family:inherit;"></textarea>
-    <div style="display:flex;align-items:center;gap:16px;margin-bottom:14px;flex-wrap:wrap;">
-      <label style="color:#94a3b8;font-size:13px;display:flex;align-items:center;gap:6px;">
-        颜色
-        <input type="color" id="tickerColor" value="#ef4444" style="width:36px;height:28px;border:none;border-radius:4px;cursor:pointer;background:none;">
-      </label>
-      <label style="color:#94a3b8;font-size:13px;display:flex;align-items:center;gap:6px;">
-        字号
-        <select id="tickerFontSize" style="background:#0f172a;color:#f1f5f9;border:1px solid #334155;border-radius:6px;padding:4px 8px;font-size:13px;">
-          <option value="14">14px</option>
-          <option value="16">16px</option>
-          <option value="18" selected>18px</option>
-          <option value="20">20px</option>
-          <option value="24">24px</option>
-          <option value="28">28px</option>
-        </select>
-      </label>
-      <label style="display:flex;align-items:center;gap:6px;color:#94a3b8;font-size:13px;cursor:pointer;">
-        <input type="checkbox" id="tickerBold" checked style="width:15px;height:15px;cursor:pointer;">
-        加粗
-      </label>
-    </div>
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
-      <label style="display:flex;align-items:center;gap:8px;color:#cbd5e1;font-size:14px;cursor:pointer;">
-        <input type="checkbox" id="tickerEnabled" style="width:16px;height:16px;cursor:pointer;">
-        发布（勾选=显示，取消=隐藏）
-      </label>
-    </div>
-    <div style="display:flex;justify-content:flex-end;gap:10px;">
-      <button onclick="closeTickerModal()" style="padding:8px 18px;border:1px solid #334155;border-radius:8px;background:none;color:#94a3b8;cursor:pointer;">取消</button>
-      <button onclick="saveTicker()" style="padding:8px 18px;border:none;border-radius:8px;background:#dc2626;color:#fff;font-weight:600;cursor:pointer;">保存</button>
+    <div id="tickerItemsList"></div>
+    <button onclick="addTickerItem()" style="width:100%;padding:8px;border:1px dashed #475569;border-radius:8px;background:none;color:#64748b;cursor:pointer;font-size:13px;margin-top:8px;">+ Add Announcement</button>
+    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:16px;">
+      <button onclick="closeTickerModal()" style="padding:8px 18px;border:1px solid #334155;border-radius:8px;background:none;color:#94a3b8;cursor:pointer;">Cancel</button>
+      <button onclick="saveTicker()" style="padding:8px 18px;border:none;border-radius:8px;background:#dc2626;color:#fff;font-weight:600;cursor:pointer;">Save All</button>
     </div>
   </div>
 </div>
@@ -523,35 +497,100 @@
   })();
 
   // ── Sync Model Registry ───────────────────────────────────────────────────────
+  let _allFamilies = [];
+
   async function openTickerModal() {
+    // Load all families for the target selector
     try {
-      const r = await fetch('/api/ticker');
+      const fr = await fetch('/api/admin/families');
+      _allFamilies = fr.ok ? await fr.json() : [];
+    } catch(e) { _allFamilies = []; }
+
+    // Load existing ticker items
+    try {
+      const r = await fetch('/api/ticker/all');
       const d = await r.json();
-      document.getElementById('tickerInput').value = d.text || '';
-      document.getElementById('tickerEnabled').checked = d.enabled || false;
-      document.getElementById('tickerColor').value = d.color || '#ef4444';
-      document.getElementById('tickerFontSize').value = d.fontSize || 18;
-      document.getElementById('tickerBold').checked = d.bold !== false;
+      const list = document.getElementById('tickerItemsList');
+      list.innerHTML = '';
+      (d.items || []).forEach(it => addTickerItem(it));
     } catch(e) {}
     document.getElementById('tickerOverlay').style.display = 'flex';
   }
+
   function closeTickerModal() {
     document.getElementById('tickerOverlay').style.display = 'none';
   }
+
+  function addTickerItem(item = {}) {
+    const list = document.getElementById('tickerItemsList');
+    const id = item.id || Date.now().toString() + Math.random().toString(36).slice(2);
+    const targets = item.targets || [];
+    const dashSel = targets.includes('__dashboard__') ? 'selected' : '';
+    const familyOptions = `<option value="__dashboard__" ${dashSel}>📊 Dashboard</option>` +
+      _allFamilies.map(f => {
+        const label = f.key.replace('modelData','');
+        const sel = targets.includes(f.key) ? 'selected' : '';
+        return `<option value="${f.key}" ${sel}>${label}</option>`;
+      }).join('');
+
+    const div = document.createElement('div');
+    div.dataset.tickerId = id;
+    div.style.cssText = 'background:#0f172a;border:1px solid #334155;border-radius:10px;padding:14px;margin-bottom:12px;';
+    div.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <label style="display:flex;align-items:center;gap:8px;color:#cbd5e1;font-size:13px;cursor:pointer;">
+          <input type="checkbox" class="ti-enabled" ${item.enabled ? 'checked' : ''} style="width:15px;height:15px;">
+          <span style="font-weight:600;">Published</span>
+        </label>
+        <button onclick="this.closest('[data-ticker-id]').remove()" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:16px;">✕</button>
+      </div>
+      <textarea class="ti-text" rows="2" placeholder="Announcement text..." style="width:100%;border:1px solid #334155;border-radius:7px;padding:8px;font-size:13px;background:#1e293b;color:#f1f5f9;resize:vertical;outline:none;margin-bottom:10px;font-family:inherit;">${esc(item.text||'')}</textarea>
+      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:10px;">
+        <label style="color:#94a3b8;font-size:12px;display:flex;align-items:center;gap:5px;">Color
+          <input type="color" class="ti-color" value="${item.color||'#ef4444'}" style="width:32px;height:26px;border:none;border-radius:4px;cursor:pointer;">
+        </label>
+        <label style="color:#94a3b8;font-size:12px;display:flex;align-items:center;gap:5px;">Size
+          <select class="ti-size" style="background:#1e293b;color:#f1f5f9;border:1px solid #334155;border-radius:5px;padding:3px 6px;font-size:12px;">
+            ${[14,16,18,20,24,28].map(s=>`<option value="${s}" ${(item.fontSize||18)==s?'selected':''}>${s}px</option>`).join('')}
+          </select>
+        </label>
+        <label style="color:#94a3b8;font-size:12px;display:flex;align-items:center;gap:5px;cursor:pointer;">
+          <input type="checkbox" class="ti-bold" ${item.bold!==false?'checked':''} style="width:13px;height:13px;"> Bold
+        </label>
+      </div>
+      <div>
+        <div style="color:#94a3b8;font-size:12px;margin-bottom:5px;">🎯 Show on product pages: <span style="color:#64748b;">(leave empty = show on all pages)</span></div>
+        <select class="ti-targets" multiple style="width:100%;background:#1e293b;color:#f1f5f9;border:1px solid #334155;border-radius:7px;padding:6px;font-size:12px;height:90px;">
+          ${familyOptions}
+        </select>
+        <div style="color:#475569;font-size:11px;margin-top:3px;">Hold Ctrl/Cmd to select multiple. Deselect all = show on all pages.</div>
+      </div>
+    `;
+    list.appendChild(div);
+  }
+
   async function saveTicker() {
-    const text     = document.getElementById('tickerInput').value.trim();
-    const enabled  = document.getElementById('tickerEnabled').checked;
-    const color    = document.getElementById('tickerColor').value;
-    const fontSize = parseInt(document.getElementById('tickerFontSize').value);
-    const bold     = document.getElementById('tickerBold').checked;
+    const items = [];
+    document.querySelectorAll('#tickerItemsList [data-ticker-id]').forEach(div => {
+      const targets = [...div.querySelector('.ti-targets').selectedOptions].map(o => o.value);
+      items.push({
+        id:       div.dataset.tickerId,
+        text:     div.querySelector('.ti-text').value.trim(),
+        enabled:  div.querySelector('.ti-enabled').checked,
+        color:    div.querySelector('.ti-color').value,
+        fontSize: parseInt(div.querySelector('.ti-size').value),
+        bold:     div.querySelector('.ti-bold').checked,
+        targets
+      });
+    });
     const r = await fetch('/api/ticker', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text, enabled, color, fontSize, bold })
+      body: JSON.stringify({ items })
     });
     const d = await r.json();
-    if (d.ok) { alert(enabled ? '✅ 已发布！' : '✅ 已隐藏。'); closeTickerModal(); }
-    else alert('保存失败：' + (d.error || '未知错误'));
+    if (d.ok) { alert('✅ Saved!'); closeTickerModal(); }
+    else alert('Save failed: ' + (d.error || 'unknown error'));
   }
 
   async function exportAllData() {

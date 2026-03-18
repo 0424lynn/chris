@@ -1099,16 +1099,33 @@
     <script>
     (async () => {
       try {
-        const r = await fetch('/api/ticker');
+        // Get family key from URL model param via modelmap
+        const urlModel = new URLSearchParams(location.search).get('model') || '';
+        let familyKey = '';
+        try {
+          const mm = await fetch('/api/modelmap');
+          if (mm.ok) {
+            const map = await mm.json();
+            const fileKey = map[urlModel];
+            familyKey = fileKey ? fileKey.replace('.json','') : '';
+          }
+        } catch(e) {}
+
+        const r = await fetch('/api/ticker' + (familyKey ? '?family=' + encodeURIComponent(familyKey) : ''));
         const d = await r.json();
-        if (d.enabled && d.text.trim()) {
-          const el = document.getElementById('tickerText');
-          el.textContent = d.text;
-          el.style.color      = d.color    || '#ef4444';
-          el.style.fontSize   = (d.fontSize || 18) + 'px';
-          el.style.fontWeight = d.bold !== false ? '700' : '400';
-          document.getElementById('tickerBar').classList.add('show');
-        }
+        const items = d.items || [];
+        if (!items.length) return;
+
+        const bar = document.getElementById('tickerBar');
+        const track = document.getElementById('tickerText');
+        // Use first matching item's style; join all texts with separator
+        const first = items[0];
+        const combined = items.map(it => it.text).join('   ·   ');
+        track.textContent = combined;
+        track.style.color      = first.color    || '#ef4444';
+        track.style.fontSize   = (first.fontSize || 18) + 'px';
+        track.style.fontWeight = first.bold !== false ? '700' : '400';
+        bar.classList.add('show');
       } catch(e) {}
     })();
     </script>

@@ -529,16 +529,17 @@
   // ── 滚动公告条 ──
   (async () => {
     try {
-      const r = await fetch('/api/ticker');
+      const r = await fetch('/api/ticker?family=__dashboard__');
       const d = await r.json();
-      if (d.enabled && d.text.trim()) {
-        const el = document.getElementById('tickerText');
-        el.textContent = d.text;
-        el.style.color      = d.color    || '#ef4444';
-        el.style.fontSize   = (d.fontSize || 18) + 'px';
-        el.style.fontWeight = d.bold !== false ? '700' : '400';
-        document.getElementById('tickerBar').classList.add('show');
-      }
+      const items = d.items || [];
+      if (!items.length) return;
+      const first = items[0];
+      const el = document.getElementById('tickerText');
+      el.textContent = items.map(it => it.text).join('   ·   ');
+      el.style.color      = first.color    || '#ef4444';
+      el.style.fontSize   = (first.fontSize || 18) + 'px';
+      el.style.fontWeight = first.bold !== false ? '700' : '400';
+      document.getElementById('tickerBar').classList.add('show');
     } catch (e) {}
   })();
   </script>
