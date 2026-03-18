@@ -617,6 +617,49 @@ app.post('/api/admin/backup-github', superAdminOnly, async (req, res) => {
   res.json(result);
 });
 
+// List available backups from GitHub
+app.get('/api/admin/backup-list', superAdminOnly, async (req, res) => {
+  if (!GITHUB_TOKEN) return res.json({ ok: false, error: 'GITHUB_BACKUP_TOKEN not set' });
+  try {
+    const headers = { 'Authorization': `Bearer ${GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'atosa-backup-bot' };
+    const listRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/backups`, { headers });
+    const files = listRes.ok ? await listRes.json() : [];
+    const list = Array.isArray(files)
+      ? files
+          .filter(f => f.name.match(/backup-\d{4}-\d{2}-\d{2}\.json/))
+          .map(f => ({ name: f.name, date: f.name.replace('backup-','').replace('.json',''), path: f.path }))
+          .sort((a, b) => b.date.localeCompare(a.date))
+      : [];
+    // Always add latest.json at top
+    list.unshift({ name: 'latest.json', date: 'Latest', path: 'latest.json' });
+    res.json({ ok: true, list });
+  } catch (e) { res.json({ ok: false, error: e.message }); }
+});
+
+// Restore from a GitHub backup file
+app.post('/api/admin/restore-github', superAdminOnly, async (req, res) => {
+  if (!GITHUB_TOKEN) return res.json({ ok: false, error: 'GITHUB_BACKUP_TOKEN not set' });
+  const { path: filePath } = req.body;
+  if (!filePath) return res.json({ ok: false, error: 'No file path provided' });
+  try {
+    const headers = { 'Authorization': `Bearer ${GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'atosa-backup-bot' };
+    const fileRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${filePath}`, { headers });
+    if (!fileRes.ok) return res.json({ ok: false, error: 'File not found' });
+    const fileData = await fileRes.json();
+    const json = Buffer.from(fileData.content, 'base64').toString('utf8');
+    const backup = JSON.parse(json);
+
+    // Restore all families into MongoDB
+    let count = 0;
+    for (const [key, data] of Object.entries(backup)) {
+      await ModelData.findByIdAndUpdate(key, { _id: key, data }, { upsert: true, new: true });
+      count++;
+    }
+    invalidateCache();
+    res.json({ ok: true, restored: count, from: filePath });
+  } catch (e) { res.json({ ok: false, error: e.message }); }
+});
+
 // Auto backup every 24 hours
 setInterval(() => backupToGitHub(true), 24 * 60 * 60 * 1000);
 // Also run once on startup (after 10s delay to let DB connect)

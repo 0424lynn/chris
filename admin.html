@@ -284,6 +284,10 @@
           style="background:#1c1c2e;color:#c084fc;border:1px solid #7c3aed;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap;">
     ☁️ Backup to GitHub
   </button>
+  <button onclick="openRestoreModal()" title="Restore data from a GitHub backup"
+          style="background:#1c1c2e;color:#fb923c;border:1px solid #ea580c;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap;">
+    🔁 Restore from GitHub
+  </button>
   <button onclick="downloadTemplate()" title="Download Excel import template"
           style="background:#1e3a5f;color:#93c5fd;border:1px solid #3b82f6;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap;">
     📥 Download Template
@@ -646,6 +650,69 @@
       alert('❌ 导入出错：' + e.message);
     }
     event.target.value = '';
+  }
+
+  // ── Restore from GitHub ──────────────────────────────────────
+  async function openRestoreModal() {
+    const overlay = document.getElementById('restoreOverlay');
+    const list    = document.getElementById('restoreFileList');
+    list.innerHTML = '<div style="color:#94a3b8;padding:12px;">Loading backup list...</div>';
+    overlay.style.display = 'flex';
+    try {
+      const r = await fetch('/api/admin/backup-list');
+      const d = await r.json();
+      if (!d.ok || !d.list.length) {
+        list.innerHTML = '<div style="color:#f87171;padding:12px;">No backups found.</div>';
+        return;
+      }
+      list.innerHTML = d.list.map(f => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid #1e293b;cursor:pointer;transition:background 0.15s;"
+             onmouseover="this.style.background='#1e293b'" onmouseout="this.style.background=''"
+             onclick="confirmRestore('${f.path}','${f.date}')">
+          <span style="color:#e2e8f0;font-size:14px;">📄 ${f.date === 'Latest' ? '⭐ latest.json (most recent)' : f.date}</span>
+          <span style="color:#60a5fa;font-size:12px;">Restore →</span>
+        </div>`).join('');
+    } catch(e) {
+      list.innerHTML = `<div style="color:#f87171;padding:12px;">Error: ${e.message}</div>`;
+    }
+  }
+
+  function closeRestoreModal() {
+    document.getElementById('restoreOverlay').style.display = 'none';
+  }
+
+  async function confirmRestore(filePath, label) {
+    if (!confirm(`⚠️ Restore from backup: "${label}"?\n\nThis will OVERWRITE all current data in the database.\nMake sure you have a current backup first.`)) return;
+    closeRestoreModal();
+    const toast = document.createElement('div');
+    toast.style = 'position:fixed;bottom:24px;right:24px;background:#1e3a5f;color:#93c5fd;padding:14px 20px;border-radius:10px;font-size:14px;z-index:9999;border:1px solid #2563eb;';
+    toast.textContent = '⏳ Restoring data...';
+    document.body.appendChild(toast);
+    try {
+      const r = await fetch('/api/admin/restore-github', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: filePath })
+      });
+      const d = await r.json();
+      if (d.ok) {
+        toast.style.background = '#14532d';
+        toast.style.color = '#86efac';
+        toast.style.borderColor = '#16a34a';
+        toast.textContent = `✅ Restored ${d.restored} families from ${label}`;
+        setTimeout(() => { toast.remove(); location.reload(); }, 2500);
+      } else {
+        toast.style.background = '#7f1d1d';
+        toast.style.color = '#fca5a5';
+        toast.textContent = '❌ Restore failed: ' + d.error;
+        setTimeout(() => toast.remove(), 4000);
+      }
+    } catch(e) {
+      toast.style.background = '#7f1d1d';
+      toast.style.color = '#fca5a5';
+      toast.textContent = '❌ Error: ' + e.message;
+      setTimeout(() => toast.remove(), 4000);
+    }
   }
 
   async function syncRegistry() {
@@ -1778,5 +1845,22 @@
   margin-bottom: 4px;
 }
 </style>
+
+<!-- Restore from GitHub Modal -->
+<div id="restoreOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9000;align-items:center;justify-content:center;">
+  <div style="background:#0f172a;border:1px solid #334155;border-radius:12px;width:480px;max-width:95vw;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+    <div style="padding:18px 20px;border-bottom:1px solid #1e293b;display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div style="color:#f97316;font-size:16px;font-weight:700;">🔁 Restore from GitHub Backup</div>
+        <div style="color:#64748b;font-size:12px;margin-top:3px;">Select a backup file to restore. This will overwrite current data.</div>
+      </div>
+      <button onclick="closeRestoreModal()" style="background:none;border:none;color:#64748b;font-size:20px;cursor:pointer;line-height:1;">✕</button>
+    </div>
+    <div id="restoreFileList" style="overflow-y:auto;flex:1;"></div>
+    <div style="padding:12px 16px;border-top:1px solid #1e293b;text-align:right;">
+      <button onclick="closeRestoreModal()" style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:7px 18px;border-radius:6px;font-size:13px;cursor:pointer;">Cancel</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
