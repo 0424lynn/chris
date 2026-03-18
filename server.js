@@ -578,6 +578,31 @@ async function backupToGitHub(silent = false) {
       if (!res.ok) { const e = await res.json(); throw new Error(e.message); }
     }
 
+    // Clean up backup files older than 30 days
+    try {
+      const listUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/backups`;
+      const listRes = await fetch(listUrl, { headers });
+      if (listRes.ok) {
+        const files = await listRes.json();
+        const cutoff = new Date();
+        cutoff.setDate(cutoff.getDate() - 30);
+        for (const file of files) {
+          // filename format: backup-YYYY-MM-DD.json
+          const match = file.name.match(/backup-(\d{4}-\d{2}-\d{2})\.json/);
+          if (match && new Date(match[1]) < cutoff) {
+            await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/backups/${file.name}`, {
+              method: 'DELETE',
+              headers,
+              body: JSON.stringify({ message: `Remove old backup ${file.name}`, sha: file.sha })
+            });
+            if (!silent) console.log(`[Backup] Deleted old backup: ${file.name}`);
+          }
+        }
+      }
+    } catch (cleanErr) {
+      console.warn('[Backup] Cleanup warning:', cleanErr.message);
+    }
+
     if (!silent) console.log(`[Backup] GitHub backup OK — ${today}`);
     return { ok: true, date: today };
   } catch (e) {
