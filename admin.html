@@ -276,21 +276,21 @@
           style="background:#7f1d1d;color:#fca5a5;border:1px solid #dc2626;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap;">
     📢 Ticker
   </button>
-  <button onclick="exportAllData()" title="Download all model data as JSON backup"
-          style="background:#14532d;color:#86efac;border:1px solid #16a34a;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap;">
-    💾 Export Backup
-  </button>
-  <button onclick="backupToGitHub(this)" title="Backup all data to GitHub now"
-          style="background:#1c1c2e;color:#c084fc;border:1px solid #7c3aed;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap;">
-    ☁️ Backup to GitHub
-  </button>
-  <button onclick="openRestoreModal()" title="Restore data from a GitHub backup"
-          style="background:#1c1c2e;color:#fb923c;border:1px solid #ea580c;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap;">
-    🔁 Restore from GitHub
-  </button>
+  <!-- Backup dropdown -->
+  <div style="position:relative;" id="backupDropdownWrap">
+    <button onclick="toggleBackupMenu()" style="background:#14532d;color:#86efac;border:1px solid #16a34a;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap;">
+      ☁️ Backup ▾
+    </button>
+    <div id="backupMenu" style="display:none;position:absolute;top:34px;left:0;background:#1e293b;border:1px solid #334155;border-radius:8px;min-width:210px;z-index:999;box-shadow:0 8px 24px rgba(0,0,0,0.4);overflow:hidden;">
+      <div onclick="exportAllData();closeBackupMenu()" style="padding:10px 16px;cursor:pointer;color:#86efac;font-size:13px;border-bottom:1px solid #334155;" onmouseover="this.style.background='#334155'" onmouseout="this.style.background=''">💾 Export Backup (JSON)</div>
+      <div onclick="backupToGitHubMenu();closeBackupMenu()" style="padding:10px 16px;cursor:pointer;color:#c084fc;font-size:13px;border-bottom:1px solid #334155;" onmouseover="this.style.background='#334155'" onmouseout="this.style.background=''">☁️ Backup to GitHub Now</div>
+      <div onclick="openRestoreModal();closeBackupMenu()" style="padding:10px 16px;cursor:pointer;color:#fb923c;font-size:13px;" onmouseover="this.style.background='#334155'" onmouseout="this.style.background=''">🔁 Restore from GitHub</div>
+    </div>
+  </div>
+  <!-- Excel -->
   <button onclick="downloadTemplate()" title="Download Excel import template"
           style="background:#1e3a5f;color:#93c5fd;border:1px solid #3b82f6;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap;">
-    📥 Download Template
+    📥 Template
   </button>
   <label title="Import data from Excel file" style="background:#312e81;color:#a5b4fc;border:1px solid #6366f1;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap;">
     📤 Import Excel
@@ -576,27 +576,39 @@
     }
   }
 
+  // ── Backup dropdown ──────────────────────────────────────────
+  function toggleBackupMenu() {
+    const m = document.getElementById('backupMenu');
+    m.style.display = m.style.display === 'none' ? 'block' : 'none';
+  }
+  function closeBackupMenu() {
+    document.getElementById('backupMenu').style.display = 'none';
+  }
+  document.addEventListener('click', e => {
+    if (!document.getElementById('backupDropdownWrap').contains(e.target)) closeBackupMenu();
+  });
+
   // ── GitHub 备份 ───────────────────────────────────────────────
-  async function backupToGitHub(btn) {
-    const orig = btn.textContent;
-    btn.textContent = '⏳ Backing up...';
-    btn.disabled = true;
+  async function backupToGitHubMenu() {
+    const toast = document.createElement('div');
+    toast.style = 'position:fixed;bottom:24px;right:24px;background:#1c1c2e;color:#c084fc;padding:14px 20px;border-radius:10px;font-size:14px;z-index:9999;border:1px solid #7c3aed;';
+    toast.textContent = '⏳ Backing up to GitHub...';
+    document.body.appendChild(toast);
     try {
       const r = await fetch('/api/admin/backup-github', { method: 'POST' });
       const d = await r.json();
       if (d.ok) {
-        btn.textContent = '✅ Backed up!';
-        setTimeout(() => { btn.textContent = orig; btn.disabled = false; }, 3000);
+        toast.style.background = '#14532d'; toast.style.color = '#86efac'; toast.style.borderColor = '#16a34a';
+        toast.textContent = '✅ Backed up to GitHub!';
       } else {
-        alert('❌ Backup failed: ' + d.error);
-        btn.textContent = orig;
-        btn.disabled = false;
+        toast.style.background = '#7f1d1d'; toast.style.color = '#fca5a5';
+        toast.textContent = '❌ Backup failed: ' + d.error;
       }
     } catch(e) {
-      alert('❌ Error: ' + e.message);
-      btn.textContent = orig;
-      btn.disabled = false;
+      toast.style.background = '#7f1d1d'; toast.style.color = '#fca5a5';
+      toast.textContent = '❌ Error: ' + e.message;
     }
+    setTimeout(() => toast.remove(), 3000);
   }
 
   // ── 下载Excel模板（动态从数据库生成）────────────────────────
