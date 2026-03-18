@@ -1582,7 +1582,7 @@
       document.getElementById('efModelList').innerHTML = '';
       // Render existing models
       Object.entries(_efData.models || {}).forEach(([code, info]) => {
-        addEfModel(code, info.title || '', info.image || '', info.diagram || '');
+        addEfModel(code, info.title || '', info.image || '', info.diagram || '', info.documents || []);
       });
       // Render common documents
       (_efData.common?.documents || []).forEach(doc => addEfDoc(doc.title, doc.url));
@@ -1676,7 +1676,7 @@
     }
   });
 
-  function addEfModel(code = '', title = '', imgUrl = '', diaUrl = '') {
+  function addEfModel(code = '', title = '', imgUrl = '', diaUrl = '', privateDocs = []) {
     const idx = _efModelCount++;
     const div = document.createElement('div');
     div.className = 'nf-model-card';
@@ -1709,9 +1709,33 @@
           </div>
         </div>
       </div>
+      <div style="margin-top:10px;">
+        <div style="font-size:11px;font-weight:700;color:#f97316;margin-bottom:6px;letter-spacing:.5px;">📎 PRIVATE DOCUMENTS <span style="font-weight:400;color:#94a3b8;">(this model only)</span></div>
+        <div class="model-private-docs"></div>
+        <button type="button" onclick="addPrivateDoc(this)" style="font-size:12px;padding:4px 10px;border:1px dashed #f97316;border-radius:5px;background:transparent;color:#f97316;cursor:pointer;margin-top:4px;">+ Add Private Document</button>
+      </div>
       <input type="file" accept="image/*" style="display:none" data-hidden-input/>
     `;
     document.getElementById('efModelList').appendChild(div);
+    // Load existing private docs
+    const docContainer = div.querySelector('.model-private-docs');
+    privateDocs.forEach(d => addPrivateDocRow(docContainer, d.title, d.url));
+  }
+
+  function addPrivateDoc(btn) {
+    const container = btn.previousElementSibling;
+    addPrivateDocRow(container);
+  }
+
+  function addPrivateDocRow(container, title = '', url = '') {
+    const row = document.createElement('div');
+    row.className = 'nf-doc-row';
+    row.innerHTML = `
+      <input type="text" placeholder="Document title" data-role="pdoc-title" value="${esc(title)}"/>
+      <input type="text" placeholder="URL (https://...)" data-role="pdoc-url" value="${esc(url)}"/>
+      <button class="nf-doc-remove" onclick="this.parentElement.remove()">✕</button>
+    `;
+    container.appendChild(row);
   }
 
   function addEfDoc(title = '', url = '') {
@@ -1754,11 +1778,19 @@
       if (!code || !title) { valid = false; return; }
       // Preserve any existing per-model issue overrides + issues array
       const existing = _efData?.models?.[code] || {};
+      // Collect private documents for this model
+      const privateDocs = [];
+      card.querySelectorAll('.model-private-docs .nf-doc-row').forEach(row => {
+        const t = row.querySelector('[data-role="pdoc-title"]').value.trim();
+        const u = row.querySelector('[data-role="pdoc-url"]').value.trim();
+        if (t && u) privateDocs.push({ title: t, url: u });
+      });
       modelsData[code] = {
         ...existing,
         title,
         image:   imgUrl,
         diagram: diaUrl,
+        ...(privateDocs.length ? { documents: privateDocs } : {}),
       };
       modelMapUpdates[code] = key;
     });
