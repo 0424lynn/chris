@@ -486,10 +486,11 @@
 
     <!-- Model-Specific Extras -->
     <div class="model-overrides-section">
-      <div class="model-overrides-title">📋 Model-Specific Extras
-        <span style="font-weight:400;color:#94a3b8;font-size:11px;margin-left:6px;">(appended after common steps, per model)</span>
+      <div class="model-overrides-title" onclick="toggleModelExtras(this)" style="cursor:pointer;user-select:none;">
+        <span id="modelExtrasArrow">▶</span> 📋 Model-Specific Extras
+        <span style="font-weight:400;color:#94a3b8;font-size:11px;margin-left:6px;">(click to expand)</span>
       </div>
-      <div id="modelOverridesList"></div>
+      <div id="modelOverridesList" style="display:none;"></div>
     </div>
 
     <div class="modal-footer">
@@ -975,7 +976,10 @@
           <input class="red-input" type="text" placeholder="⚠ Red note (optional)" value="${esc(red)}"/>
           <input class="video-input" type="text" placeholder="🎬 Video path (optional, e.g. /MGFMSF-Drawer-web.mp4)" value="${esc(video)}"/>
         </div>
-        ${subSteps !== '' || true ? `
+        <button type="button" class="substeps-toggle" onclick="toggleSubsteps(this)" style="margin-top:6px;font-size:11px;background:none;border:1px dashed #475569;color:#64748b;padding:2px 10px;border-radius:4px;cursor:pointer;">
+          ${subSteps ? '▶ Sub-steps (' + subSteps.split('\n\n').filter(s=>s.trim()).length + ')' : '▶ Add Sub-steps'}
+        </button>
+        <div class="substeps-body" style="display:none;">
           <div class="substeps-toolbar">
             <button type="button" onclick="openLinkPopup(this)">🔗 插入链接</button>
           </div>
@@ -987,8 +991,29 @@
           </div>
           <textarea class="step-substeps" placeholder="Sub-steps (blank line = new bullet, Enter = line break within same bullet)">${esc(subSteps)}</textarea>
           <span class="step-substeps-label">按两下 Enter = 新一条 &nbsp;·&nbsp; 按一下 Enter = 同一条内换行</span>
-        ` : ''}
+        </div>
       </div>`;
+  }
+
+  function toggleSubsteps(btn) {
+    const body = btn.nextElementSibling;
+    const isOpen = body.style.display !== 'none';
+    body.style.display = isOpen ? 'none' : 'block';
+    const ta = body.querySelector('.step-substeps');
+    const count = ta ? ta.value.split('\n\n').filter(s => s.trim()).length : 0;
+    btn.textContent = isOpen
+      ? (count ? `▶ Sub-steps (${count})` : '▶ Add Sub-steps')
+      : (count ? `▼ Sub-steps (${count})` : '▼ Add Sub-steps');
+    if (!isOpen) ta && ta.focus();
+  }
+
+  function toggleModelExtras(titleEl) {
+    const list = document.getElementById('modelOverridesList');
+    const arrow = document.getElementById('modelExtrasArrow');
+    const isOpen = list.style.display !== 'none';
+    list.style.display = isOpen ? 'none' : 'block';
+    arrow.textContent = isOpen ? '▶' : '▼';
+    titleEl.querySelector('span:last-child').textContent = isOpen ? '(click to expand)' : '(appended after common steps, per model)';
   }
 
   function openLinkPopup(btn) {
