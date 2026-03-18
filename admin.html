@@ -122,11 +122,11 @@
     }
     .step-card .row1 { display: flex; gap: 8px; align-items: flex-start; }
     .step-card .row1 textarea {
-      flex: 1; border: 1px solid #d1d5db; border-radius: 6px; padding: 7px 10px;
+      flex: 1; border: 1px solid #fb923c; border-radius: 6px; padding: 7px 10px;
       font-size: 14px; resize: vertical; min-height: 48px; font-family: Arial, sans-serif;
-      outline: none;
+      outline: none; background: #fff7ed;
     }
-    .step-card .row1 textarea:focus { border-color: #3b82f6; }
+    .step-card .row1 textarea:focus { border-color: #ea580c; background: #fff7ed; }
     .step-remove {
       background: none; border: none; color: #d1d5db; cursor: pointer;
       font-size: 16px; padding: 2px 5px; flex-shrink: 0; line-height: 1;
@@ -964,21 +964,25 @@
     const red      = typeof s === 'string' ? '' : (s.red   || '');
     const video    = typeof s === 'string' ? '' : (s.video || '');
     const subSteps = typeof s === 'string' ? '' : (s.steps ? s.steps.map(st => typeof st === 'string' ? st : (st.text || '')).join('\n\n') : '');
+    const hasExtras = red || video || subSteps;
+    const subCount  = subSteps ? subSteps.split('\n\n').filter(s=>s.trim()).length : 0;
+    const extraHint = [red ? '⚠ code' : '', video ? '🎬 video' : '', subCount ? `📝 ${subCount} sub-step${subCount>1?'s':''}` : ''].filter(Boolean).join(' · ');
     return `
       <div class="step-card" data-tier="${tier}" data-idx="${idx}">
         <div class="row1">
           <textarea placeholder="Step text..." oninput="updateCount('${tier}')">${esc(text)}</textarea>
           <button class="step-remove" onclick="removeStep(this)">✕</button>
         </div>
-        <span class="step-substeps-label">按 Enter = 换行</span>
-        <div class="step-extras">
-          <input class="red-input" type="text" placeholder="⚠ Red note (optional)" value="${esc(red)}"/>
-          <input class="video-input" type="text" placeholder="🎬 Video path (optional, e.g. /MGFMSF-Drawer-web.mp4)" value="${esc(video)}"/>
-        </div>
-        <button type="button" class="substeps-toggle" onclick="toggleSubsteps(this)" style="margin-top:6px;font-size:11px;background:none;border:1px dashed #475569;color:#64748b;padding:2px 10px;border-radius:4px;cursor:pointer;">
-          ${subSteps ? '▶ Sub-steps (' + subSteps.split('\n\n').filter(s=>s.trim()).length + ')' : '▶ Add Sub-steps'}
+        <button type="button" class="step-detail-toggle" onclick="toggleStepDetail(this)"
+          style="font-size:11px;background:none;border:none;color:#64748b;padding:2px 4px;cursor:pointer;text-align:left;width:100%;">
+          ${hasExtras ? `▶ ${extraHint}` : '▶ Add details (code / video / sub-steps)'}
         </button>
-        <div class="substeps-body" style="display:none;">
+        <div class="step-detail-body" style="display:none;">
+          <span class="step-substeps-label">按 Enter = 换行</span>
+          <div class="step-extras">
+            <input class="red-input" type="text" placeholder="⚠ Red note (optional)" value="${esc(red)}"/>
+            <input class="video-input" type="text" placeholder="🎬 Video path (optional, e.g. /MGFMSF-Drawer-web.mp4)" value="${esc(video)}"/>
+          </div>
           <div class="substeps-toolbar">
             <button type="button" onclick="openLinkPopup(this)">🔗 插入链接</button>
           </div>
@@ -992,6 +996,29 @@
           <span class="step-substeps-label">按两下 Enter = 新一条 &nbsp;·&nbsp; 按一下 Enter = 同一条内换行</span>
         </div>
       </div>`;
+  }
+
+  function toggleStepDetail(btn) {
+    const body = btn.nextElementSibling;
+    const isOpen = body.style.display !== 'none';
+    body.style.display = isOpen ? 'none' : 'block';
+    if (!isOpen) {
+      // Update hint text
+      const red   = body.querySelector('.red-input')?.value || '';
+      const video = body.querySelector('.video-input')?.value || '';
+      const ta    = body.querySelector('.step-substeps');
+      const count = ta ? ta.value.split('\n\n').filter(s => s.trim()).length : 0;
+      const hint  = [red ? '⚠ code' : '', video ? '🎬 video' : '', count ? `📝 ${count} sub-step${count>1?'s':''}` : ''].filter(Boolean).join(' · ');
+      btn.textContent = `▼ ${hint || 'details'}`;
+    } else {
+      // Rebuild hint on close
+      const red   = body.querySelector('.red-input')?.value || '';
+      const video = body.querySelector('.video-input')?.value || '';
+      const ta    = body.querySelector('.step-substeps');
+      const count = ta ? ta.value.split('\n\n').filter(s => s.trim()).length : 0;
+      const hint  = [red ? '⚠ code' : '', video ? '🎬 video' : '', count ? `📝 ${count} sub-step${count>1?'s':''}` : ''].filter(Boolean).join(' · ');
+      btn.textContent = hint ? `▶ ${hint}` : '▶ Add details (code / video / sub-steps)';
+    }
   }
 
   function toggleSubsteps(btn) {
@@ -1054,6 +1081,9 @@
 
   function removeStep(btn) {
     const card = btn.closest('.step-card');
+    const text = card.querySelector('.row1 textarea').value.trim();
+    const preview = text.length > 40 ? text.slice(0, 40) + '...' : text || '(empty)';
+    if (!confirm(`Delete this step?\n\n"${preview}"`)) return;
     const tier = card.dataset.tier;
     card.remove();
     updateCount(tier);
@@ -1210,7 +1240,7 @@
             <span>${mc}</span>${badge}
             <span class="model-override-arrow" id="marrow-${mc}">▼</span>
           </div>
-          <div class="model-override-body${count ? ' open' : ''}" id="mob-${mc}">
+          <div class="model-override-body" id="mob-${mc}">
             <div style="margin-bottom:12px;">
               <div class="tier-hd green" style="margin-bottom:6px;">🟢 Extra Overview <span class="tier-count" id="mcount-overview-${mc}"></span></div>
               <div id="msteps-overview-${mc}"></div>
@@ -1296,6 +1326,9 @@
 
   function removeModelStep(btn) {
     const card = btn.closest('.step-card');
+    const text = card.querySelector('.row1 textarea').value.trim();
+    const preview = text.length > 40 ? text.slice(0, 40) + '...' : text || '(empty)';
+    if (!confirm(`Delete this step?\n\n"${preview}"`)) return;
     card.remove();
     updateModelCount(card.dataset.model, card.dataset.tier);
   }
