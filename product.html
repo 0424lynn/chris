@@ -56,6 +56,18 @@
             border-radius: 12px !important;
             box-shadow: none !important;
         }
+        .diagram-box {
+            padding: 12px;
+            text-align: center;
+        }
+        .diagram-box img {
+            width: 100%;
+            max-width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 8px;
+            cursor: zoom-in;
+        }
 
         /* ── Header ── */
         .header-container {
@@ -1100,5 +1112,19 @@
       } catch(e) {}
     })();
     </script>
+
+<!-- Image zoom overlay -->
+<div id="imgZoomOverlay" onclick="this.style.display='none'" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;align-items:center;justify-content:center;cursor:zoom-out;">
+  <img id="imgZoomEl" src="" style="max-width:92vw;max-height:92vh;border-radius:10px;box-shadow:0 8px 40px rgba(0,0,0,0.6);">
+</div>
+<script>
+  document.querySelectorAll('.diagram-box img').forEach(img => {
+    img.addEventListener('click', () => {
+      const ov = document.getElementById('imgZoomOverlay');
+      document.getElementById('imgZoomEl').src = img.src;
+      ov.style.display = 'flex';
+    });
+  });
+</script>
 </body>
 </html>
