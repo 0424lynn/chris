@@ -271,6 +271,8 @@
       const res  = await fetch('/api/feedback');
       const data = await res.json();
       renderFeed(data);
+      // Mark all as read if admin
+      fetch('/api/feedback/mark-all-read', { method: 'POST' }).catch(()=>{});
     } catch {
       feed.innerHTML = '<div class="fb-empty">Failed to load suggestions.</div>';
     }

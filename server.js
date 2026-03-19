@@ -25,7 +25,8 @@ const ModelData = mongoose.model(
 const FeedbackSchema = new mongoose.Schema({
   text:   { type: String, required: true },
   author: { type: String, required: true },
-  ts:     { type: Number, required: true }
+  ts:     { type: Number, required: true },
+  read:   { type: Boolean, default: false }
 });
 const Feedback = mongoose.model('Feedback', FeedbackSchema, 'feedback');
 
@@ -237,11 +238,29 @@ app.post('/api/ticker', async (req, res) => {
 });
 
 // ── API: Feedback / Suggestions (MongoDB) ────────────────────────────────────
+app.get('/api/feedback/unread-count', async (req, res) => {
+  if (!req.session?.user) return res.status(401).json({ error: 'Unauthorized' });
+  try {
+    const count = await Feedback.countDocuments({ read: false });
+    res.json({ count });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/feedback/mark-all-read', async (req, res) => {
+  const role = req.session?.user?.role;
+  if (role !== 'superAdmin' && role !== 'normalAdmin')
+    return res.status(403).json({ error: 'Forbidden' });
+  try {
+    await Feedback.updateMany({ read: false }, { read: true });
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 app.get('/api/feedback', async (req, res) => {
   if (!req.session?.user) return res.status(401).json({ error: 'Unauthorized' });
   try {
     const items = await Feedback.find().sort({ ts: -1 }).lean();
-    res.json(items.map(i => ({ id: i._id, text: i.text, author: i.author, ts: i.ts })));
+    res.json(items.map(i => ({ id: i._id, text: i.text, author: i.author, ts: i.ts, read: i.read })));
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 

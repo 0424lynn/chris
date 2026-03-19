@@ -426,7 +426,7 @@
       </div>
       <div class="topbar">
         <a id="mapButton" href="https://salty-river-39081-77ca2b964755.herokuapp.com/" target="_blank" class="topbar-btn" style="display:none;">🗺 Tech Map</a>
-        <a href="feedback.html" class="topbar-btn primary">💬 Suggestions</a>
+        <a href="feedback.html" class="topbar-btn primary" id="suggestionsBtn" style="position:relative;">💬 Suggestions<span id="suggestionsBadge" style="display:none;position:absolute;top:-6px;right:-6px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;border-radius:999px;min-width:18px;height:18px;line-height:18px;text-align:center;padding:0 4px;"></span></a>
         <a id="adminBtn" href="admin.html" class="topbar-btn" style="display:none;">⚙️ Admin</a>
         <button id="logout" class="topbar-btn">🚪 Logout</button>
       </div>
@@ -525,6 +525,20 @@
     loadBookmarks();
   }
   document.addEventListener('DOMContentLoaded', loadBookmarks);
+
+  // ── Suggestions unread badge ──
+  (async () => {
+    try {
+      const r = await fetch('/api/feedback/unread-count');
+      if (!r.ok) return;
+      const { count } = await r.json();
+      const badge = document.getElementById('suggestionsBadge');
+      if (count > 0 && badge) {
+        badge.textContent = count > 99 ? '99+' : count;
+        badge.style.display = 'inline-block';
+      }
+    } catch(e) {}
+  })();
 
   // ── 滚动公告条 ──
   (async () => {
