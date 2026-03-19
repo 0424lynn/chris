@@ -113,6 +113,9 @@
         .problem-box ul li a {
             color: #60a5fa;
         }
+        .problem-box ul li a:visited {
+            color: #60a5fa;
+        }
         .problem-box ul li a:hover {
             color: #93c5fd;
             text-decoration: underline;
@@ -179,6 +182,9 @@
         #modelDocumentsList a, #commonDocumentsList a {
             color: #60a5fa;
             text-decoration: none;
+        }
+        #modelDocumentsList a:visited, #commonDocumentsList a:visited {
+            color: #60a5fa;
         }
         #modelDocumentsList a:hover, #commonDocumentsList a:hover {
             color: #93c5fd;
@@ -300,6 +306,18 @@
             border-left: 4px solid #3b82f6;
             color: #93c5fd;
         }
+        /* ── Content area links — always yellow, never purple ── */
+        .acc-bd a, .solution-content a {
+            color: #facc15 !important;
+            text-decoration: underline;
+        }
+        .acc-bd a:visited, .solution-content a:visited {
+            color: #facc15 !important;
+        }
+        .acc-bd a:hover, .solution-content a:hover {
+            color: #fde68a !important;
+        }
+
         /* Non-warranty — orange (dark theme) */
         #customerSolution .acc-hd {
             background: rgba(124,45,18,0.45);
