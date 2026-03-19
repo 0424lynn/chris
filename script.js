@@ -597,10 +597,10 @@ function checkSerialNumber() {
   // ── Production Location ──
   const loc = parsed.location || '';
   const locOk = VALID_LOCATIONS.includes(loc);
-  let locHint = loc === 'C' ? '✅ China' : loc === 'T' ? '✅ Taiwan' : '';
+  let locHint = loc === 'C' ? '✅ China' : loc === 'T' ? '✅ Thailand' : '';
   if (!locOk) {
     allOk = false;
-    locHint = loc ? `❌ "${loc}" invalid — only C (China) or T (Taiwan)` : `❌ Missing — should be C or T`;
+    locHint = loc ? `❌ "${loc}" invalid — only C (China) or T (Thailand)` : `❌ Missing — should be C or T`;
   }
   html += _serialRow('Production Location', loc || '—', locOk, locHint);
 
@@ -638,7 +638,7 @@ function checkSerialNumber() {
       <button onclick="document.getElementById('serialInput').value='${tryC}';checkSerialNumber();"
         style="margin:2px 4px;padding:3px 10px;border:1px solid rgba(59,130,246,0.50);border-radius:6px;background:rgba(37,99,235,0.20);color:#60a5fa;cursor:pointer;font-size:12px;font-weight:600;">Try C (China)</button>
       <button onclick="document.getElementById('serialInput').value='${tryT}';checkSerialNumber();"
-        style="margin:2px 4px;padding:3px 10px;border:1px solid rgba(74,222,128,0.40);border-radius:6px;background:rgba(6,78,59,0.30);color:#4ade80;cursor:pointer;font-size:12px;font-weight:600;">Try T (Taiwan)</button>
+        style="margin:2px 4px;padding:3px 10px;border:1px solid rgba(74,222,128,0.40);border-radius:6px;background:rgba(6,78,59,0.30);color:#4ade80;cursor:pointer;font-size:12px;font-weight:600;">Try T (Thailand)</button>
     </div>`;
   }
   if (!custOk && raw.length === TOTAL) {
