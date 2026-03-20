@@ -222,6 +222,7 @@
     <div class="fb-header">
       <a href="dashboard.html" class="fb-back">← Back</a>
       <h1 class="fb-title">💬 Team Suggestions</h1>
+      <button id="markAllReadBtn" onclick="markAllRead()" style="display:none;margin-left:auto;padding:6px 14px;background:#22c55e;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">✓ Mark all read</button>
     </div>
 
     <!-- Submit form -->
@@ -271,11 +272,19 @@
       const res  = await fetch('/api/feedback');
       const data = await res.json();
       renderFeed(data);
-      // Mark all as read if admin
-      fetch('/api/feedback/mark-all-read', { method: 'POST' }).catch(()=>{});
+      // Show mark-all-read button if there are unread items
+      const hasUnread = data.some(i => !i.read);
+      const btn = document.getElementById('markAllReadBtn');
+      if (btn) btn.style.display = hasUnread ? 'inline-block' : 'none';
     } catch {
       feed.innerHTML = '<div class="fb-empty">Failed to load suggestions.</div>';
     }
+  }
+
+  async function markAllRead() {
+    await fetch('/api/feedback/mark-all-read', { method: 'POST' });
+    document.getElementById('markAllReadBtn').style.display = 'none';
+    loadFeed();
   }
 
   function renderFeed(data) {
