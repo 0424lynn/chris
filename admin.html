@@ -268,13 +268,17 @@
   <a href="dashboard.html">← Dashboard</a>
   <span style="color:#475569">|</span>
   <h1>⚙️ Content Manager</h1>
-  <button onclick="syncRegistry()" title="Seed / update the Model Registry from the master list"
-          style="background:#1e3a5f;color:#93c5fd;border:1px solid #2563eb;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap;">
-    🔄 Sync Registry
-  </button>
   <button onclick="openTickerModal()"
           style="background:#7f1d1d;color:#fca5a5;border:1px solid #dc2626;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap;">
     📢 Ticker
+  </button>
+  <button onclick="openAnalyticsModal()"
+          style="background:#1e3a5f;color:#7dd3fc;border:1px solid #0284c7;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap;">
+    📊 Analytics
+  </button>
+  <button onclick="openAILogModal()"
+          style="background:#1a1a3e;color:#c4b5fd;border:1px solid #7c3aed;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap;">
+    🤖 AI Log
   </button>
   <!-- Backup dropdown -->
   <div style="position:relative;" id="backupDropdownWrap">
@@ -287,15 +291,19 @@
       <div onclick="openRestoreModal();closeBackupMenu()" style="padding:10px 16px;cursor:pointer;color:#fb923c;font-size:13px;" onmouseover="this.style.background='#334155'" onmouseout="this.style.background=''">🔁 Restore from GitHub</div>
     </div>
   </div>
-  <!-- Excel -->
-  <button onclick="downloadTemplate()" title="Download Excel import template"
-          style="background:#1e3a5f;color:#93c5fd;border:1px solid #3b82f6;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap;">
-    📥 Template
-  </button>
-  <label title="Import data from Excel file" style="background:#312e81;color:#a5b4fc;border:1px solid #6366f1;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap;">
-    📤 Import Excel
-    <input type="file" accept=".xlsx" onchange="importExcel(event)" style="display:none;">
-  </label>
+  <!-- Excel dropdown -->
+  <div style="position:relative;" id="excelDropdownWrap">
+    <button onclick="toggleExcelMenu()" style="background:#1e3a5f;color:#93c5fd;border:1px solid #3b82f6;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;white-space:nowrap;">
+      📊 Excel ▾
+    </button>
+    <div id="excelMenu" style="display:none;position:absolute;top:34px;right:0;background:#1e293b;border:1px solid #334155;border-radius:8px;min-width:200px;z-index:999;box-shadow:0 8px 24px rgba(0,0,0,0.4);overflow:hidden;">
+      <div onclick="downloadTemplate();closeExcelMenu()" style="padding:10px 16px;cursor:pointer;color:#93c5fd;font-size:13px;border-bottom:1px solid #334155;" onmouseover="this.style.background='#334155'" onmouseout="this.style.background=''">📥 Download Template</div>
+      <label style="display:block;padding:10px 16px;cursor:pointer;color:#a5b4fc;font-size:13px;margin:0;" onmouseover="this.style.background='#334155'" onmouseout="this.style.background=''">
+        📤 Import Excel
+        <input type="file" accept=".xlsx" onchange="importExcel(event);closeExcelMenu()" style="display:none;">
+      </label>
+    </div>
+  </div>
   <div class="topbar-right" id="topbarInfo">Loading...</div>
 </div>
 
@@ -614,6 +622,18 @@
       alert('Export failed: ' + e.message);
     }
   }
+
+  // ── Excel dropdown ───────────────────────────────────────────
+  function toggleExcelMenu() {
+    const m = document.getElementById('excelMenu');
+    m.style.display = m.style.display === 'none' ? 'block' : 'none';
+  }
+  function closeExcelMenu() {
+    document.getElementById('excelMenu').style.display = 'none';
+  }
+  document.addEventListener('click', e => {
+    if (!document.getElementById('excelDropdownWrap').contains(e.target)) closeExcelMenu();
+  });
 
   // ── Backup dropdown ──────────────────────────────────────────
   function toggleBackupMenu() {
@@ -2002,5 +2022,135 @@
     </div>
   </div>
 </div>
+
+<!-- Analytics Modal -->
+<div id="analyticsOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9000;align-items:center;justify-content:center;">
+  <div style="background:#1e293b;border:1px solid #334155;border-radius:12px;padding:28px;width:680px;max-width:95vw;max-height:85vh;overflow-y:auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+      <div style="color:#7dd3fc;font-size:17px;font-weight:700;">📊 Issue Analytics — Top Views</div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="resetAnalytics()" style="background:#7f1d1d;color:#fca5a5;border:1px solid #dc2626;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;">🗑 Reset</button>
+        <button onclick="document.getElementById('analyticsOverlay').style.display='none'" style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;">✕ Close</button>
+      </div>
+    </div>
+    <div id="analyticsBody" style="font-size:13px;color:#e2e8f0;">Loading...</div>
+  </div>
+</div>
+
+<!-- AI Chat Log Modal -->
+<div id="aiLogOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9000;align-items:center;justify-content:center;">
+  <div style="background:#1e293b;border:1px solid #334155;border-radius:12px;padding:28px;width:780px;max-width:95vw;max-height:88vh;display:flex;flex-direction:column;gap:0;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+      <div style="color:#c4b5fd;font-size:17px;font-weight:700;">🤖 AI Chat Log</div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="clearAILog()" style="background:#7f1d1d;color:#fca5a5;border:1px solid #dc2626;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;">🗑 Clear All</button>
+        <button onclick="document.getElementById('aiLogOverlay').style.display='none'" style="background:#1e293b;color:#94a3b8;border:1px solid #334155;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;">✕ Close</button>
+      </div>
+    </div>
+    <!-- Summary bar -->
+    <div id="aiLogSummary" style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap;"></div>
+    <!-- Log list -->
+    <div id="aiLogBody" style="overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:10px;font-size:13px;">Loading...</div>
+  </div>
+</div>
+
+<script>
+async function openAnalyticsModal() {
+  document.getElementById('analyticsOverlay').style.display = 'flex';
+  const body = document.getElementById('analyticsBody');
+  body.innerHTML = 'Loading...';
+  try {
+    const r = await fetch('/api/analytics/top');
+    const rows = await r.json();
+    if (!rows.length) { body.innerHTML = '<div style="color:#64748b;text-align:center;padding:30px;">No data yet. Views will appear here as users browse issues.</div>'; return; }
+    const max = rows[0].count || 1;
+    body.innerHTML = rows.map((row, i) => `
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #1e293b;">
+        <div style="width:24px;text-align:right;color:#64748b;font-size:12px;">${i+1}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:600;color:#f1f5f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${row.issueKey}</div>
+          <div style="font-size:11px;color:#64748b;">${row.family.replace('modelData','')}</div>
+        </div>
+        <div style="width:160px;">
+          <div style="background:#0f172a;border-radius:4px;height:6px;overflow:hidden;">
+            <div style="background:#0284c7;height:100%;width:${Math.round(row.count/max*100)}%;border-radius:4px;"></div>
+          </div>
+        </div>
+        <div style="width:40px;text-align:right;font-weight:700;color:#7dd3fc;">${row.count}</div>
+        <div style="width:80px;text-align:right;font-size:11px;color:#64748b;">${new Date(row.lastSeen).toLocaleDateString()}</div>
+      </div>`).join('');
+  } catch(e) { body.innerHTML = '<div style="color:#f87171;">Error: ' + e.message + '</div>'; }
+}
+
+async function resetAnalytics() {
+  if (!confirm('Reset all analytics data?')) return;
+  await fetch('/api/analytics/reset', { method: 'DELETE' });
+  openAnalyticsModal();
+}
+
+// ── AI Chat Log ───────────────────────────────────────────────────────────────
+async function openAILogModal() {
+  document.getElementById('aiLogOverlay').style.display = 'flex';
+  await loadAILog();
+}
+
+async function loadAILog() {
+  const body    = document.getElementById('aiLogBody');
+  const summary = document.getElementById('aiLogSummary');
+  body.innerHTML = 'Loading...';
+  summary.innerHTML = '';
+  try {
+    const r    = await fetch('/api/admin/ai-chat-log?limit=200');
+    const logs = await r.json();
+
+    if (!logs.length) {
+      body.innerHTML = '<div style="color:#475569;text-align:center;padding:40px;">No AI chat history yet.</div>';
+      return;
+    }
+
+    // Summary stats
+    const today = new Date(); today.setHours(0,0,0,0);
+    const todayCount = logs.filter(l => new Date(l.ts) >= today).length;
+    const userSet    = new Set(logs.map(l => l.username));
+    summary.innerHTML = `
+      <div style="background:rgba(124,58,237,0.12);border:1px solid rgba(124,58,237,0.25);border-radius:8px;padding:8px 14px;font-size:12px;color:#c4b5fd;">
+        <span style="font-size:18px;font-weight:700;color:#a78bfa;">${logs.length}</span><br>Total Questions
+      </div>
+      <div style="background:rgba(124,58,237,0.12);border:1px solid rgba(124,58,237,0.25);border-radius:8px;padding:8px 14px;font-size:12px;color:#c4b5fd;">
+        <span style="font-size:18px;font-weight:700;color:#a78bfa;">${todayCount}</span><br>Today
+      </div>
+      <div style="background:rgba(124,58,237,0.12);border:1px solid rgba(124,58,237,0.25);border-radius:8px;padding:8px 14px;font-size:12px;color:#c4b5fd;">
+        <span style="font-size:18px;font-weight:700;color:#a78bfa;">${userSet.size}</span><br>Users
+      </div>`;
+
+    // Log entries
+    body.innerHTML = logs.map(l => {
+      const d = new Date(l.ts);
+      const dateStr = d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const answerPreview = (l.answer || '').slice(0, 180) + ((l.answer || '').length > 180 ? '…' : '');
+      return `<div style="background:rgba(15,23,42,0.70);border:1px solid #1e293b;border-radius:10px;padding:14px 16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <span style="font-size:12px;font-weight:600;color:#a78bfa;">👤 ${escHtmlLog(l.username)}</span>
+          <span style="font-size:11px;color:#334155;">${dateStr}</span>
+        </div>
+        <div style="font-size:13px;color:#e2e8f0;font-weight:500;margin-bottom:6px;">❓ ${escHtmlLog(l.question)}</div>
+        <div style="font-size:12px;color:#64748b;line-height:1.5;border-top:1px solid #1e293b;padding-top:6px;">💬 ${escHtmlLog(answerPreview)}</div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    body.innerHTML = '<div style="color:#f87171;">Error: ' + e.message + '</div>';
+  }
+}
+
+async function clearAILog() {
+  if (!confirm('Clear all AI chat history? This cannot be undone.')) return;
+  await fetch('/api/admin/ai-chat-log', { method: 'DELETE' });
+  loadAILog();
+}
+
+function escHtmlLog(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
 </body>
 </html>

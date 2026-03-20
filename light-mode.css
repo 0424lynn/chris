@@ -1,0 +1,345 @@
+/* ================================================
+   ATOSA — Light Mode Overrides
+   Applied when <html> has class "light-mode"
+   ================================================ */
+
+/* ── Body / Background ── */
+html.light-mode body {
+  background: #e8f0f7 !important;
+  color: #1e293b !important;
+}
+html.light-mode body::before {
+  opacity: 0.05 !important;
+  filter: blur(60px) !important;
+}
+
+/* ── Product page: container & body bg ── */
+html.light-mode body.product-page {
+  background: #edf2f7 !important;
+}
+html.light-mode body.product-page .container {
+  background: rgba(255,255,255,0.88) !important;
+  border-color: rgba(0,0,0,0.09) !important;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.09) !important;
+}
+html.light-mode body.product-page body::before {
+  opacity: 0.04 !important;
+}
+
+/* ── Ticker bar ── */
+html.light-mode .ticker-bar {
+  background: #fef3c7 !important;
+  color: #b45309 !important;
+}
+
+/* ── Dashboard container ── */
+html.light-mode .container {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* ── Product page container ── */
+html.light-mode .container.product-container,
+html.light-mode div.container[style] {
+  background: rgba(255,255,255,0.82) !important;
+  border-color: rgba(0,0,0,0.10) !important;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.10) !important;
+}
+
+/* ── Header / Title ── */
+html.light-mode .header-container h1 {
+  color: #1e293b !important;
+}
+html.light-mode .header-container .sub {
+  color: #64748b !important;
+}
+html.light-mode .header-container {
+  border-bottom-color: rgba(0,0,0,0.10) !important;
+}
+
+/* ── Topbar buttons ── */
+html.light-mode .topbar-btn {
+  background: rgba(255,255,255,0.90) !important;
+  border-color: rgba(0,0,0,0.13) !important;
+  color: #374151 !important;
+}
+html.light-mode .topbar-btn:hover {
+  background: rgba(37,99,235,0.10) !important;
+  border-color: rgba(37,99,235,0.35) !important;
+  color: #1e40af !important;
+}
+html.light-mode .topbar-btn.primary {
+  background: linear-gradient(135deg,#2563eb,#7c3aed) !important;
+  color: #fff !important;
+}
+html.light-mode #logout { color: #dc2626 !important; }
+html.light-mode #logout:hover {
+  background: rgba(239,68,68,0.12) !important;
+  color: #dc2626 !important;
+}
+
+/* ── Back home button (product page) ── */
+html.light-mode .back-home-button {
+  background: rgba(255,255,255,0.90) !important;
+  border-color: rgba(0,0,0,0.13) !important;
+  color: #374151 !important;
+}
+html.light-mode .back-home-button:hover {
+  background: rgba(37,99,235,0.10) !important;
+  color: #1e40af !important;
+}
+
+/* ── Announcement bar ── */
+html.light-mode .announcement-bar {
+  background: rgba(255,255,255,0.92) !important;
+  border-color: rgba(245,158,11,0.35) !important;
+  border-left-color: #f59e0b !important;
+}
+html.light-mode .announcement-bar h2 { color: #b45309 !important; }
+html.light-mode .announcement-content { color: #92400e !important; }
+html.light-mode .close-btn { color: #94a3b8 !important; }
+html.light-mode .close-btn:hover { color: #374151 !important; }
+html.light-mode #announcementEdit {
+  background: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  color: #1e293b !important;
+}
+
+/* ── Search + Serial box ── */
+html.light-mode .search-serial-row {
+  background: rgba(255,255,255,0.88) !important;
+  border-color: rgba(0,0,0,0.10) !important;
+}
+html.light-mode .col-label { color: #64748b !important; }
+html.light-mode .col-divider { background: rgba(0,0,0,0.08) !important; }
+html.light-mode #searchInput,
+html.light-mode #serialInput {
+  background: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  color: #1e293b !important;
+}
+html.light-mode #searchInput::placeholder,
+html.light-mode #serialInput::placeholder { color: #94a3b8 !important; }
+html.light-mode .serial-hint { color: #64748b !important; }
+html.light-mode #clearSerialBtn {
+  background: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+  color: #64748b !important;
+}
+
+/* ── Category tabs ── */
+html.light-mode .cat-tab {
+  background: rgba(255,255,255,0.88) !important;
+  border-color: rgba(37,99,235,0.30) !important;
+  color: #2563eb !important;
+}
+html.light-mode .cat-tab:hover {
+  background: rgba(37,99,235,0.08) !important;
+}
+html.light-mode .cat-tab.active {
+  background: linear-gradient(135deg,#2563eb,#7c3aed) !important;
+  color: #fff !important;
+}
+
+/* ── Product list links ── */
+html.light-mode #productList a { color: #2563eb !important; }
+html.light-mode #productList a:hover { color: #1d4ed8 !important; }
+
+/* ── Recent history / bookmarks ── */
+html.light-mode .recent-history,
+html.light-mode .bookmarks-bar { color: #475569 !important; }
+html.light-mode .recent-tag {
+  background: rgba(241,245,249,0.95) !important;
+  border-color: rgba(0,0,0,0.10) !important;
+  color: #475569 !important;
+}
+html.light-mode .recent-tag:hover {
+  background: rgba(37,99,235,0.10) !important;
+  color: #1e40af !important;
+}
+html.light-mode .bookmark-tag {
+  background: rgba(255,251,235,0.95) !important;
+  border-color: rgba(245,158,11,0.30) !important;
+  color: #92400e !important;
+}
+
+/* ── Global search bar ── */
+html.light-mode #globalSearchBar {
+  background: rgba(255,255,255,0.88) !important;
+  border-color: rgba(0,0,0,0.10) !important;
+}
+html.light-mode #globalSearchInput {
+  background: transparent !important;
+  color: #1e293b !important;
+}
+html.light-mode #globalSearchInput::placeholder { color: #94a3b8 !important; }
+html.light-mode #globalSearchResults {
+  background: #ffffff !important;
+  border-color: rgba(0,0,0,0.12) !important;
+}
+html.light-mode .gs-item { color: #1e293b !important; border-bottom-color: rgba(0,0,0,0.06) !important; }
+html.light-mode .gs-item:hover { background: rgba(37,99,235,0.06) !important; }
+
+/* ── Recent Updates bar ── */
+html.light-mode .updates-bar {
+  background: rgba(240,253,244,0.97) !important;
+  border-color: rgba(52,211,153,0.35) !important;
+}
+html.light-mode .chip-time { color: #9ca3af !important; }
+
+/* ── AI Chat panel ── */
+html.light-mode #aiChatPanel {
+  background: #f8fafc !important;
+  border-color: rgba(0,0,0,0.12) !important;
+}
+html.light-mode .ai-msg.bot {
+  background: #e2e8f0 !important;
+  color: #1e293b !important;
+}
+html.light-mode #aiInput {
+  background: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  color: #1e293b !important;
+}
+
+/* ================================================
+   Product Page Specific
+   ================================================ */
+
+/* ── Frame cards ── */
+html.light-mode .frame {
+  background: rgba(255,255,255,0.90) !important;
+  border-color: rgba(0,0,0,0.10) !important;
+}
+
+/* ── Problem box (sidebar) ── */
+html.light-mode .problem-box {
+  background: rgba(255,255,255,0.90) !important;
+}
+html.light-mode .problem-box h2 { color: #1e293b !important; }
+html.light-mode .problem-box ul li span {
+  color: #2563eb !important;
+}
+html.light-mode .problem-box ul li span:hover {
+  color: #1d4ed8 !important;
+}
+html.light-mode #problemCategoryList li.active-issue span {
+  background: rgba(37,99,235,0.12) !important;
+}
+html.light-mode #problemCategorySearch {
+  background: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  color: #1e293b !important;
+}
+html.light-mode #problemCategorySearch::placeholder { color: #94a3b8 !important; }
+html.light-mode .search-box label { color: #64748b !important; }
+
+/* ── Mobile issue toggle button ── */
+html.light-mode #mobileIssueToggle {
+  background: rgba(37,99,235,0.10) !important;
+  border-color: rgba(37,99,235,0.30) !important;
+  color: #2563eb !important;
+}
+
+/* ── Solution/Accordion ── */
+html.light-mode .acc-wrap {
+  border-color: rgba(0,0,0,0.10) !important;
+}
+html.light-mode .acc-bd {
+  color: #1e293b !important;
+}
+html.light-mode .acc-bd li {
+  border-bottom-color: rgba(0,0,0,0.07) !important;
+}
+html.light-mode .acc-bd a,
+html.light-mode .solution-content a {
+  color: #b45309 !important;
+}
+html.light-mode .acc-bd a:visited,
+html.light-mode .solution-content a:visited {
+  color: #b45309 !important;
+}
+html.light-mode .acc-count {
+  background: rgba(0,0,0,0.08) !important;
+  color: inherit !important;
+}
+
+/* Level 1 — green (light) */
+html.light-mode #quickGuide .acc-hd {
+  background: rgba(220,252,231,0.85) !important;
+  border-left-color: #16a34a !important;
+  color: #166534 !important;
+}
+/* Level 2 — blue (light) */
+html.light-mode #technicianSolution .acc-hd {
+  background: rgba(219,234,254,0.85) !important;
+  border-left-color: #3b82f6 !important;
+  color: #1d4ed8 !important;
+}
+/* Non-warranty — orange (light) */
+html.light-mode #customerSolution .acc-hd {
+  background: rgba(255,237,213,0.85) !important;
+  border-left-color: #f97316 !important;
+  color: #c2410c !important;
+}
+
+/* ── Item sub-accordion ── */
+html.light-mode .item-acc {
+  background: rgba(0,0,0,0.03) !important;
+  border-color: rgba(0,0,0,0.08) !important;
+}
+html.light-mode .item-acc.open { background: rgba(0,0,0,0.05) !important; }
+html.light-mode .item-acc-hd:hover { background: rgba(0,0,0,0.05) !important; }
+html.light-mode .item-acc-arrow { color: #94a3b8 !important; }
+
+/* ── Toolbar buttons (product page) ── */
+html.light-mode .sol-toolbar-btn {
+  background: rgba(255,255,255,0.90) !important;
+  border-color: rgba(0,0,0,0.13) !important;
+  color: #374151 !important;
+}
+html.light-mode .sol-toolbar-btn:hover {
+  background: rgba(37,99,235,0.10) !important;
+  color: #1e40af !important;
+}
+html.light-mode #bookmarkBtn.bookmarked {
+  background: rgba(254,252,232,0.90) !important;
+  border-color: rgba(245,158,11,0.45) !important;
+  color: #92400e !important;
+}
+
+/* ── Fix worked ── */
+html.light-mode .fix-worked-wrap {
+  border-top-color: rgba(0,0,0,0.08) !important;
+}
+html.light-mode #fixWorkedBtn {
+  background: rgba(220,252,231,0.70) !important;
+  border-color: rgba(22,163,74,0.40) !important;
+  color: #166534 !important;
+}
+html.light-mode .fix-count-label { color: #64748b !important; }
+html.light-mode .fix-count-label strong { color: #166534 !important; }
+html.light-mode .sol-issue-label { color: #94a3b8 !important; }
+
+/* ── Documents ── */
+html.light-mode .file-box h2 { color: #1e293b !important; }
+html.light-mode #modelDocumentsList a,
+html.light-mode #commonDocumentsList a { color: #2563eb !important; }
+html.light-mode #modelDocumentsList a:hover,
+html.light-mode #commonDocumentsList a:hover { color: #1d4ed8 !important; }
+
+/* ── Acc copy button ── */
+html.light-mode .acc-copy {
+  background: rgba(0,0,0,0.07) !important;
+  border-color: rgba(0,0,0,0.12) !important;
+  color: inherit !important;
+}
+html.light-mode .acc-copy:hover { background: rgba(0,0,0,0.13) !important; }
+
+/* ── Mobile problem-box overlay (light mode) ── */
+@media (max-width: 768px) {
+  html.light-mode .problem-box {
+    background: rgba(240,244,248,0.98) !important;
+  }
+}

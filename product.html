@@ -1,7 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="stylesheet" href="/light-mode.css">
+  <script>(function(){if(localStorage.getItem('atosa_theme')==='light')document.documentElement.classList.add('light-mode');})();</script>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="ATOSA Tech">
+  <meta name="theme-color" content="#0d1b2e">
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -11,7 +20,7 @@
 
         body {
             font-family: 'Inter', 'Segoe UI', Arial, sans-serif !important;
-            background: #0d1b2e !important;
+            background: #0d1b2e;
             background-image: none !important;
             color: #e2e8f0;
             display: block !important;
@@ -81,7 +90,7 @@
         .header-container h1 {
             font-size: 1.3rem !important;
             font-weight: 800 !important;
-            color: #f1f5f9 !important;
+            color: #f1f5f9;
             letter-spacing: -0.3px;
             flex: 1;
         }
@@ -431,6 +440,193 @@
         }
         .acc-copy:hover { background: rgba(255,255,255,0.20); }
 
+        /* ── Mobile Styles ── */
+        @media (max-width: 768px) {
+            .container { margin: 8px auto !important; padding: 14px 12px 20px !important; border-radius: 12px !important; }
+
+            /* Header */
+            .header-container { gap: 10px; margin-bottom: 14px; }
+            .header-container h1 { font-size: 1.05rem !important; }
+            .back-home-button { padding: 6px 12px !important; font-size: 12px !important; }
+
+            /* Grid → single column */
+            .grid-layout { display: flex !important; flex-direction: column !important; gap: 12px !important; }
+
+            /* Issue panel: hidden by default on mobile, toggled by button */
+            .problem-box {
+                display: none;
+                position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+                z-index: 800;
+                border-radius: 0 !important;
+                overflow-y: auto;
+                padding: 20px 16px 80px !important;
+                background: rgba(8,15,35,0.97) !important;
+            }
+            .problem-box.mobile-open { display: block !important; }
+            .problem-box ul li { padding: 2px 0; }
+            .problem-box ul li span { font-size: 15px !important; padding: 8px 4px !important; display: block; }
+
+            /* Issue toggle button (mobile only) */
+            #mobileIssueToggle {
+                display: flex !important;
+                align-items: center; gap: 8px;
+                width: 100%; padding: 11px 16px;
+                background: rgba(37,99,235,0.18);
+                border: 1px solid rgba(59,130,246,0.35);
+                border-radius: 10px; color: #93c5fd;
+                font-size: 14px; font-weight: 600; font-family: inherit;
+                cursor: pointer; margin-bottom: 4px;
+            }
+
+            /* Solution box: full width */
+            .solution-box { width: 100% !important; }
+
+            /* Toolbar: wrap on small screens */
+            .sol-toolbar { flex-wrap: wrap; gap: 6px; }
+            .sol-toolbar-btn { padding: 8px 12px !important; font-size: 12px !important; flex: 1; min-width: 80px; justify-content: center; }
+            .sol-issue-label { width: 100%; text-align: center; }
+
+            /* Accordion: larger tap targets */
+            .acc-hd { padding: 14px 14px !important; font-size: 14px !important; min-height: 50px; }
+            .acc-bd { padding: 12px !important; }
+            .acc-bd ul li { padding: 5px 0 !important; font-size: 13.5px !important; line-height: 1.6; }
+
+            /* Fix Worked button */
+            #fixWorkedBtn { width: 100%; padding: 12px !important; font-size: 14px !important; }
+
+            /* Diagram/image box — 手机端小图，点击放大 */
+            .diagram-box {
+                padding: 8px !important;
+                display: flex !important;
+                align-items: center !important;
+                gap: 10px !important;
+                background: rgba(8,15,35,0.60) !important;
+            }
+            .diagram-box img {
+                width: 80px !important;
+                height: 80px !important;
+                max-width: 80px !important;
+                object-fit: contain !important;
+                border-radius: 8px !important;
+                cursor: zoom-in !important;
+                flex-shrink: 0 !important;
+            }
+            .diagram-box::after {
+                content: 'Tap image to enlarge 🔍';
+                font-size: 11.5px;
+                color: #475569;
+            }
+
+            /* Documents */
+            .file-box { padding: 14px !important; }
+        }
+
+        /* ══════════════════════════════════════
+           LIGHT MODE — Product Page
+           ══════════════════════════════════════ */
+        html.light-mode body.product-page {
+            background: #edf2f7 !important;
+            color: #1e293b !important;
+        }
+        html.light-mode body.product-page::before {
+            opacity: 0.04 !important;
+        }
+        html.light-mode body.product-page .container {
+            background: rgba(255,255,255,0.90) !important;
+            border-color: rgba(0,0,0,0.09) !important;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.09) !important;
+        }
+        /* Header */
+        html.light-mode .header-container {
+            border-bottom-color: rgba(0,0,0,0.10) !important;
+        }
+        html.light-mode .header-container h1 {
+            color: #1e293b !important;
+        }
+        /* Frame cards */
+        html.light-mode .frame {
+            background: rgba(255,255,255,0.92) !important;
+            border-color: rgba(0,0,0,0.09) !important;
+        }
+        /* Sidebar */
+        html.light-mode .problem-box {
+            background: rgba(248,250,252,0.95) !important;
+        }
+        html.light-mode .problem-box h2 { color: #1e293b !important; }
+        html.light-mode .problem-box ul li span { color: #2563eb !important; }
+        html.light-mode .problem-box ul li span:hover { color: #1d4ed8 !important; }
+        html.light-mode #problemCategoryList li.active-issue span {
+            background: rgba(37,99,235,0.12) !important;
+        }
+        html.light-mode #problemCategorySearch {
+            background: #f1f5f9 !important;
+            border-color: #cbd5e1 !important;
+            color: #1e293b !important;
+        }
+        html.light-mode #problemCategorySearch::placeholder { color: #94a3b8 !important; }
+        html.light-mode .search-box label { color: #64748b !important; }
+        /* Back button */
+        html.light-mode .back-home-button {
+            background: rgba(255,255,255,0.90) !important;
+            border-color: rgba(0,0,0,0.13) !important;
+            color: #374151 !important;
+        }
+        /* Toolbar buttons */
+        html.light-mode .sol-toolbar-btn {
+            background: rgba(255,255,255,0.90) !important;
+            border-color: rgba(0,0,0,0.13) !important;
+            color: #374151 !important;
+        }
+        /* Accordion sections */
+        html.light-mode .acc-wrap { border-color: rgba(0,0,0,0.10) !important; }
+        html.light-mode .acc-bd { color: #1e293b !important; }
+        html.light-mode .acc-bd li { border-bottom-color: rgba(0,0,0,0.07) !important; }
+        html.light-mode #quickGuide .acc-hd {
+            background: rgba(220,252,231,0.85) !important;
+            border-left-color: #16a34a !important;
+            color: #166534 !important;
+        }
+        html.light-mode #technicianSolution .acc-hd {
+            background: rgba(219,234,254,0.85) !important;
+            border-left-color: #3b82f6 !important;
+            color: #1d4ed8 !important;
+        }
+        html.light-mode #customerSolution .acc-hd {
+            background: rgba(255,237,213,0.85) !important;
+            border-left-color: #f97316 !important;
+            color: #c2410c !important;
+        }
+        html.light-mode .item-acc {
+            background: rgba(0,0,0,0.03) !important;
+            border-color: rgba(0,0,0,0.08) !important;
+        }
+        html.light-mode .acc-bd a, html.light-mode .solution-content a {
+            color: #b45309 !important;
+        }
+        html.light-mode .acc-copy {
+            background: rgba(0,0,0,0.07) !important;
+            border-color: rgba(0,0,0,0.12) !important;
+        }
+        /* Documents */
+        html.light-mode .file-box h2 { color: #1e293b !important; }
+        html.light-mode #modelDocumentsList a,
+        html.light-mode #commonDocumentsList a { color: #2563eb !important; }
+        /* Fix worked */
+        html.light-mode #fixWorkedBtn {
+            background: rgba(220,252,231,0.70) !important;
+            border-color: rgba(22,163,74,0.40) !important;
+            color: #166534 !important;
+        }
+        html.light-mode .fix-count-label { color: #64748b !important; }
+        html.light-mode .fix-count-label strong { color: #166534 !important; }
+        html.light-mode .sol-issue-label { color: #94a3b8 !important; }
+        /* Mobile overlay */
+        @media (max-width: 768px) {
+            html.light-mode .problem-box {
+                background: rgba(240,244,248,0.99) !important;
+            }
+        }
+
         /* ── Print styles ── */
         @media print {
             .header-container .back-home-button,
@@ -452,16 +648,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Product</title>
 </head>
-<body>
+<body class="product-page">
     <div class="ticker-bar" id="tickerBar"><span class="ticker-track" id="tickerText"></span></div>
     <div class="container">
         <div class="header-container">
             <a href="dashboard.html" class="back-home-button">Back</a>
             <h1 id="product-title"></h1>
+            <button id="themeToggleBtn" onclick="toggleTheme()" title="Toggle light/dark mode" style="background:rgba(15,23,42,0.70);border:1px solid rgba(255,255,255,0.12);color:#cbd5e1;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:14px;font-family:inherit;flex-shrink:0;">☀️</button>
         </div>
 
+        <!-- Mobile: issue list toggle button (hidden on desktop via CSS) -->
+        <button id="mobileIssueToggle" style="display:none;" onclick="toggleMobileIssuePanel()">
+            ☰ <span id="mobileToggleLabel">View Issues</span>
+        </button>
+
         <div class="grid-layout">
-            <div class="frame problem-box">
+            <div class="frame problem-box" id="problemBox">
                 <div class="search-box">
                     <label for="problemCategorySearch">Search Issue:</label>
                     <input type="text" id="problemCategorySearch" placeholder="Search..." onkeyup="searchProblemCategory()">
@@ -545,6 +747,70 @@
             </div>
         </div>
     </div>
+
+    <script>
+    /* ── Theme toggle ── */
+    function applyThemeStyles(isLight) {
+      // Inject a <style> tag at end of <head> — last in cascade + !important = always wins
+      let s = document.getElementById('__theme_override__');
+      if (!s) { s = document.createElement('style'); s.id = '__theme_override__'; document.head.appendChild(s); }
+      if (isLight) {
+        s.textContent = `
+          body { background: #edf2f7 !important; color: #1e293b !important; }
+          body::before { opacity: 0.04 !important; filter: blur(60px) !important; }
+          .container { background: rgba(255,255,255,0.90) !important; border-color: rgba(0,0,0,0.09) !important; box-shadow: 0 4px 24px rgba(0,0,0,0.09) !important; }
+          .header-container h1, #product-title { color: #1e293b !important; }
+          .header-container { border-bottom-color: rgba(0,0,0,0.10) !important; }
+          .back-home-button { background: rgba(255,255,255,0.90) !important; border-color: rgba(0,0,0,0.13) !important; color: #374151 !important; }
+          .frame { background: rgba(255,255,255,0.92) !important; border-color: rgba(0,0,0,0.09) !important; }
+          .problem-box { background: rgba(248,250,252,0.98) !important; }
+          .problem-box h2 { color: #1e293b !important; }
+          .problem-box ul li span { color: #2563eb !important; }
+          #problemCategorySearch { background: #f1f5f9 !important; border-color: #cbd5e1 !important; color: #1e293b !important; }
+          .search-box label { color: #64748b !important; }
+          .sol-toolbar-btn { background: rgba(255,255,255,0.90) !important; border-color: rgba(0,0,0,0.13) !important; color: #374151 !important; }
+          .acc-wrap { border-color: rgba(0,0,0,0.10) !important; }
+          .acc-bd { color: #1e293b !important; }
+          .acc-bd li { border-bottom-color: rgba(0,0,0,0.07) !important; }
+          #quickGuide .acc-hd { background: rgba(220,252,231,0.85) !important; border-left-color: #16a34a !important; color: #166534 !important; }
+          #technicianSolution .acc-hd { background: rgba(219,234,254,0.85) !important; border-left-color: #3b82f6 !important; color: #1d4ed8 !important; }
+          #customerSolution .acc-hd { background: rgba(255,237,213,0.85) !important; border-left-color: #f97316 !important; color: #c2410c !important; }
+          .item-acc { background: rgba(0,0,0,0.03) !important; border-color: rgba(0,0,0,0.08) !important; }
+          .acc-bd a, .solution-content a { color: #2563eb !important; }
+          .file-box h2 { color: #1e293b !important; }
+          #modelDocumentsList a, #commonDocumentsList a { color: #2563eb !important; }
+          #fixWorkedBtn { background: rgba(220,252,231,0.70) !important; border-color: rgba(22,163,74,0.40) !important; color: #166534 !important; }
+          .fix-count-label { color: #64748b !important; }
+          .fix-count-label strong { color: #166534 !important; }
+          .ticker-bar { background: #fef3c7 !important; color: #b45309 !important; }
+        `;
+      } else {
+        s.textContent = '';
+      }
+    }
+
+    function toggleTheme() {
+      const isLight = document.documentElement.classList.toggle('light-mode');
+      localStorage.setItem('atosa_theme', isLight ? 'light' : 'dark');
+      const btn = document.getElementById('themeToggleBtn');
+      if (btn) btn.textContent = isLight ? '🌙' : '☀️';
+      applyThemeStyles(isLight);
+      // Direct element overrides — guaranteed to work
+      const h1 = document.getElementById('product-title');
+      if (h1) h1.style.color = isLight ? '#1e293b' : '';
+      document.body.style.background = isLight ? '#edf2f7' : '';
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+      const isLight = document.documentElement.classList.contains('light-mode');
+      const btn = document.getElementById('themeToggleBtn');
+      if (btn) btn.textContent = isLight ? '🌙' : '☀️';
+      applyThemeStyles(isLight);
+      // Direct element overrides on page load
+      const h1 = document.getElementById('product-title');
+      if (h1) h1.style.color = isLight ? '#1e293b' : '';
+      document.body.style.background = isLight ? '#edf2f7' : '';
+    });
+    </script>
 
     <script>
     // ─── Static fallback map (model code → family key) ───────────────────────
@@ -767,7 +1033,12 @@
             // Guard: model may exist in the family map without a full entry
             // (e.g. added only via Model-Specific Extras in an issue editor)
             const modelEntry = data.models[model] || {};
-            document.getElementById('product-title').innerText = modelEntry.title || model;
+            const titleEl = document.getElementById('product-title');
+            titleEl.innerText = modelEntry.title || model;
+            if (localStorage.getItem('atosa_theme') === 'light') {
+                titleEl.style.cssText += '; color: #1e293b !important;';
+                document.body.style.cssText += '; background: #edf2f7 !important;';
+            }
             document.getElementById('product-image').src       = modelEntry.image   || '';
             document.getElementById('product-diagram').src     = modelEntry.diagram || '';
 
@@ -783,19 +1054,40 @@
                     : Object.keys(data.common.issues || {})
             );
 
+            // Fetch recent updates for this family to show 🆕 badges
+            let recentUpdatedKeys = new Set();
+            try {
+                const uRes = await fetch('/api/updates/recent');
+                if (uRes.ok) {
+                    const uList = await uRes.json();
+                    const cutoff = Date.now() - 4 * 24 * 60 * 60 * 1000;
+                    uList.forEach(u => {
+                        if (u.family === currentFileKey && new Date(u.updatedAt).getTime() > cutoff)
+                            recentUpdatedKeys.add(u.issueKey);
+                    });
+                }
+            } catch(e) {}
+
             const problemCategoryList = document.getElementById('problemCategoryList');
             issues.forEach(issueKey => {
                 const li = document.createElement('li');
                 li.dataset.issue = issueKey;
                 const iss = data.common?.issues?.[issueKey] || {};
                 const lbl = iss.label || (issueKey.charAt(0).toUpperCase() + issueKey.slice(1));
-                const colorAttr = iss.color ? ` style="color:${iss.color};font-weight:600;" data-color="${iss.color}"` : '';
                 const a = document.createElement('span');
                 a.style.cursor = 'pointer';
                 a.style.display = 'block';
                 a.style.color = iss.color || '#60a5fa';
                 if (iss.color) { a.style.fontWeight = '600'; a.dataset.color = iss.color; }
                 a.textContent = lbl;
+                // 🆕 badge for recently updated issues
+                if (recentUpdatedKeys.has(issueKey)) {
+                    const badge = document.createElement('span');
+                    badge.textContent = '🆕';
+                    badge.title = 'Recently updated';
+                    badge.style.cssText = 'font-size:11px;margin-left:5px;vertical-align:middle;';
+                    a.appendChild(badge);
+                }
                 a.addEventListener('click', () => showSolution(issueKey));
                 li.appendChild(a);
                 problemCategoryList.appendChild(li);
@@ -844,17 +1136,22 @@
     function renderItem(item) {
         if (typeof item === 'string') return item; // 旧 HTML 字符串，直接渲染
 
+        const isLight = localStorage.getItem('atosa_theme') === 'light';
+        const cText  = isLight ? '#1e293b'  : '#f1f5f9';   // main title text
+        const cStep  = isLight ? '#dc2626'  : '#f87171';   // step content
+        const cLink  = isLight ? '#2563eb'  : '#60a5fa';   // links
+
         let html = '';
         const nl2br = s => (s || '').replace(/\n/g, '<br>');
 
         if (item.text) {
-            html += `<div style="font-size:18px;font-weight:700;color:#f1f5f9;margin-bottom:6px;white-space:pre-line;">${item.text}</div>`;
+            html += `<div style="font-size:18px;font-weight:700;color:${cText};margin-bottom:6px;white-space:pre-line;">${item.text}</div>`;
         }
         if (item.red) {
             html += `<div style="color:#16a34a;font-size:17px;font-weight:700;margin-bottom:6px;line-height:1.7;white-space:pre-line;">${item.red}</div>`;
         }
         if (item.link) {
-            html += `<div style="margin-bottom:6px;"><a href="${item.link.url}" target="_blank" style="color:#60a5fa;font-size:16px;">${item.link.label}</a></div>`;
+            html += `<div style="margin-bottom:6px;"><a href="${item.link.url}" target="_blank" style="color:${cLink};font-size:16px;">${item.link.label}</a></div>`;
         }
         if (item.steps && item.steps.length) {
             const multi = item.steps.length > 1;
@@ -862,12 +1159,12 @@
                 const prefix = multi ? `<span style="font-weight:600;">${i + 1}.</span> ` : '';
                 const mb = multi ? '14px' : '6px';
                 if (typeof step === 'string') {
-                    html += `<div style="color:#f87171;font-size:16px;margin-bottom:${mb};white-space:pre-line;">${prefix}${step}</div>`;
+                    html += `<div style="color:${cStep};font-size:16px;margin-bottom:${mb};white-space:pre-line;">${prefix}${step}</div>`;
                 } else {
-                    html += `<div style="color:#f87171;font-size:16px;margin-bottom:${mb};white-space:pre-line;">${prefix}${step.text || ''}`;
-                    if (step.red) html += ` <span style="color:#f87171;">${step.red}</span>`;
+                    html += `<div style="color:${cStep};font-size:16px;margin-bottom:${mb};white-space:pre-line;">${prefix}${step.text || ''}`;
+                    if (step.red) html += ` <span style="color:${cStep};">${step.red}</span>`;
                     if (step.links) step.links.forEach(l => {
-                        html += ` <a href="${l.url}" target="_blank" style="color:#60a5fa;">${l.label}</a>`;
+                        html += ` <a href="${l.url}" target="_blank" style="color:${cLink};">${l.label}</a>`;
                     });
                     html += `</div>`;
                 }
@@ -1193,6 +1490,31 @@
       ov.style.display = 'flex';
     });
   });
+</script>
+
+<script>
+  // ── Mobile: issue panel toggle ──────────────────────────────────────────────
+  function toggleMobileIssuePanel() {
+    const box   = document.getElementById('problemBox');
+    const label = document.getElementById('mobileToggleLabel');
+    const open  = box.classList.toggle('mobile-open');
+    label.textContent = open ? 'Close Issues' : 'View Issues';
+    document.body.style.overflow = open ? 'hidden' : '';
+  }
+
+  // Close panel when an issue is clicked on mobile
+  document.addEventListener('click', e => {
+    const box = document.getElementById('problemBox');
+    if (box && box.classList.contains('mobile-open') && e.target.closest('#problemBox ul')) {
+      setTimeout(() => {
+        box.classList.remove('mobile-open');
+        document.getElementById('mobileToggleLabel').textContent = 'View Issues';
+        document.body.style.overflow = '';
+      }, 150);
+    }
+  });
+
+  // PWA disabled
 </script>
 </body>
 </html>

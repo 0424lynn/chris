@@ -30,6 +30,36 @@ const FeedbackSchema = new mongoose.Schema({
 });
 const Feedback = mongoose.model('Feedback', FeedbackSchema, 'feedback');
 
+// Analytics: track issue view counts
+const AnalyticsSchema = new mongoose.Schema({
+  family:   { type: String, required: true },
+  issueKey: { type: String, required: true },
+  model:    { type: String, default: '' },
+  count:    { type: Number, default: 0 },
+  lastSeen: { type: Date,   default: Date.now }
+}, { strict: false });
+AnalyticsSchema.index({ family: 1, issueKey: 1 }, { unique: true });
+const Analytics = mongoose.model('Analytics', AnalyticsSchema, 'analytics');
+
+// AI Chat Log
+const AIChatLogSchema = new mongoose.Schema({
+  question:  { type: String, required: true },
+  answer:    { type: String, default: '' },
+  username:  { type: String, default: 'anonymous' },
+  ts:        { type: Date, default: Date.now }
+});
+const AIChatLog = mongoose.model('AIChatLog', AIChatLogSchema, 'aichatlog');
+
+// Content update notifications
+const ContentUpdateSchema = new mongoose.Schema({
+  family:      { type: String, required: true },
+  issueKey:    { type: String, required: true },
+  issueLabel:  { type: String, default: '' },
+  updatedBy:   { type: String, default: '' },
+  updatedAt:   { type: Date,   default: Date.now }
+});
+const ContentUpdate = mongoose.model('ContentUpdate', ContentUpdateSchema, 'contentupdates');
+
 const AnnouncementSchema = new mongoose.Schema({
   lines: { type: [String], default: [] },
   updatedAt: { type: Date, default: Date.now }
@@ -92,6 +122,8 @@ app.use((req, res, next) => {
   // 静态资源（视频、图片、CSS、JS 等）不需要登录即可访问
   const staticExts = /\.(mp4|webm|mov|mp3|jpg|jpeg|png|gif|svg|webp|ico|css|js|pdf|woff|woff2|ttf)$/i;
   if (staticExts.test(req.path))     return next();
+  // PWA files always accessible
+  if (req.path === '/manifest.json' || req.path === '/service-worker.js') return next();
 
   // 未登录：HTML 跳转，其他资源返回 401
   if (req.accepts('html')) return res.redirect('/');
@@ -386,6 +418,42 @@ app.put('/api/admin/family/:key', superAdminOnly, async (req, res) => {
   try {
     const { data } = req.body;
     if (!data) return res.status(400).json({ error: 'Missing data' });
+
+    // ── Detect changed issues before overwriting ──────────────────────────
+    const oldDoc = await ModelData.findById(req.params.key).lean();
+    if (oldDoc && oldDoc.data && oldDoc.data.common && data.common) {
+      const oldIssues = oldDoc.data.common.issues || {};
+      const newIssues = data.common.issues || {};
+      const updatedBy = req.session?.user?.username || 'admin';
+      const updatePromises = [];
+
+      for (const issueKey of Object.keys(newIssues)) {
+        const oldContent = JSON.stringify({
+          overview:    (oldIssues[issueKey]?.overview    || []),
+          technician:  (oldIssues[issueKey]?.technician  || []),
+          customer:    (oldIssues[issueKey]?.customer    || [])
+        });
+        const newContent = JSON.stringify({
+          overview:    (newIssues[issueKey]?.overview    || []),
+          technician:  (newIssues[issueKey]?.technician  || []),
+          customer:    (newIssues[issueKey]?.customer    || [])
+        });
+        if (oldContent !== newContent) {
+          const issueLabel = newIssues[issueKey]?.label || issueKey;
+          updatePromises.push(
+            ContentUpdate.create({
+              family:     req.params.key,
+              issueKey,
+              issueLabel,
+              updatedBy,
+              updatedAt:  new Date()
+            })
+          );
+        }
+      }
+      if (updatePromises.length) await Promise.all(updatePromises);
+    }
+
     await ModelData.findByIdAndUpdate(
       req.params.key, { data }, { upsert: true, new: true }
     );
@@ -570,7 +638,20 @@ app.post('/api/ai-chat', async (req, res) => {
       ],
       max_tokens: 1024
     });
-    res.json({ reply: completion.choices[0].message.content });
+    const reply = completion.choices[0].message.content;
+
+    // Log the latest user question + answer (fire-and-forget)
+    const lastUserMsg = [...messages].reverse().find(m => m.role === 'user');
+    if (lastUserMsg) {
+      AIChatLog.create({
+        question: lastUserMsg.content.slice(0, 1000),
+        answer:   reply.slice(0, 2000),
+        username: req.session?.user?.username || 'anonymous',
+        ts:       new Date()
+      }).catch(() => {});
+    }
+
+    res.json({ reply });
   } catch (e) {
     console.error('Groq error:', e.message);
     res.status(500).json({ error: e.message });
@@ -1040,6 +1121,159 @@ app.post('/api/admin/import-excel', superAdminOnly, upload.single('file'), async
     res.json({ success: true, imported: results });
   } catch (e) {
     console.error('Import error:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ── Analytics ────────────────────────────────────────────────────────────────
+// Record a view (fire-and-forget from product page)
+app.post('/api/analytics/view', async (req, res) => {
+  try {
+    const { family, issueKey, model } = req.body;
+    if (!family || !issueKey) return res.json({ ok: false });
+    await Analytics.findOneAndUpdate(
+      { family, issueKey },
+      { $inc: { count: 1 }, $set: { lastSeen: new Date(), model } },
+      { upsert: true, new: true }
+    );
+    res.json({ ok: true });
+  } catch (e) { res.json({ ok: false }); }
+});
+
+// Get top issues (admin only)
+app.get('/api/analytics/top', superAdminOnly, async (req, res) => {
+  try {
+    const rows = await Analytics.find().sort({ count: -1 }).limit(50).lean();
+    res.json(rows);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// Reset analytics (admin only)
+app.delete('/api/analytics/reset', superAdminOnly, async (req, res) => {
+  try {
+    await Analytics.deleteMany({});
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── AI Chat Log (admin) ───────────────────────────────────────────────────────
+// Get recent logs, newest first
+app.get('/api/admin/ai-chat-log', superAdminOnly, async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 100;
+    const logs = await AIChatLog.find().sort({ ts: -1 }).limit(limit).lean();
+    res.json(logs);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// Clear all logs
+app.delete('/api/admin/ai-chat-log', superAdminOnly, async (req, res) => {
+  try {
+    await AIChatLog.deleteMany({});
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── Content Update Notifications ─────────────────────────────────────────────
+// Get recent updates (last 14 days), newest first
+app.get('/api/updates/recent', async (req, res) => {
+  if (!req.session?.user) return res.status(401).json({ error: 'Unauthorized' });
+  try {
+    const since = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
+    const updates = await ContentUpdate.find({ updatedAt: { $gte: since } })
+      .sort({ updatedAt: -1 })
+      .limit(20)
+      .lean();
+    res.json(updates);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// Delete old updates (admin only, called manually or auto cleanup)
+app.delete('/api/updates/clear', superAdminOnly, async (req, res) => {
+  try {
+    const cutoff = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
+    await ContentUpdate.deleteMany({ updatedAt: { $lt: cutoff } });
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── Global Content Search ─────────────────────────────────────────────────────
+// Recursively extract plain text from a step item (string or structured object)
+function extractStepText(item) {
+  if (!item) return '';
+  if (typeof item === 'string') return item;
+  if (typeof item !== 'object') return '';
+  const parts = [];
+  if (item.text) parts.push(item.text);
+  if (item.red)  parts.push(item.red);
+  if (Array.isArray(item.steps)) item.steps.forEach(s => parts.push(extractStepText(s)));
+  if (Array.isArray(item.links)) item.links.forEach(l => { if (l.label) parts.push(l.label); });
+  return parts.join(' ');
+}
+
+app.get('/api/search', async (req, res) => {
+  if (!req.session?.user) return res.status(401).json({ error: 'Unauthorized' });
+  const q = (req.query.q || '').trim();
+  if (q.length < 2) return res.json({ results: [] });
+  const ql = q.toLowerCase();
+
+  try {
+    const docs = await ModelData.find({}, { _id: 1, data: 1 }).lean();
+    const results = [];
+
+    for (const doc of docs) {
+      const family = doc._id;
+      const data   = doc.data;
+      if (!data?.common?.issues) continue;
+
+      // Collect representative models for this family
+      const models = Object.keys(data.models || {});
+
+      for (const [issueKey, issue] of Object.entries(data.common.issues)) {
+        const label = issue.label || issueKey;
+
+        // Build searchable text per section
+        const sections = { overview: issue.overview || [], technician: issue.technician || [], customer: issue.customer || [] };
+        let matched = false;
+
+        // Match on key or label first
+        if (issueKey.toLowerCase().includes(ql) || label.toLowerCase().includes(ql)) {
+          results.push({
+            family,
+            issueKey,
+            label,
+            section: 'label',
+            preview: label,
+            models: models.slice(0, 5)
+          });
+          matched = true;
+        }
+
+        if (!matched) {
+          for (const [sectionName, items] of Object.entries(sections)) {
+            for (const item of items) {
+              const txt = extractStepText(item);
+              if (txt.toLowerCase().includes(ql)) {
+                // Grab a short preview around the match
+                const idx = txt.toLowerCase().indexOf(ql);
+                const start = Math.max(0, idx - 40);
+                const preview = (start > 0 ? '…' : '') + txt.slice(start, idx + 80).trim() + (txt.length > idx + 80 ? '…' : '');
+                results.push({ family, issueKey, label, section: sectionName, preview, models: models.slice(0, 5) });
+                matched = true;
+                break;
+              }
+            }
+            if (matched) break;
+          }
+        }
+
+        if (results.length >= 40) break;
+      }
+      if (results.length >= 40) break;
+    }
+
+    res.json({ results });
+  } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });

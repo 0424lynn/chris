@@ -2,8 +2,15 @@
 <html lang="en">
 <head>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="stylesheet" href="/light-mode.css">
+  <script>(function(){if(localStorage.getItem('atosa_theme')==='light')document.documentElement.classList.add('light-mode');})();</script>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="ATOSA Tech">
+  <meta name="theme-color" content="#0d1b2e">
   <title>ATOSA — Technical Documentation Center</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -166,6 +173,62 @@
     .ann-save   { background: linear-gradient(135deg,#059669,#10b981); color:#fff; }
     .ann-cancel { background: rgba(100,116,139,0.35); color:#94a3b8; margin-left:6px; border: 1px solid rgba(255,255,255,0.10); }
 
+    /* ── 内容更新通知 — 右侧悬浮竖栏 ── */
+    .updates-bar {
+      position: fixed;
+      top: 50%;
+      right: 0;
+      transform: translateY(-50%);
+      z-index: 900;
+      width: 200px;
+      background: rgba(6,28,20,0.92);
+      border: 1px solid rgba(52,211,153,0.28);
+      border-right: none;
+      border-radius: 14px 0 0 14px;
+      padding: 14px 12px 14px 14px;
+      backdrop-filter: blur(16px);
+      box-shadow: -4px 0 24px rgba(0,0,0,0.40);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .updates-bar-header {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .updates-bar-title {
+      font-size: 11px; font-weight: 700; color: #34d399;
+      letter-spacing: 0.6px; text-transform: uppercase;
+    }
+    .updates-dismiss {
+      background: none; border: none; color: #374151;
+      font-size: 15px; cursor: pointer; padding: 0; line-height: 1;
+    }
+    .updates-dismiss:hover { color: #9ca3af; }
+    @media (max-width: 768px) {
+      .updates-bar {
+        position: static;
+        transform: none;
+        width: 100%;
+        border-radius: 12px;
+        border-right: 1px solid rgba(52,211,153,0.28);
+        margin-bottom: 12px;
+      }
+    }
+    .updates-chips { display: flex; flex-direction: column; gap: 6px; }
+    .update-chip {
+      display: flex; flex-direction: column; gap: 2px;
+      padding: 7px 10px;
+      background: rgba(16,185,129,0.10);
+      border: 1px solid rgba(52,211,153,0.18);
+      border-radius: 10px;
+      cursor: default;
+      transition: background 0.2s;
+    }
+    .update-chip:hover { background: rgba(16,185,129,0.20); }
+    .chip-family { font-size: 11.5px; font-weight: 700; color: #34d399; }
+    .chip-issue  { font-size: 11.5px; color: #a7f3d0; line-height: 1.3; }
+    .chip-time   { font-size: 10.5px; color: #4b5563; margin-top: 1px; }
+
     /* ── 搜索+序號列 ── */
     .search-serial-row {
       display: flex;
@@ -324,16 +387,94 @@
 
     /* ── Mobile ── */
     @media (max-width: 640px) {
-      .container { width: 100%; padding: 16px 12px 32px; }
-      .topbar { flex-wrap: wrap; }
-      .topbar-btn { padding: 7px 11px; font-size: 12.5px; }
-      .header-container h1 { font-size: 16px; }
-      .search-serial-row { flex-direction: column; gap: 16px; padding: 14px; }
+      /* Container */
+      .container { width: 100%; padding: 12px 10px 32px; }
+
+      /* Title row: stack vertically, center everything */
+      .title-row {
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+      .title-spacer { display: none; }
+      .header-container { text-align: center; }
+      .header-container h1 { font-size: 15px; line-height: 1.4; }
+      .header-container .sub { font-size: 11.5px; }
+
+      /* Topbar buttons: single row, compact */
+      .topbar {
+        width: 100%;
+        justify-content: center;
+        gap: 7px;
+        flex-wrap: nowrap;
+      }
+      .topbar-btn {
+        padding: 7px 12px;
+        font-size: 12px;
+        flex: 1;
+        justify-content: center;
+        text-align: center;
+        max-width: 130px;
+      }
+
+      /* Announcement: smaller text, limit height */
+      .announcement-bar { padding: 12px 14px; margin-bottom: 12px; }
+      .announcement-bar h2 { font-size: 13px; }
+      .announcement-content { font-size: 12.5px; line-height: 1.55; }
+
+      /* Global search: full width, shorter placeholder */
+      #globalSearchInput { font-size: 13px; }
+
+      /* Search + Serial: vertical stack, full width inputs */
+      .search-serial-row {
+        flex-direction: column;
+        gap: 14px;
+        padding: 14px 12px;
+        border-radius: 12px;
+      }
       .col-divider { width: 100%; height: 1px; margin: 0; }
+      .search-col, .serial-col { width: 100%; align-items: stretch; }
       #searchInput { width: 100%; }
-      .serial-input-row { flex-wrap: wrap; }
-      .cat-tab { padding: 5px 12px; font-size: 12.5px; }
-      #productList li { width: 150px; }
+      #serialInput { flex: 1; }
+      .serial-input-row { gap: 6px; }
+      #checkSerialBtn { padding: 10px 14px; font-size: 13px; }
+
+      /* Category tabs: horizontal scroll */
+      .category-tabs {
+        display: flex;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        gap: 6px;
+        padding-bottom: 4px;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+      }
+      .category-tabs::-webkit-scrollbar { display: none; }
+      .cat-tab { padding: 6px 14px; font-size: 12.5px; white-space: nowrap; flex-shrink: 0; }
+
+      /* Product list: 2-column grid */
+      #productList {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+      }
+      #productList li { width: auto; }
+      #productList a { font-size: 13.5px; }
+
+      /* Recent / bookmarks */
+      .recent-history, .bookmarks-bar { font-size: 12px; }
+
+      /* AI chat: full width on mobile */
+      #aiChatPanel {
+        width: 100% !important;
+        right: 0 !important;
+        left: 0 !important;
+        bottom: 0 !important;
+        border-radius: 16px 16px 0 0 !important;
+        max-height: 75vh !important;
+      }
+      #aiChatBtn { right: 16px !important; bottom: 16px !important; }
     }
   /* ── 滚动公告条 ── */
   .ticker-bar {
@@ -408,6 +549,95 @@
     width: 38px; flex-shrink: 0; cursor: pointer; color: white; font-size: 18px;
   }
   #aiSendBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ══════════════════════════════════════
+     LIGHT MODE — Dashboard
+     ══════════════════════════════════════ */
+  html.light-mode body {
+    background: #e8f0f7 !important;
+    color: #1e293b !important;
+  }
+  html.light-mode body::before { opacity: 0.05 !important; }
+  html.light-mode .header-container h1 { color: #1e293b !important; }
+  html.light-mode .header-container .sub { color: #64748b !important; }
+  html.light-mode .topbar-btn {
+    background: rgba(255,255,255,0.88) !important;
+    border-color: rgba(0,0,0,0.13) !important;
+    color: #374151 !important;
+  }
+  html.light-mode .topbar-btn:hover {
+    background: rgba(37,99,235,0.10) !important;
+    color: #1e40af !important;
+  }
+  html.light-mode .topbar-btn.primary {
+    background: linear-gradient(135deg,#2563eb,#7c3aed) !important;
+    color: #fff !important;
+  }
+  html.light-mode #logout { color: #dc2626 !important; }
+  html.light-mode .announcement-bar {
+    background: rgba(255,255,255,0.92) !important;
+    border-color: rgba(245,158,11,0.35) !important;
+  }
+  html.light-mode .announcement-bar h2 { color: #b45309 !important; }
+  html.light-mode .announcement-content { color: #92400e !important; }
+  html.light-mode .search-serial-row {
+    background: rgba(255,255,255,0.88) !important;
+    border-color: rgba(0,0,0,0.10) !important;
+  }
+  html.light-mode .col-label { color: #64748b !important; }
+  html.light-mode .col-divider { background: rgba(0,0,0,0.08) !important; }
+  html.light-mode #searchInput, html.light-mode #serialInput {
+    background: #f1f5f9 !important;
+    border-color: #cbd5e1 !important;
+    color: #1e293b !important;
+  }
+  html.light-mode #searchInput::placeholder,
+  html.light-mode #serialInput::placeholder { color: #94a3b8 !important; }
+  html.light-mode .cat-tab {
+    background: rgba(255,255,255,0.88) !important;
+    border-color: rgba(37,99,235,0.30) !important;
+    color: #2563eb !important;
+  }
+  html.light-mode .cat-tab.active {
+    background: linear-gradient(135deg,#2563eb,#7c3aed) !important;
+    color: #fff !important;
+  }
+  html.light-mode #productList a { color: #2563eb !important; }
+  html.light-mode .recent-tag {
+    background: rgba(241,245,249,0.95) !important;
+    border-color: rgba(0,0,0,0.10) !important;
+    color: #475569 !important;
+  }
+  html.light-mode .bookmark-tag {
+    background: rgba(255,251,235,0.95) !important;
+    color: #92400e !important;
+  }
+  html.light-mode #globalSearchBar {
+    background: rgba(255,255,255,0.88) !important;
+    border-color: rgba(0,0,0,0.10) !important;
+  }
+  html.light-mode #globalSearchInput {
+    background: transparent !important;
+    color: #1e293b !important;
+  }
+  html.light-mode #globalSearchInput::placeholder { color: #94a3b8 !important; }
+  html.light-mode #globalSearchResults {
+    background: #fff !important;
+    border-color: rgba(0,0,0,0.12) !important;
+  }
+  html.light-mode .gs-item { color: #1e293b !important; border-bottom-color: rgba(0,0,0,0.06) !important; }
+  html.light-mode .gs-item:hover { background: rgba(37,99,235,0.06) !important; }
+  html.light-mode .ticker-bar { background: #fef3c7 !important; color: #b45309 !important; }
+  html.light-mode #aiChatPanel {
+    background: #f8fafc !important;
+    border-color: rgba(0,0,0,0.12) !important;
+  }
+  html.light-mode .ai-msg.bot { background: #e2e8f0 !important; color: #1e293b !important; }
+  html.light-mode #aiInput { background: #f1f5f9 !important; border-color: #cbd5e1 !important; color: #1e293b !important; }
+  html.light-mode .updates-bar {
+    background: rgba(240,253,244,0.97) !important;
+    border-color: rgba(52,211,153,0.35) !important;
+  }
   </style>
 </head>
 <body>
@@ -428,6 +658,7 @@
         <a id="mapButton" href="https://salty-river-39081-77ca2b964755.herokuapp.com/" target="_blank" class="topbar-btn" style="display:none;">🗺 Tech Map</a>
         <a href="feedback.html" class="topbar-btn primary" id="suggestionsBtn" style="position:relative;">💬 Suggestions<span id="suggestionsBadge" style="display:none;position:absolute;top:-6px;right:-6px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;border-radius:999px;min-width:18px;height:18px;line-height:18px;text-align:center;padding:0 4px;"></span></a>
         <a id="adminBtn" href="admin.html" class="topbar-btn" style="display:none;">⚙️ Admin</a>
+        <button id="themeToggleBtn" class="topbar-btn" onclick="toggleTheme()" title="Toggle light/dark mode">☀️</button>
         <button id="logout" class="topbar-btn">🚪 Logout</button>
       </div>
     </div>
@@ -446,6 +677,29 @@
         <button class="ann-edit-btn ann-save"   onclick="saveAnnouncement()">Save</button>
         <button class="ann-edit-btn ann-cancel" onclick="toggleAnnouncementEdit()">Cancel</button>
       </div>
+    </div>
+
+    <!-- 内容更新通知 — 右侧悬浮竖栏 -->
+    <div class="updates-bar" id="updatesBar" style="display:none;">
+      <div class="updates-bar-header">
+        <span class="updates-bar-title">🔔 Updates</span>
+        <button class="updates-dismiss" onclick="dismissUpdates()" title="Dismiss">×</button>
+      </div>
+      <div class="updates-chips" id="updatesChips"></div>
+    </div>
+
+    <!-- 全局内容搜索 -->
+    <div id="globalSearchWrap" style="position:relative;margin-bottom:14px;">
+      <div style="display:flex;align-items:center;gap:10px;background:rgba(10,18,40,0.80);border:1.5px solid rgba(59,130,246,0.30);border-radius:14px;padding:10px 16px;backdrop-filter:blur(12px);">
+        <span style="font-size:18px;line-height:1;">🔍</span>
+        <input id="globalSearchInput" type="text" placeholder="Search issues, error codes, symptoms across all products…"
+          style="flex:1;background:transparent;border:none;outline:none;color:#e2e8f0;font-size:14px;font-family:inherit;"
+          oninput="onGlobalSearch(this.value)" autocomplete="off">
+        <span id="globalSearchSpinner" style="display:none;color:#60a5fa;font-size:13px;">Searching…</span>
+        <button onclick="clearGlobalSearch()" id="globalSearchClear" style="display:none;background:none;border:none;color:#64748b;cursor:pointer;font-size:16px;padding:0 2px;" title="Clear">✕</button>
+      </div>
+      <!-- Results dropdown -->
+      <div id="globalSearchResults" style="display:none;position:absolute;top:calc(100% + 6px);left:0;right:0;background:#0f172a;border:1px solid rgba(255,255,255,0.12);border-radius:14px;max-height:420px;overflow-y:auto;z-index:500;box-shadow:0 12px 40px rgba(0,0,0,0.55);"></div>
     </div>
 
     <!-- 搜索 + 序號列 -->
@@ -501,6 +755,61 @@
 
   <!-- 書籤 JS -->
   <script>
+  /* ── Theme toggle ── */
+  function applyThemeStyles(isLight) {
+    let s = document.getElementById('__theme_override__');
+    if (!s) { s = document.createElement('style'); s.id = '__theme_override__'; document.head.appendChild(s); }
+    if (isLight) {
+      s.textContent = `
+        body { background: #e8f0f7 !important; color: #1e293b !important; }
+        body::before { opacity: 0.05 !important; }
+        .header-container h1 { color: #1e293b !important; }
+        .header-container .sub { color: #64748b !important; }
+        .topbar-btn:not(.primary) { background: rgba(255,255,255,0.88) !important; border-color: rgba(0,0,0,0.13) !important; color: #374151 !important; }
+        #logout { color: #dc2626 !important; }
+        .announcement-bar { background: rgba(255,255,255,0.92) !important; border-color: rgba(245,158,11,0.35) !important; }
+        .announcement-bar h2 { color: #b45309 !important; }
+        .announcement-content { color: #92400e !important; }
+        .search-serial-row { background: rgba(255,255,255,0.88) !important; border-color: rgba(0,0,0,0.10) !important; }
+        .col-label { color: #64748b !important; }
+        .col-divider { background: rgba(0,0,0,0.08) !important; }
+        #searchInput, #serialInput { background: #f1f5f9 !important; border-color: #cbd5e1 !important; color: #1e293b !important; }
+        #searchInput::placeholder, #serialInput::placeholder { color: #94a3b8 !important; }
+        .cat-tab:not(.active) { background: rgba(255,255,255,0.88) !important; border-color: rgba(37,99,235,0.30) !important; color: #2563eb !important; }
+        #productList a { color: #2563eb !important; }
+        .recent-tag { background: rgba(241,245,249,0.95) !important; border-color: rgba(0,0,0,0.10) !important; color: #475569 !important; }
+        .bookmark-tag { background: rgba(255,251,235,0.95) !important; color: #92400e !important; }
+        #globalSearchBar { background: rgba(255,255,255,0.88) !important; border-color: rgba(0,0,0,0.10) !important; }
+        #globalSearchInput { background: transparent !important; color: #1e293b !important; }
+        #globalSearchResults { background: #fff !important; border-color: rgba(0,0,0,0.12) !important; }
+        .gs-item { color: #1e293b !important; }
+        .ticker-bar { background: #fef3c7 !important; color: #b45309 !important; }
+        #aiChatPanel { background: #f8fafc !important; }
+        .ai-msg.bot { background: #e2e8f0 !important; color: #1e293b !important; }
+        #aiInput { background: #f1f5f9 !important; color: #1e293b !important; }
+        .updates-bar { background: rgba(240,253,244,0.97) !important; }
+      `;
+    } else {
+      s.textContent = '';
+    }
+  }
+
+  function toggleTheme() {
+    const isLight = document.documentElement.classList.toggle('light-mode');
+    localStorage.setItem('atosa_theme', isLight ? 'light' : 'dark');
+    const btn = document.getElementById('themeToggleBtn');
+    if (btn) btn.textContent = isLight ? '🌙' : '☀️';
+    applyThemeStyles(isLight);
+  }
+  document.addEventListener('DOMContentLoaded', function() {
+    const isLight = document.documentElement.classList.contains('light-mode');
+    const btn = document.getElementById('themeToggleBtn');
+    if (btn) btn.textContent = isLight ? '🌙' : '☀️';
+    if (isLight) applyThemeStyles(true);
+  });
+  </script>
+
+  <script>
   function loadBookmarks() {
     const bar  = document.getElementById('bookmarksBar');
     const tags = document.getElementById('bookmarkTags');
@@ -525,6 +834,53 @@
     loadBookmarks();
   }
   document.addEventListener('DOMContentLoaded', loadBookmarks);
+
+  // ── Content Update Notifications ──────────────────────────────────────────
+  (async () => {
+    try {
+      const r = await fetch('/api/updates/recent');
+      if (!r.ok) return;
+      const updates = await r.json();
+      if (!updates || !updates.length) return;
+
+      // Filter out dismissed (stored by timestamp in localStorage)
+      const dismissedTs = parseInt(localStorage.getItem('atosa_updates_dismissed') || '0');
+      const fresh = updates.filter(u => new Date(u.updatedAt).getTime() > dismissedTs);
+      if (!fresh.length) return;
+
+      const chips = document.getElementById('updatesChips');
+      // Deduplicate: same family+issue only show once (most recent)
+      const seen = new Set();
+      fresh.forEach(u => {
+        const key = u.family + '|' + u.issueKey;
+        if (seen.has(key)) return;
+        seen.add(key);
+
+        const familyLabel = u.family.replace('modelData','').replace(/([A-Z])/g,' $1').trim();
+        const ago = timeAgo(new Date(u.updatedAt));
+        const chip = document.createElement('span');
+        chip.className = 'update-chip';
+        chip.innerHTML = `<span class="chip-family">${familyLabel}</span><span class="chip-issue">${u.issueLabel || u.issueKey}</span><span class="chip-time">${ago}</span>`;
+        chip.title = `${familyLabel} — ${u.issueLabel || u.issueKey} (${ago})`;
+        chips.appendChild(chip);
+      });
+
+      document.getElementById('updatesBar').style.display = 'flex';
+    } catch(e) {}
+  })();
+
+  function dismissUpdates() {
+    localStorage.setItem('atosa_updates_dismissed', Date.now().toString());
+    document.getElementById('updatesBar').style.display = 'none';
+  }
+
+  function timeAgo(date) {
+    const sec = Math.floor((Date.now() - date.getTime()) / 1000);
+    if (sec < 60)   return 'just now';
+    if (sec < 3600) return Math.floor(sec / 60) + 'm ago';
+    if (sec < 86400)return Math.floor(sec / 3600) + 'h ago';
+    return Math.floor(sec / 86400) + 'd ago';
+  }
 
   // ── Suggestions unread badge ──
   (async () => {
@@ -581,6 +937,89 @@
   </div>
 
   <script>
+  // ── Global Content Search ─────────────────────────────────────────────────
+  let _gsTimer = null;
+  const SECTION_LABELS = { label: 'Issue', overview: 'Quick Guide', technician: 'Technician', customer: 'Non-Warranty' };
+
+  function onGlobalSearch(val) {
+    const clear = document.getElementById('globalSearchClear');
+    const res   = document.getElementById('globalSearchResults');
+    clear.style.display = val ? 'block' : 'none';
+    if (!val.trim()) { res.style.display = 'none'; return; }
+    clearTimeout(_gsTimer);
+    _gsTimer = setTimeout(() => doGlobalSearch(val.trim()), 350);
+  }
+
+  async function doGlobalSearch(q) {
+    const spinner = document.getElementById('globalSearchSpinner');
+    const res     = document.getElementById('globalSearchResults');
+    spinner.style.display = 'inline';
+    res.style.display = 'none';
+    try {
+      const r = await fetch('/api/search?q=' + encodeURIComponent(q));
+      const { results } = await r.json();
+      spinner.style.display = 'none';
+      if (!results || !results.length) {
+        res.innerHTML = '<div style="padding:20px;text-align:center;color:#475569;font-size:13px;">No results found for "<strong style=\'color:#94a3b8\'>' + escHtml(q) + '</strong>"</div>';
+        res.style.display = 'block';
+        return;
+      }
+      // Group by family
+      const grouped = {};
+      results.forEach(r => {
+        if (!grouped[r.family]) grouped[r.family] = [];
+        grouped[r.family].push(r);
+      });
+      let html = '';
+      for (const [family, items] of Object.entries(grouped)) {
+        const familyLabel = family.replace('modelData','').replace(/([A-Z])/g,' $1').trim();
+        html += `<div style="padding:8px 16px 4px;font-size:11px;font-weight:700;color:#475569;letter-spacing:0.8px;text-transform:uppercase;border-top:1px solid rgba(255,255,255,0.06);">${escHtml(familyLabel)}</div>`;
+        items.forEach(item => {
+          const repModel = item.models && item.models[0] ? item.models[0] : '';
+          const href = repModel ? `product.html?model=${encodeURIComponent(repModel)}&issue=${encodeURIComponent(item.issueKey)}` : '#';
+          const secLabel = SECTION_LABELS[item.section] || item.section;
+          const preview = item.preview || '';
+          // Highlight matched query in preview
+          const hiPreview = preview.replace(new RegExp('(' + escRegex(q) + ')', 'gi'), '<mark style="background:rgba(251,191,36,0.30);color:#fde68a;border-radius:2px;padding:0 2px;">$1</mark>');
+          html += `<a href="${href}" target="_blank" rel="noopener noreferrer" style="display:block;padding:10px 16px;text-decoration:none;border-bottom:1px solid rgba(255,255,255,0.04);" onmouseover="this.style.background='rgba(37,99,235,0.15)'" onmouseout="this.style.background=''">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">
+              <span style="font-size:13.5px;font-weight:600;color:#e2e8f0;">${escHtml(item.label)}</span>
+              <span style="font-size:11px;color:#475569;background:rgba(255,255,255,0.06);padding:1px 7px;border-radius:10px;">${escHtml(secLabel)}</span>
+            </div>
+            <div style="font-size:12px;color:#64748b;line-height:1.5;">${hiPreview}</div>
+          </a>`;
+        });
+      }
+      res.innerHTML = html + `<div style="padding:8px 16px;font-size:11.5px;color:#334155;text-align:right;">${results.length} result${results.length !== 1 ? 's' : ''}</div>`;
+      res.style.display = 'block';
+    } catch(e) {
+      spinner.style.display = 'none';
+      res.innerHTML = '<div style="padding:16px;color:#fca5a5;font-size:13px;">Search error. Please try again.</div>';
+      res.style.display = 'block';
+    }
+  }
+
+  function clearGlobalSearch() {
+    document.getElementById('globalSearchInput').value = '';
+    document.getElementById('globalSearchResults').style.display = 'none';
+    document.getElementById('globalSearchClear').style.display = 'none';
+  }
+
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function escRegex(s) {
+    return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  }
+
+  // Close results when clicking outside
+  document.addEventListener('click', e => {
+    const wrap = document.getElementById('globalSearchWrap');
+    if (wrap && !wrap.contains(e.target)) {
+      document.getElementById('globalSearchResults').style.display = 'none';
+    }
+  });
+
   // Show greeting bubble every 10s, visible for 4s each time
   function showAIBubble() {
     const bubble = document.getElementById('aiGreetBubble');
@@ -646,6 +1085,10 @@
     box.scrollTop = box.scrollHeight;
     return div;
   }
+  </script>
+
+  <script>
+    // PWA disabled
   </script>
 </body>
 </html>

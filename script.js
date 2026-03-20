@@ -831,6 +831,11 @@ async function loadAnnouncement() {
       return;
     }
     el.innerHTML = lines.map((l, i) => `${i + 1}. ${l}`).join('<br>');
+    // 手机端默认收起公告栏
+    if (window.innerWidth <= 640) {
+      const bar = document.getElementById('announcementBar');
+      if (bar) bar.style.display = 'none';
+    }
   } catch (e) {}
 }
 
