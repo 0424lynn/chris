@@ -110,22 +110,23 @@
         }
 
         /* ── Problem box (left panel) ── */
-        .problem-box ul li a {
+        .problem-box ul li span {
             color: #60a5fa;
             outline: none;
         }
-        .problem-box ul li a:visited {
+        .problem-box ul li span:visited {
             color: #60a5fa;
         }
-        .problem-box ul li a:focus,
-        .problem-box ul li a:focus-visible {
+        .problem-box ul li span:focus,
+        .problem-box ul li span:focus-visible {
             outline: none;
+            box-shadow: none;
         }
-        .problem-box ul li a:hover {
+        .problem-box ul li span:hover {
             color: #93c5fd;
             text-decoration: underline;
         }
-        #problemCategoryList li.active-issue a {
+        #problemCategoryList li.active-issue span {
             background: rgba(37,99,235,0.20) !important;
         }
 
@@ -331,7 +332,7 @@
         }
 
         /* ── Active issue highlight ── */
-        #problemCategoryList li.active-issue a {
+        #problemCategoryList li.active-issue span {
             background: rgba(0,123,255,0.10);
             font-weight: 700;
             border-radius: 4px;
@@ -725,8 +726,16 @@
     const params = new URLSearchParams(location.search);
     const model  = params.get('model');
 
+    // Remove focus ring when page is restored from bfcache
+    window.addEventListener('pageshow', () => {
+        if (document.activeElement && document.activeElement !== document.body) {
+            document.activeElement.blur();
+        }
+    });
+
     // Cache fetched data here so showSolution doesn't re-fetch on every click
     let pageData = null;
+    let currentFileKey = null; // module-level so showSolution can access it
 
     // ─── Async init: merge static map with dynamic map from server ────────────
     (async function () {
@@ -741,6 +750,7 @@
         const jsonFile = modelMap[model];
         // Strip .json if present (static map has .json; dynamic map stores key only)
         const fileKey = jsonFile ? jsonFile.replace('.json', '') : null;
+        currentFileKey = fileKey; // expose to showSolution
         const apiUrl  = fileKey ? '/api/modeldata/' + fileKey : null;
 
         if (!model || !fileKey) {
@@ -780,7 +790,14 @@
                 const iss = data.common?.issues?.[issueKey] || {};
                 const lbl = iss.label || (issueKey.charAt(0).toUpperCase() + issueKey.slice(1));
                 const colorAttr = iss.color ? ` style="color:${iss.color};font-weight:600;" data-color="${iss.color}"` : '';
-                li.innerHTML = `<a href="#" onclick="showSolution('${issueKey}')"${colorAttr}>${lbl}</a>`;
+                const a = document.createElement('span');
+                a.style.cursor = 'pointer';
+                a.style.display = 'block';
+                a.style.color = iss.color || '#60a5fa';
+                if (iss.color) { a.style.fontWeight = '600'; a.dataset.color = iss.color; }
+                a.textContent = lbl;
+                a.addEventListener('click', () => showSolution(issueKey));
+                li.appendChild(a);
                 problemCategoryList.appendChild(li);
             });
 
@@ -1011,6 +1028,13 @@
                 url.searchParams.set('issue', category);
                 history.replaceState(null, '', url.toString());
 
+                // Analytics: record issue view (fire-and-forget)
+                fetch('/api/analytics/view', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ family: currentFileKey, issueKey: category, model })
+                }).catch(() => {});
+
                 // Update bookmark + fix-worked button state
                 updateBookmarkBtn();
                 updateFixBtn();
@@ -1022,9 +1046,13 @@
                 const label = document.getElementById('currentIssueLabel');
                 if (label) label.textContent = category.charAt(0).toUpperCase() + category.slice(1);
 
-                // Highlight active issue in left panel
+                // Highlight active issue in left panel, blur any focused link
                 document.querySelectorAll('#problemCategoryList li').forEach(li => {
                     li.classList.toggle('active-issue', li.dataset.issue === category);
+                    if (li.dataset.issue !== category) {
+                        const a = li.querySelector('span');
+                        if (a) a.blur();
+                    }
                 });
         })(pageData);
     }
@@ -1058,7 +1086,7 @@
         if (!val) {
             for (const item of items) {
                 item.style.display = '';
-                const a = item.querySelector('a');
+                const a = item.querySelector('span');
                 if (a) { a.style.color = ''; a.style.fontStyle = ''; }
             }
             return;
@@ -1072,7 +1100,7 @@
                 if (issueData) contentMatch = JSON.stringify(issueData).toLowerCase().includes(val);
             }
             item.style.display = (labelMatch || contentMatch) ? '' : 'none';
-            const a = item.querySelector('a');
+            const a = item.querySelector('span');
             if (a) {
                 a.style.color     = (contentMatch && !labelMatch) ? '#60a5fa' : '';
                 a.style.fontStyle = (contentMatch && !labelMatch) ? 'italic'  : '';
