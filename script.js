@@ -108,7 +108,6 @@
   side.innerHTML = `
     <h3>ADMIN PANEL</h3>
     <p class="hint">仅 admin/4321 可见</p>
-    <a class="btn" href="${V('techmap')}">🚀 TECH MAP</a>
     <a class="btn" href="${V('dataanalysis')}">📊 Data Analysis</a>
     <a class="btn" href="${V('issuetracker')}">🧩 Product Issue Tracker</a>
     <a class="btn" href="${V('techbonus')}">🧰 In-House Tech Center</a>
